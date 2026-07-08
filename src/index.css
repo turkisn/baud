@@ -1,0 +1,143 @@
+/* ─── Fonts: DM Sans (EN) + Cairo (AR) ─────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+
+body {
+  font-family: 'Cairo', 'Tajawal', 'DM Sans', system-ui, sans-serif;
+  background-color: #F8F5EF;
+  color: #4A392D;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[dir="rtl"]    { font-family: 'Cairo', 'Tajawal', sans-serif; }
+.font-arabic   { font-family: 'Cairo', 'Tajawal', sans-serif; }
+
+@layer components {
+  /* ─── Buttons ──────────────────────────────────────────── */
+  .btn-primary {
+    @apply bg-dark-brown text-warm-white px-6 py-3 rounded-xl font-semibold
+           hover:bg-deep-brown active:scale-[0.98] transition-all duration-200
+           inline-flex items-center gap-2 shadow-brand;
+  }
+  .btn-secondary {
+    @apply border-2 border-dark-brown text-dark-brown px-6 py-3 rounded-xl font-semibold
+           hover:bg-dark-brown hover:text-warm-white active:scale-[0.98] transition-all duration-200
+           inline-flex items-center gap-2;
+  }
+  .btn-gold {
+    @apply bg-gold text-dark-brown px-6 py-3 rounded-xl font-bold
+           hover:bg-light-gold active:scale-[0.98] transition-all duration-200
+           inline-flex items-center gap-2 shadow-gold;
+  }
+  .btn-ghost {
+    @apply border border-warm-white/30 text-warm-white px-6 py-3 rounded-xl font-semibold
+           hover:bg-warm-white/10 active:scale-[0.98] transition-all duration-200
+           inline-flex items-center gap-2;
+  }
+  .btn-sand {
+    @apply bg-sand text-dark-brown px-6 py-3 rounded-xl font-semibold
+           hover:bg-beige active:scale-[0.98] transition-all duration-200
+           inline-flex items-center gap-2;
+  }
+
+  /* ─── Cards ────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl border border-sand shadow-card
+           hover:shadow-card-hover transition-all duration-300;
+  }
+  .card-dark {
+    @apply bg-medium-brown/15 rounded-2xl border border-medium-brown/20 transition-all duration-300;
+  }
+  .card-sand {
+    @apply bg-sand/50 rounded-2xl border border-beige transition-all duration-300;
+  }
+
+  /* ─── Typography ────────────────────────────────────────── */
+  .section-title {
+    @apply text-3xl sm:text-4xl font-bold text-dark-brown leading-tight;
+  }
+  .section-subtitle {
+    @apply text-light-brown text-lg leading-relaxed;
+  }
+  .section-eyebrow {
+    @apply inline-flex items-center gap-2 text-gold text-xs font-semibold tracking-widest uppercase;
+  }
+
+  /* ─── Form ──────────────────────────────────────────────── */
+  .input-field {
+    @apply w-full border border-sand rounded-xl px-4 py-3 bg-white text-dark-brown
+           placeholder-light-brown/70 focus:outline-none focus:ring-2 focus:ring-dark-brown/20
+           focus:border-dark-brown transition-all duration-200;
+  }
+  .label {
+    @apply block text-sm font-semibold text-dark-brown mb-1.5;
+  }
+
+  /* ─── Geometric patterns ────────────────────────────────── */
+  .geometric-bg {
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='40,2 78,40 40,78 2,40' fill='none' stroke='%234A392D' stroke-width='0.5' stroke-opacity='0.07'/%3E%3C/svg%3E");
+  }
+  .diamond-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L55 30 L30 55 L5 30 Z' fill='none' stroke='%234A392D' stroke-width='0.6' stroke-opacity='0.06'/%3E%3C/svg%3E");
+  }
+
+  /* ─── Dividers ──────────────────────────────────────────── */
+  .gold-divider {
+    @apply h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent;
+  }
+  .gold-line {
+    @apply h-0.5 w-10 bg-gold rounded-full;
+  }
+  .brand-line {
+    @apply h-0.5 w-10 bg-dark-brown rounded-full;
+  }
+
+  /* ─── Badges ────────────────────────────────────────────── */
+  .badge-green {
+    @apply inline-flex items-center gap-1.5 bg-saudi-green/10 text-saudi-green
+           text-xs font-semibold px-3 py-1.5 rounded-full;
+  }
+  .badge-gold {
+    @apply inline-flex items-center gap-1.5 bg-gold/10 text-gold
+           text-xs font-semibold px-3 py-1.5 rounded-full border border-gold/20;
+  }
+  .badge-brown {
+    @apply inline-flex items-center gap-1.5 bg-beige/40 text-dark-brown
+           text-xs font-semibold px-3 py-1.5 rounded-full border border-beige;
+  }
+
+  /* ─── Table ─────────────────────────────────────────────── */
+  .table-row {
+    @apply border-b border-sand hover:bg-ivory transition-colors;
+  }
+}
+
+/* ─── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: #F8F5EF; }
+::-webkit-scrollbar-thumb  { background: #D6C5AE; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #6A5744; }
+
+/* ─── Selection ──────────────────────────────────────── */
+::selection { background: #C9A84C33; color: #4A392D; }
+
+/* ─── Page transition ────────────────────────────────── */
+.page-enter { animation: pageEnter 0.4s ease-out; }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Hero gradient ──────────────────────────────────── */
+.hero-gradient {
+  background: linear-gradient(135deg, #4A392D 0%, #2E1F13 55%, #4A392D 100%);
+}
+
