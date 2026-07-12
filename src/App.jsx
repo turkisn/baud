@@ -13,9 +13,12 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import BlockDetails from './pages/BlockDetails';
+import Library from './pages/Library';
+import LibraryDetail from './pages/LibraryDetail';
+import LibraryAdmin from './pages/LibraryAdmin';
 
 // Pages that should NOT show the shared Navbar/Footer
-const BARE_ROUTES = ['/login', '/dashboard'];
+const BARE_ROUTES = ['/login', '/dashboard', '/library-admin'];
 
 function Layout() {
   const location = useLocation();
@@ -37,6 +40,9 @@ function Layout() {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/block/:id" element={<BlockDetails />} />
+          <Route path="/library" element={<Library />} />
+          <Route path="/library/:id" element={<LibraryDetail />} />
+          <Route path="/library-admin" element={<LibraryAdmin />} />
         </Routes>
       </main>
       {!isBare && <Footer />}

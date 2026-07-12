@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 
 const navLinks = [
   { path: '/marketplace', en: 'Marketplace', ar: 'المتجر' },
+  { path: '/library',     en: 'Library',     ar: 'المكتبة' },
   { path: '/suppliers',   en: 'Suppliers',   ar: 'الموردون' },
   { path: '/designers',   en: 'Designers',   ar: 'المصممون' },
   { path: '/ai-boq',      en: 'AI BOQ',      ar: 'AI BOQ' },
