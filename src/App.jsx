@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
@@ -16,9 +17,12 @@ import BlockDetails from './pages/BlockDetails';
 import Library from './pages/Library';
 import LibraryDetail from './pages/LibraryDetail';
 import LibraryAdmin from './pages/LibraryAdmin';
+import AddProduct from './pages/products/AddProduct';
+import MyProducts from './pages/products/MyProducts';
+import ProductReview from './pages/admin/ProductReview';
 
 // Pages that should NOT show the shared Navbar/Footer
-const BARE_ROUTES = ['/login', '/dashboard', '/library-admin'];
+const BARE_ROUTES = ['/login', '/dashboard', '/library-admin', '/products/add', '/my-products', '/admin'];
 
 function Layout() {
   const location = useLocation();
@@ -43,6 +47,9 @@ function Layout() {
           <Route path="/library" element={<Library />} />
           <Route path="/library/:id" element={<LibraryDetail />} />
           <Route path="/library-admin" element={<LibraryAdmin />} />
+          <Route path="/products/add" element={<AddProduct />} />
+          <Route path="/my-products" element={<MyProducts />} />
+          <Route path="/admin/products" element={<ProductReview />} />
         </Routes>
       </main>
       {!isBare && <Footer />}
@@ -54,7 +61,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <LanguageProvider>
-        <Layout />
+        <AuthProvider>
+          <Layout />
+        </AuthProvider>
       </LanguageProvider>
     </BrowserRouter>
   );
