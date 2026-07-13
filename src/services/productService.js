@@ -148,8 +148,10 @@ export const productService = {
         short_description_ar, short_description_en,
         featured_image_path, is_free, price, currency,
         view_count, download_count, created_at,
+        verification_status,
         categories(code, name_ar, name_en),
-        subcategories(code, name_ar, name_en)
+        subcategories(code, name_ar, name_en),
+        product_files(file_format)
       `)
       .eq('status', 'approved')
       .eq('visibility', 'public')
