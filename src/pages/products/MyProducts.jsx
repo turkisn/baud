@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { getMyProducts, submitForReview, seedDemoProducts } from '../../services/productsService';
+import { productService } from '../../services/productService';
+import { seedDemoProducts } from '../../services/productsService';
 import { CATEGORIES } from '../../data/categoriesData';
 import { fadeInUp, viewport } from '../../utils/animations';
 
@@ -74,7 +75,7 @@ export default function MyProducts() {
 
   useEffect(() => {
     seedDemoProducts(user?.id || 'u-supplier');
-    getMyProducts(user?.id || 'u-supplier').then(ps => {
+    productService.getMyProducts(user?.id || 'u-supplier').then(ps => {
       setProducts(ps);
       setLoading(false);
     });
@@ -110,8 +111,8 @@ export default function MyProducts() {
 
   const handleSubmit = async (id) => {
     setSub(id);
-    await submitForReview(id, user?.id || 'u-supplier');
-    const updated = await getMyProducts(user?.id || 'u-supplier');
+    await productService.submitForReview(id);
+    const updated = await productService.getMyProducts(user?.id || 'u-supplier');
     setProducts(updated);
     setSub(null);
   };

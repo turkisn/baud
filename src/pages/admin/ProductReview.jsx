@@ -7,10 +7,9 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import {
-  getAllProducts, approveProduct, rejectProduct,
-  adminUpdateProduct, seedDemoProducts,
-} from '../../services/productsService';
+import { reviewService } from '../../services/reviewService';
+import { productService } from '../../services/productService';
+import { seedDemoProducts } from '../../services/productsService';
 import { CATEGORIES } from '../../data/categoriesData';
 import { fadeInUp, viewport } from '../../utils/animations';
 
@@ -216,7 +215,7 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, lang }) {
               <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#6E5847' }}>Verification Status</p>
               <div className="flex flex-wrap gap-2">
                 {['unverified','verified','manufacturer_verified','supplier_verified'].map(v => (
-                  <button key={v} onClick={() => adminUpdateProduct(product.id, { verification_status: v })}
+                  <button key={v} onClick={() => productService.updateProduct(product.id, { verification_status: v })}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:opacity-80"
                     style={{
                       background: product.verification_status === v ? GOLD + '20' : 'white',
@@ -235,7 +234,7 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, lang }) {
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#6E5847' }}>Visibility</p>
             <div className="flex gap-2">
               {['private','public','unlisted'].map(v => (
-                <button key={v} onClick={() => adminUpdateProduct(product.id, { visibility: v })}
+                <button key={v} onClick={() => productService.updateProduct(product.id, { visibility: v })}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:opacity-80"
                   style={{
                     background: product.visibility === v ? GOLD + '20' : 'white',
@@ -267,7 +266,7 @@ export default function ProductReview() {
 
   const reload = () => {
     seedDemoProducts();
-    getAllProducts().then(ps => { setProducts(ps); setLoading(false); });
+    reviewService.getAllForReview().then(ps => { setProducts(ps); setLoading(false); });
   };
   useEffect(reload, []);
 
@@ -292,13 +291,13 @@ export default function ProductReview() {
   }, [products]);
 
   const handleApprove = async (id) => {
-    await approveProduct(id);
+    await reviewService.approveProduct(id, user?.id);
     reload();
     setSelected(null);
   };
 
   const handleRejectConfirm = async (reason) => {
-    await rejectProduct(rejectTarget.id, reason);
+    await reviewService.rejectProduct(rejectTarget.id, user?.id, reason);
     setRejT(null);
     setSelected(null);
     reload();

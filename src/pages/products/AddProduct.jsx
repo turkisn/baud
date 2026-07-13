@@ -11,7 +11,7 @@ import {
   CATEGORIES, SUBCATEGORIES, CATEGORY_SPECS, UNITS,
   FILE_FORMATS, SOFTWARE_LIST, LICENSE_TYPES, MATERIAL_TYPES,
 } from '../../data/categoriesData';
-import { createProduct, updateProduct, saveDraft } from '../../services/productsService';
+import { productService } from '../../services/productService';
 
 // ─── Brand tokens ────────────────────────────────────────────
 const GOLD  = '#B68D57';
@@ -858,7 +858,7 @@ export default function AddProduct() {
   const handleSaveDraft = async () => {
     setSaving(true);
     try {
-      const p = await createProduct({ ...form, status: 'draft', visibility: 'private' }, user?.id || 'u-guest');
+      const p = await productService.createProduct(user?.id || 'u-guest', { ...form, status: 'draft', visibility: 'private' });
       setDraftId(p.id);
       setSavedMsg(lang === 'ar' ? '✓ تم حفظ المسودة' : '✓ Draft saved');
       setTimeout(() => setSavedMsg(''), 3000);
@@ -874,7 +874,7 @@ export default function AddProduct() {
     setErrors([]);
     setSub(true);
     try {
-      const p = await createProduct({ ...form, status: 'pending_review' }, user?.id || 'u-guest');
+      const p = await productService.createProduct(user?.id || 'u-guest', { ...form, status: 'pending_review' });
       setBuodRef(p.buod_reference);
       setDraftId(p.id);
       setSavedMsg(lang === 'ar' ? '✓ أُرسل للمراجعة' : '✓ Submitted for review');

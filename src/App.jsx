@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
@@ -47,9 +48,9 @@ function Layout() {
           <Route path="/library" element={<Library />} />
           <Route path="/library/:id" element={<LibraryDetail />} />
           <Route path="/library-admin" element={<LibraryAdmin />} />
-          <Route path="/products/add" element={<AddProduct />} />
-          <Route path="/my-products" element={<MyProducts />} />
-          <Route path="/admin/products" element={<ProductReview />} />
+          <Route path="/products/add" element={<ProtectedRoute requireSupplier><AddProduct /></ProtectedRoute>} />
+          <Route path="/my-products" element={<ProtectedRoute requireSupplier><MyProducts /></ProtectedRoute>} />
+          <Route path="/admin/products" element={<ProtectedRoute requireAdmin><ProductReview /></ProtectedRoute>} />
         </Routes>
       </main>
       {!isBare && <Footer />}
