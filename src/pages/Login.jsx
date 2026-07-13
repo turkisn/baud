@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/authService';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
 import { fadeInUp, stagger } from '../utils/animations';
 
@@ -29,7 +30,7 @@ function mapError(err) {
   if (msg.includes('Password should be'))           return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.';
   if (msg.includes('Unable to validate email'))     return 'صيغة البريد الإلكتروني غير صحيحة.';
   if (msg.includes('rate limit'))                   return 'عدد كبير من المحاولات. انتظر دقيقة وحاول مجدداً.';
-  if (msg.includes('Supabase not configured'))      return 'قاعدة البيانات غير متصلة. استخدم الحسابات التجريبية.';
+  if (msg.includes('Supabase not configured'))      return 'التسجيل غير مفعّل في هذه البيئة. أضف متغيرات VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في Vercel ثم أعد النشر.';
   return msg;
 }
 
@@ -83,17 +84,18 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === 'login') {
+        // login() handles both real Supabase and mock demo accounts
         await login(form.email, form.password);
         navigate('/');
       } else {
+        // authService.signUp() includes role in user_metadata for the DB trigger
         const role = userTypes[userTypeIdx].id;
-        await register({
+        await authService.signUp({
           email:    form.email,
           password: form.password,
           fullName: form.name,
           role,
         });
-        // Show email verification message (Supabase sends confirmation email)
         setSuccess(true);
       }
     } catch (err) {
