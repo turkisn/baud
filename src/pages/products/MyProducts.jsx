@@ -9,6 +9,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { productService } from '../../services/productService';
 import { seedDemoProducts } from '../../services/productsService';
+import { SUPABASE_CONFIGURED } from '../../lib/supabase';
 import { CATEGORIES } from '../../data/categoriesData';
 import { fadeInUp, viewport } from '../../utils/animations';
 
@@ -74,7 +75,7 @@ export default function MyProducts() {
   const [submitting, setSub]    = useState(null);
 
   useEffect(() => {
-    seedDemoProducts(user?.id || 'u-supplier');
+    if (!SUPABASE_CONFIGURED) seedDemoProducts(user?.id || 'u-supplier');
     productService.getMyProducts(user?.id || 'u-supplier').then(ps => {
       setProducts(ps);
       setLoading(false);

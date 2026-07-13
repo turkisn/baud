@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { reviewService } from '../../services/reviewService';
 import { productService } from '../../services/productService';
 import { seedDemoProducts } from '../../services/productsService';
+import { SUPABASE_CONFIGURED } from '../../lib/supabase';
 import { CATEGORIES } from '../../data/categoriesData';
 import { fadeInUp, viewport } from '../../utils/animations';
 
@@ -265,7 +266,7 @@ export default function ProductReview() {
   const [rejectTarget, setRejT] = useState(null);
 
   const reload = () => {
-    seedDemoProducts();
+    if (!SUPABASE_CONFIGURED) seedDemoProducts();
     reviewService.getAllForReview().then(ps => { setProducts(ps); setLoading(false); });
   };
   useEffect(reload, []);
