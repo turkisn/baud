@@ -252,17 +252,6 @@ export default function Login() {
             </motion.div>
           )}
 
-          {/* Global error banner */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-sm text-red-700"
-            >
-              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </motion.div>
-          )}
-
           {/* Form */}
           <motion.form variants={fadeInUp} className="space-y-4" onSubmit={handleSubmit} noValidate>
 
@@ -389,6 +378,17 @@ export default function Login() {
                   {t('Forgot password?', 'نسيت كلمة المرور؟')}
                 </a>
               </div>
+            )}
+
+            {/* Error banner — placed here so it's always visible above the submit button */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-sm text-red-700"
+              >
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </motion.div>
             )}
 
             {/* Submit */}
