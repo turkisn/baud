@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,6 +12,8 @@ import {
   FILE_FORMATS, SOFTWARE_LIST, LICENSE_TYPES, MATERIAL_TYPES,
 } from '../../data/categoriesData';
 import { productService } from '../../services/productService';
+import { categoryService } from '../../services/categoryService';
+import { storageService } from '../../services/storageService';
 
 // ─── Brand tokens ────────────────────────────────────────────
 const GOLD  = '#B68D57';
@@ -134,8 +136,9 @@ function AddBtn({ onClick, labelEn, labelAr, lang }) {
 }
 
 // ─── STEP 1: Basic Info ──────────────────────────────────────
-function Step1({ form, update, lang }) {
-  const subs = SUBCATEGORIES[form.category_id] || [];
+function Step1({ form, update, lang, dbCategories }) {
+  const selectedCat = dbCategories.find(c => c.id === form.category_id);
+  const subs = selectedCat?.subcategories || [];
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -152,10 +155,10 @@ function Step1({ form, update, lang }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <FieldLabel required>{lang === 'ar' ? 'التصنيف' : 'Category'}</FieldLabel>
-          <Select value={form.category_id} onChange={e => update('category_id', e.target.value)}>
+          <Select value={form.category_id} onChange={e => { update('category_id', e.target.value); update('subcategory_id', ''); }}>
             <option value="">{lang === 'ar' ? '— اختر التصنيف —' : '— Select Category —'}</option>
-            {CATEGORIES.map(c => (
-              <option key={c.id} value={c.id}>{c.icon} {lang === 'ar' ? c.nameAr : c.nameEn}</option>
+            {dbCategories.map(c => (
+              <option key={c.id} value={c.id}>{c.icon || ''} {lang === 'ar' ? c.name_ar : c.name_en}</option>
             ))}
           </Select>
         </div>
@@ -164,7 +167,7 @@ function Step1({ form, update, lang }) {
           <Select value={form.subcategory_id} onChange={e => update('subcategory_id', e.target.value)} disabled={!form.category_id}>
             <option value="">{lang === 'ar' ? '— اختر التصنيف الفرعي —' : '— Select Sub-category —'}</option>
             {subs.map(s => (
-              <option key={s.id} value={s.id}>{lang === 'ar' ? s.nameAr : s.nameEn}</option>
+              <option key={s.id} value={s.id}>{lang === 'ar' ? s.name_ar : s.name_en}</option>
             ))}
           </Select>
         </div>
@@ -228,8 +231,10 @@ function Step1({ form, update, lang }) {
 }
 
 // ─── STEP 2: Specifications ───────────────────────────────────
-function Step2({ form, update, lang }) {
-  const templateSpecs = CATEGORY_SPECS[form.category_id] || [];
+function Step2({ form, update, lang, dbCategories }) {
+  const selectedCat = dbCategories.find(c => c.id === form.category_id);
+  const catCode = selectedCat?.code || form.category_id;
+  const templateSpecs = CATEGORY_SPECS[catCode] || [];
   const specs = form.specifications;
 
   const addSpec = () => update('specifications', [...specs, { ...EMPTY_SPEC }]);
@@ -441,9 +446,15 @@ function Step5({ form, update, lang }) {
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split('.').pop().toUpperCase();
-    updateFile(i, 'file_name_original', file.name);
-    updateFile(i, 'file_size', file.size);
-    if (FILE_FORMATS.includes(ext)) updateFile(i, 'file_format', ext);
+    const next = [...files];
+    next[i] = {
+      ...next[i],
+      file_name_original: file.name,
+      file_size: file.size,
+      _file: file,
+      ...(FILE_FORMATS.includes(ext) ? { file_format: ext } : {}),
+    };
+    update('files', next);
   };
 
   const fmt = (bytes) => {
@@ -523,12 +534,13 @@ function Step5({ form, update, lang }) {
 function Step6({ form, update, lang }) {
   const images = form.images;
   const handleImg = (e) => {
-    const files = Array.from(e.target.files || []);
-    const newImgs = files.map((f, i) => ({
+    const newFiles = Array.from(e.target.files || []);
+    const newImgs = newFiles.map((f, i) => ({
       image_type: 'render', alt_text_en: '', alt_text_ar: '',
       is_primary: images.length === 0 && i === 0,
       fileName: f.name, fileSize: f.size,
       preview: URL.createObjectURL(f),
+      _file: f,
     }));
     update('images', [...images, ...newImgs]);
   };
@@ -700,10 +712,9 @@ function Step8({ form, update, lang }) {
 }
 
 // ─── STEP 9: Review & Submit ──────────────────────────────────
-function Step9({ form, buodRef, lang }) {
-  const cat  = CATEGORIES.find(c => c.id === form.category_id);
-  const subs = SUBCATEGORIES[form.category_id] || [];
-  const sub  = subs.find(s => s.id === form.subcategory_id);
+function Step9({ form, buodRef, lang, dbCategories }) {
+  const cat = dbCategories.find(c => c.id === form.category_id);
+  const sub = cat?.subcategories?.find(s => s.id === form.subcategory_id);
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -751,8 +762,8 @@ function Step9({ form, buodRef, lang }) {
         </p>
         <Row label={lang === 'ar' ? 'الاسم (عربي)' : 'Name (AR)'} value={form.product_name_ar} />
         <Row label={lang === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'} value={form.product_name_en} />
-        <Row label={lang === 'ar' ? 'التصنيف' : 'Category'} value={cat ? `${cat.icon} ${cat.nameEn}` : '—'} />
-        <Row label={lang === 'ar' ? 'التصنيف الفرعي' : 'Sub-category'} value={sub?.nameEn} />
+        <Row label={lang === 'ar' ? 'التصنيف' : 'Category'} value={cat ? `${cat.icon || ''} ${lang === 'ar' ? cat.name_ar : cat.name_en}` : '—'} />
+        <Row label={lang === 'ar' ? 'التصنيف الفرعي' : 'Sub-category'} value={sub ? (lang === 'ar' ? sub.name_ar : sub.name_en) : '—'} />
         <Row label={lang === 'ar' ? 'العلامة التجارية' : 'Brand'} value={form.brand_name} />
         <Row label={lang === 'ar' ? 'الوحدة' : 'Unit'} value={form.unit} />
         <Row label={lang === 'ar' ? 'الترخيص' : 'License'} value={form.license_type} />
@@ -829,14 +840,29 @@ export default function AddProduct() {
   const { user }      = useAuth();
   const navigate      = useNavigate();
 
-  const [step, setStep]         = useState(1);
-  const [form, setForm]         = useState({ ...INITIAL_FORM });
-  const [draftId, setDraftId]   = useState(null);
-  const [buodRef, setBuodRef]   = useState(null);
-  const [saving, setSaving]     = useState(false);
-  const [submitting, setSub]    = useState(false);
-  const [savedMsg, setSavedMsg] = useState('');
-  const [errors, setErrors]     = useState([]);
+  const [step, setStep]           = useState(1);
+  const [form, setForm]           = useState({ ...INITIAL_FORM });
+  const [draftId, setDraftId]     = useState(null);
+  const [buodRef, setBuodRef]     = useState(null);
+  const [saving, setSaving]       = useState(false);
+  const [submitting, setSub]      = useState(false);
+  const [savedMsg, setSavedMsg]   = useState('');
+  const [errors, setErrors]       = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
+
+  useEffect(() => {
+    categoryService.getAllWithSubcategories()
+      .then(cats => setDbCategories(cats || []))
+      .catch(() => {
+        setDbCategories(CATEGORIES.map(cat => ({
+          id: cat.id, code: cat.code,
+          name_ar: cat.nameAr, name_en: cat.nameEn, icon: cat.icon,
+          subcategories: (SUBCATEGORIES[cat.code] || []).map(s => ({
+            id: s.id, code: s.code, name_ar: s.nameAr, name_en: s.nameEn,
+          })),
+        })));
+      });
+  }, []);
 
   const update = useCallback((field, val) => {
     setForm(prev => ({ ...prev, [field]: val }));
@@ -855,10 +881,42 @@ export default function AddProduct() {
     return errs;
   };
 
+  const uploadFormAssets = async (uid) => {
+    const uploadedImages = await Promise.all(
+      form.images.map(async (img) => {
+        if (!img._file) return img;
+        const { path, url } = await storageService.uploadProductImage(uid, img._file);
+        const { _file, preview, ...rest } = img;
+        return { ...rest, path, url };
+      })
+    );
+
+    const uploadedFiles = await Promise.all(
+      form.files.map(async (f) => {
+        if (!f._file) return f;
+        const { path } = await storageService.uploadProductFile(uid, f._file);
+        const { _file, ...rest } = f;
+        return { ...rest, path };
+      })
+    );
+
+    const primaryImg = uploadedImages.find(img => img.is_primary) || uploadedImages[0];
+    return { uploadedImages, uploadedFiles, featuredImagePath: primaryImg?.path || null };
+  };
+
   const handleSaveDraft = async () => {
     setSaving(true);
     try {
-      const p = await productService.createProduct(user?.id || 'u-guest', { ...form, status: 'draft', visibility: 'private' });
+      const uid = user?.id || 'u-guest';
+      const { uploadedImages, uploadedFiles, featuredImagePath } = await uploadFormAssets(uid);
+      const p = await productService.createProduct(uid, {
+        ...form,
+        images: uploadedImages,
+        files: uploadedFiles,
+        featured_image_path: featuredImagePath,
+        status: 'draft',
+        visibility: 'private',
+      });
       setDraftId(p.id);
       setSavedMsg(lang === 'ar' ? '✓ تم حفظ المسودة' : '✓ Draft saved');
       setTimeout(() => setSavedMsg(''), 3000);
@@ -874,7 +932,15 @@ export default function AddProduct() {
     setErrors([]);
     setSub(true);
     try {
-      const p = await productService.createProduct(user?.id || 'u-guest', { ...form, status: 'pending_review' });
+      const uid = user?.id || 'u-guest';
+      const { uploadedImages, uploadedFiles, featuredImagePath } = await uploadFormAssets(uid);
+      const p = await productService.createProduct(uid, {
+        ...form,
+        images: uploadedImages,
+        files: uploadedFiles,
+        featured_image_path: featuredImagePath,
+        status: 'pending_review',
+      });
       setBuodRef(p.buod_reference);
       setDraftId(p.id);
       setSavedMsg(lang === 'ar' ? '✓ أُرسل للمراجعة' : '✓ Submitted for review');
@@ -884,7 +950,7 @@ export default function AddProduct() {
     setSub(false);
   };
 
-  const stepProps = { form, update, lang };
+  const stepProps = { form, update, lang, dbCategories };
   const STEP_COMPONENTS = [Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9];
   const CurrentStep = STEP_COMPONENTS[step - 1];
 
@@ -934,7 +1000,7 @@ export default function AddProduct() {
               </div>
 
               {step === 9
-                ? <Step9 form={form} buodRef={buodRef} lang={lang} />
+                ? <Step9 form={form} buodRef={buodRef} lang={lang} dbCategories={dbCategories} />
                 : <CurrentStep {...stepProps} />
               }
             </Card>

@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Download, Eye, BadgeCheck, Share2, Heart,
-  Calendar, HardDrive, Tag, ChevronRight, AlertCircle, Copy, Check
+  Calendar, HardDrive, Tag, ChevronRight, Loader2, AlertCircle, Copy, Check
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { libraryModels, libraryCategories } from '../data/mockData';
 import { fadeInUp, viewport } from '../utils/animations';
+import { productService } from '../services/productService';
+import { storageService } from '../services/storageService';
 
 const FORMAT_COLOR = {
   RVT: '#0696D7', SKP: '#D73A0A', MAX: '#00A3E0',
@@ -68,23 +69,110 @@ function ModelPreview({ model, large = false }) {
 export default function LibraryDetail() {
   const { id }         = useParams();
   const { t, lang }    = useLanguage();
-  const [saved, setSaved]     = useState(false);
-  const [copied, setCopied]   = useState(false);
-  const [showAlert, setAlert] = useState(false);
+  const [saved, setSaved]       = useState(false);
+  const [copied, setCopied]     = useState(false);
+  const [downloading, setDl]    = useState(null); // file id being downloaded
+  const [product, setProduct]   = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [similar, setSimilar]   = useState([]);
 
-  const model   = libraryModels.find(m => m.id === id) || libraryModels[0];
-  const similar = libraryModels.filter(m => m.id !== model.id && m.category === model.category).slice(0, 4);
-  const cat     = libraryCategories.find(c => c.id === model.category);
+  useEffect(() => {
+    setLoading(true);
+    setLoadError(null);
+    productService.getProductById(id)
+      .then((p) => {
+        if (!p) { setLoadError('not_found'); return; }
+        setProduct(p);
+        productService.incrementViewCount(id).catch(() => {});
+        if (p.category_id) {
+          productService.getPublicProducts({ categoryId: p.category_id, pageSize: 5 })
+            .then(list => setSimilar((list || []).filter(x => x.id !== id).slice(0, 4)))
+            .catch(() => {});
+        }
+      })
+      .catch(err => setLoadError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  const name = lang === 'ar' ? model.nameAr : model.nameEn;
-  const desc = lang === 'ar' ? model.descriptionAr : model.descriptionEn;
-  const catLabel = lang === 'ar' ? cat?.labelAr : cat?.labelEn;
-
-  const handleDownload = () => setAlert(true);
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadFile = async (file) => {
+    setDl(file.id);
+    try {
+      const url = await storageService.createSignedDownloadUrl(
+        storageService.BUCKETS.FILES,
+        file.file_path,
+        3600
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.original_file_name || file.file_path.split('/').pop();
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch {
+      // signed URL failed — open in new tab as fallback
+    } finally {
+      setDl(null);
+    }
+  };
+
+  // ── Loading state ─────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-ivory flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-gold" style={{ color: '#B68D57' }} />
+      </div>
+    );
+  }
+
+  // ── Error state ───────────────────────────────────────────────
+  if (loadError || !product) {
+    return (
+      <div className="min-h-screen bg-ivory flex flex-col items-center justify-center gap-4">
+        <AlertCircle size={40} style={{ color: '#B68D57' }} />
+        <p className="font-bold text-dark-brown text-lg">
+          {loadError === 'not_found' ? t('Product not found', 'المنتج غير موجود') : t('Failed to load product', 'تعذر تحميل المنتج')}
+        </p>
+        <Link to="/library" className="text-sm font-semibold hover:underline" style={{ color: '#B68D57' }}>
+          {t('Back to Library', 'العودة للمكتبة')}
+        </Link>
+      </div>
+    );
+  }
+
+  // ── Map DB product to display values ──────────────────────────
+  const name = lang === 'ar' ? product.product_name_ar : product.product_name_en;
+  const desc = lang === 'ar'
+    ? (product.full_description_ar || product.short_description_ar || '')
+    : (product.full_description_en || product.short_description_en || '');
+  const catLabel = lang === 'ar' ? product.categories?.name_ar : product.categories?.name_en;
+  const subLabel = lang === 'ar' ? product.subcategories?.name_ar : product.subcategories?.name_en;
+
+  const images = product.product_images || [];
+  const primaryImg = images.find(i => i.is_primary) || images[0];
+  const primaryImgUrl = primaryImg
+    ? (storageService.getPublicUrl(primaryImg.image_path) || product.featured_image_path)
+    : product.featured_image_path;
+
+  const files = (product.product_files || []).filter(f => f.file_path);
+  const formats = [...new Set(files.map(f => f.file_format).filter(Boolean))];
+  const primaryFile = files.find(f => f.is_primary) || files[0];
+  const fileSize = primaryFile?.file_size
+    ? primaryFile.file_size > 1e6
+      ? (primaryFile.file_size / 1e6).toFixed(1) + ' MB'
+      : (primaryFile.file_size / 1e3).toFixed(0) + ' KB'
+    : '—';
+
+  const dateAdded = new Date(product.created_at).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const handleDownload = () => {
+    if (files.length > 0) handleDownloadFile(files[0]);
   };
 
   return (
@@ -109,7 +197,13 @@ export default function LibraryDetail() {
 
             {/* Main preview */}
             <motion.div variants={fadeInUp} initial="hidden" animate="visible">
-              <ModelPreview model={model} large />
+              {primaryImgUrl
+                ? <img src={primaryImgUrl} alt={name}
+                    className="w-full h-80 object-cover rounded-2xl"
+                    onError={e => { e.currentTarget.style.display = 'none'; }}
+                  />
+                : <ModelPreview model={{ category: product.categories?.code?.toLowerCase() || 'furniture', nameEn: name, format: formats[0] || '3D', softwareVersion: primaryFile?.software_version || '' }} large />
+              }
             </motion.div>
 
             {/* Title + badges */}
@@ -136,13 +230,13 @@ export default function LibraryDetail() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                {model.verified && (
+                {product.verification_status === 'verified' && (
                   <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
                     style={{ background: '#B68D5715', color: '#B68D57', border: '1px solid #B68D5730' }}>
                     <BadgeCheck size={13} /> {t('Verified Model', 'موديل موثق')}
                   </span>
                 )}
-                {model.isFree
+                {product.is_free
                   ? <span className="text-xs font-bold px-2.5 py-1 rounded-full"
                       style={{ background: '#22c55e18', color: '#16a34a', border: '1px solid #22c55e30' }}>
                       {t('Free Download', 'تحميل مجاني')}
@@ -152,6 +246,12 @@ export default function LibraryDetail() {
                       {t('Premium', 'مدفوع')}
                     </span>
                 }
+                {product.buod_reference && (
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full"
+                    style={{ background: '#2B1B0E12', color: '#2B1B0E', border: '1px solid #2B1B0E25' }}>
+                    {product.buod_reference}
+                  </span>
+                )}
               </div>
             </motion.div>
 
@@ -166,15 +266,15 @@ export default function LibraryDetail() {
               <h2 className="font-bold text-dark-brown text-lg mb-4">{t('File Details', 'تفاصيل الملف')}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { label: t('Primary Format', 'الصيغة الرئيسية'), value: model.format, color: FORMAT_COLOR[model.format] },
-                  { label: t('Software Version', 'إصدار البرنامج'), value: model.softwareVersion },
-                  { label: t('File Size', 'حجم الملف'), value: model.fileSize },
-                  { label: t('Designer', 'المصمم'), value: model.designer },
-                  { label: t('Date Added', 'تاريخ الإضافة'), value: model.dateAdded },
-                  { label: t('License', 'الترخيص'), value: model.license },
-                  { label: t('Category', 'التصنيف'), value: `${cat?.icon} ${catLabel}` },
-                  { label: t('Sub-category', 'التصنيف الفرعي'), value: model.subCategory },
-                  { label: t('Downloads', 'التحميلات'), value: model.downloads.toLocaleString() },
+                  { label: t('Primary Format', 'الصيغة الرئيسية'), value: formats[0] || '—', color: FORMAT_COLOR[formats[0]] },
+                  { label: t('Software', 'البرنامج'), value: primaryFile?.software_name || '—' },
+                  { label: t('File Size', 'حجم الملف'), value: fileSize },
+                  { label: t('Date Added', 'تاريخ الإضافة'), value: dateAdded },
+                  { label: t('License', 'الترخيص'), value: product.license_type || '—' },
+                  { label: t('Category', 'التصنيف'), value: catLabel || '—' },
+                  { label: t('Sub-category', 'التصنيف الفرعي'), value: subLabel || '—' },
+                  { label: t('Downloads', 'التحميلات'), value: (product.download_count || 0).toLocaleString() },
+                  { label: t('Views', 'المشاهدات'), value: (product.view_count || 0).toLocaleString() },
                 ].map((s, i) => (
                   <div key={i} className="bg-white rounded-xl p-4 border border-sand">
                     <div className="text-[10px] font-semibold text-light-brown uppercase tracking-wider mb-1">{s.label}</div>
@@ -185,36 +285,55 @@ export default function LibraryDetail() {
             </motion.div>
 
             {/* Available formats */}
-            <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
-              <h2 className="font-bold text-dark-brown text-lg mb-4">{t('Available Formats', 'الصيغ المتاحة')}</h2>
-              <div className="flex flex-wrap gap-2">
-                {model.formats.map(f => <FormatBadge key={f} fmt={f} />)}
-              </div>
-            </motion.div>
+            {formats.length > 0 && (
+              <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
+                <h2 className="font-bold text-dark-brown text-lg mb-4">{t('Available Formats', 'الصيغ المتاحة')}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {formats.map(f => <FormatBadge key={f} fmt={f} />)}
+                </div>
+              </motion.div>
+            )}
 
             {/* Available files */}
-            <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
-              <h2 className="font-bold text-dark-brown text-lg mb-4">{t('Files in Package', 'ملفات الحزمة')}</h2>
-              <div className="bg-white border border-sand rounded-2xl overflow-hidden">
-                {model.availableFiles.map((file, i) => {
-                  const ext = file.split('.').pop().toUpperCase();
-                  const c = FORMAT_COLOR[ext] || '#888';
-                  return (
-                    <div key={i}
-                      className={`flex items-center justify-between px-5 py-3.5 ${i < model.availableFiles.length - 1 ? 'border-b border-sand' : ''}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-bold font-mono"
-                          style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>
-                          {ext}
+            {files.length > 0 && (
+              <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
+                <h2 className="font-bold text-dark-brown text-lg mb-4">{t('Files in Package', 'ملفات الحزمة')}</h2>
+                <div className="bg-white border border-sand rounded-2xl overflow-hidden">
+                  {files.map((file, i) => {
+                    const ext = file.file_format || file.original_file_name?.split('.').pop().toUpperCase() || '?';
+                    const c = FORMAT_COLOR[ext] || '#888';
+                    const sz = file.file_size > 1e6
+                      ? (file.file_size / 1e6).toFixed(1) + ' MB'
+                      : file.file_size ? (file.file_size / 1e3).toFixed(0) + ' KB' : '—';
+                    return (
+                      <div key={file.id || i}
+                        className={`flex items-center justify-between px-5 py-3.5 ${i < files.length - 1 ? 'border-b border-sand' : ''}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-bold font-mono"
+                            style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>
+                            {ext}
+                          </div>
+                          <span className="text-sm text-dark-brown font-medium font-mono">
+                            {file.original_file_name || `file.${ext.toLowerCase()}`}
+                          </span>
                         </div>
-                        <span className="text-sm text-dark-brown font-medium font-mono">{file}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-light-brown">{sz}</span>
+                          <button onClick={() => handleDownloadFile(file)} disabled={!!downloading}
+                            className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-all hover:opacity-80 disabled:opacity-50"
+                            style={{ background: '#B68D5718', color: '#B68D57', border: '1px solid #B68D5730' }}>
+                            {downloading === file.id
+                              ? <Loader2 size={11} className="animate-spin" />
+                              : <Download size={11} />}
+                            {t('Download', 'تحميل')}
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-xs text-light-brown">{model.fileSize}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
 
             {/* License info */}
             <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
@@ -222,10 +341,10 @@ export default function LibraryDetail() {
               <div className="bg-white border border-sand rounded-2xl p-5">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   {[
-                    { label: t('License Type', 'نوع الترخيص'), value: model.license },
-                    { label: t('Source', 'المصدر'), value: model.source },
-                    { label: t('Commercial Use', 'استخدام تجاري'), value: model.licenseCommercial ? t('✓ Allowed', '✓ مسموح') : t('✗ Not allowed', '✗ غير مسموح') },
-                    { label: t('Redistribution', 'إعادة التوزيع'), value: model.licenseRedistribution ? t('✓ Allowed', '✓ مسموح') : t('✗ Not allowed', '✗ غير مسموح') },
+                    { label: t('License Type', 'نوع الترخيص'), value: product.license_type || '—' },
+                    { label: t('Source', 'المصدر'), value: product.source_url ? product.source_url.replace(/^https?:\/\//, '').split('/')[0] : '—' },
+                    { label: t('Commercial Use', 'استخدام تجاري'), value: product.license_commercial ? t('✓ Allowed', '✓ مسموح') : t('✗ Not allowed', '✗ غير مسموح') },
+                    { label: t('Redistribution', 'إعادة التوزيع'), value: product.license_redistribute ? t('✓ Allowed', '✓ مسموح') : t('✗ Not allowed', '✗ غير مسموح') },
                   ].map((s, i) => (
                     <div key={i}>
                       <div className="text-[10px] text-light-brown uppercase tracking-wider mb-0.5">{s.label}</div>
@@ -242,17 +361,19 @@ export default function LibraryDetail() {
               </div>
             </motion.div>
 
-            {/* Keywords */}
-            <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
-              <h2 className="font-bold text-dark-brown text-lg mb-3">{t('Keywords', 'الكلمات المفتاحية')}</h2>
-              <div className="flex flex-wrap gap-2">
-                {model.keywords.map(kw => (
-                  <span key={kw} className="px-3 py-1 rounded-full text-xs font-medium border border-sand bg-white text-medium-brown">
-                    #{kw}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
+            {/* Keywords — derived from category + subcategory */}
+            {(catLabel || subLabel) && (
+              <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>
+                <h2 className="font-bold text-dark-brown text-lg mb-3">{t('Tags', 'التصنيفات')}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {[catLabel, subLabel, product.brand_name, product.product_type].filter(Boolean).map(kw => (
+                    <span key={kw} className="px-3 py-1 rounded-full text-xs font-medium border border-sand bg-white text-medium-brown">
+                      #{kw}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* ── Right col — sticky CTA ────────────────── */}
@@ -263,37 +384,39 @@ export default function LibraryDetail() {
               <div className="bg-white rounded-2xl p-6 border border-sand shadow-sm">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="flex items-center gap-1.5 text-sm text-light-brown">
-                    <Eye size={14} /> {model.views.toLocaleString()}
+                    <Eye size={14} /> {(product.view_count || 0).toLocaleString()}
                   </div>
                   <div className="flex items-center gap-1.5 text-sm text-light-brown">
-                    <Download size={14} /> {model.downloads.toLocaleString()}
+                    <Download size={14} /> {(product.download_count || 0).toLocaleString()}
                   </div>
                   <div className="ml-auto text-xs text-light-brown flex items-center gap-1">
-                    <Calendar size={12} /> {model.dateAdded}
+                    <Calendar size={12} /> {dateAdded}
                   </div>
                 </div>
 
-                <div className="mb-5">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-light-brown mb-2">
-                    {t('Package includes', 'الحزمة تشمل')}
+                {formats.length > 0 && (
+                  <div className="mb-5">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-light-brown mb-2">
+                      {t('Package includes', 'الحزمة تشمل')}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {formats.map(f => {
+                        const c = FORMAT_COLOR[f] || '#888';
+                        return (
+                          <span key={f} className="text-[10px] font-bold px-2 py-1 rounded font-mono"
+                            style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>
+                            .{f.toLowerCase()}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {model.formats.map(f => {
-                      const c = FORMAT_COLOR[f] || '#888';
-                      return (
-                        <span key={f} className="text-[10px] font-bold px-2 py-1 rounded font-mono"
-                          style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>
-                          .{f.toLowerCase()}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
+                )}
 
-                <button onClick={handleDownload}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all hover:opacity-90 mb-3"
+                <button onClick={handleDownload} disabled={files.length === 0 || !!downloading}
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-sm transition-all hover:opacity-90 mb-3 disabled:opacity-50"
                   style={{ background: '#2B1B0E', color: '#F7F4EF' }}>
-                  <Download size={16} />
+                  {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                   {t('Download Model', 'تحميل الموديل')}
                 </button>
 
@@ -304,41 +427,15 @@ export default function LibraryDetail() {
                 </button>
               </div>
 
-              {/* Trial alert */}
-              {showAlert && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl p-5 border"
-                  style={{ background: '#FFF8ED', borderColor: '#B68D5740' }}>
-                  <div className="flex items-start gap-3">
-                    <AlertCircle size={18} style={{ color: '#B68D57' }} className="flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-dark-brown text-sm mb-1">
-                        {t('Trial Model', 'موديل تجريبي')}
-                      </p>
-                      <p className="text-xs text-medium-brown leading-relaxed">
-                        {t(
-                          'This file is for preview and testing purposes only and is not available for download at this time.',
-                          'هذا الملف تجريبي وغير متاح للتحميل حاليًا. سيتم إتاحته عند إطلاق المنصة رسمياً.'
-                        )}
-                      </p>
-                      <button onClick={() => setAlert(false)}
-                        className="mt-3 text-xs font-semibold hover:underline" style={{ color: '#B68D57' }}>
-                        {t('Dismiss', 'إغلاق')}
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
               {/* Info */}
               <div className="bg-white rounded-2xl p-5 border border-sand">
                 <h3 className="font-bold text-dark-brown text-sm mb-4">{t('Model Info', 'معلومات الموديل')}</h3>
                 <div className="space-y-3">
                   {[
-                    { icon: <HardDrive size={13} />, label: t('File Size', 'الحجم'), value: model.fileSize },
-                    { icon: <Tag size={13} />, label: t('License', 'الترخيص'), value: model.license },
-                    { icon: <BadgeCheck size={13} />, label: t('Status', 'الحالة'), value: model.verified ? t('Verified', 'موثق') : t('Pending', 'قيد المراجعة') },
-                    { icon: <Calendar size={13} />, label: t('Added', 'أُضيف'), value: model.dateAdded },
+                    { icon: <HardDrive size={13} />, label: t('File Size', 'الحجم'), value: fileSize },
+                    { icon: <Tag size={13} />, label: t('License', 'الترخيص'), value: product.license_type || '—' },
+                    { icon: <BadgeCheck size={13} />, label: t('Status', 'الحالة'), value: product.verification_status === 'verified' ? t('Verified', 'موثق') : t('Approved', 'معتمد') },
+                    { icon: <Calendar size={13} />, label: t('Added', 'أُضيف'), value: dateAdded },
                   ].map((row, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-light-brown text-xs">
@@ -367,17 +464,24 @@ export default function LibraryDetail() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {similar.map(m => {
-                const n = lang === 'ar' ? m.nameAr : m.nameEn;
+                const n = lang === 'ar' ? m.product_name_ar : m.product_name_en;
+                const simFormats = [...new Set((m.product_files || []).map(f => f.file_format).filter(Boolean))];
+                const simImg = m.featured_image_path
+                  ? storageService.getPublicUrl(m.featured_image_path)
+                  : null;
                 return (
                   <Link key={m.id} to={`/library/${m.id}`} className="group">
                     <div className="bg-white rounded-2xl overflow-hidden border border-sand hover:border-gold/40 hover:shadow-card transition-all">
-                      <div className="relative overflow-hidden" style={{ paddingBottom: '60%' }}>
-                        <ModelPreview model={m} />
+                      <div className="relative overflow-hidden h-40">
+                        {simImg
+                          ? <img src={simImg} alt={n} className="w-full h-full object-cover" />
+                          : <ModelPreview model={{ category: m.categories?.code?.toLowerCase() || 'furniture', nameEn: n, format: simFormats[0] || '3D', softwareVersion: '' }} />
+                        }
                       </div>
                       <div className="p-4">
                         <h3 className="font-bold text-dark-brown text-sm line-clamp-2 mb-2">{n}</h3>
                         <div className="flex items-center gap-1">
-                          {m.formats.slice(0, 3).map(f => {
+                          {simFormats.slice(0, 3).map(f => {
                             const c = FORMAT_COLOR[f] || '#888';
                             return (
                               <span key={f} className="text-[8px] font-bold px-1.5 py-0.5 rounded font-mono"

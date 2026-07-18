@@ -90,7 +90,7 @@ export const reviewService = {
     if (!SUPABASE_CONFIGURED) return;
     const { data, error } = await supabase
       .from('products')
-      .update({ status: 'rejected', rejection_reason: notes })
+      .update({ status: 'revision_required', rejection_reason: notes, admin_notes: notes })
       .eq('id', productId)
       .select()
       .single();

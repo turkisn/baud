@@ -15,7 +15,8 @@ export const productService = {
         *,
         categories(code, name_ar, name_en),
         subcategories(code, name_ar, name_en),
-        product_images(image_path, is_primary, sort_order)
+        product_images(image_path, is_primary, sort_order),
+        product_files(id, file_format, original_file_name, is_primary)
       `)
       .eq('created_by', userId)
       .order('created_at', { ascending: false });
