@@ -5,7 +5,8 @@
       "name": "buad-dev",
       "runtimeExecutable": "/Users/macbook/nodejs-local/bin/npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": false
     }
   ]
 }
