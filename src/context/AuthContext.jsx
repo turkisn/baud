@@ -39,20 +39,22 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Check existing session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(mergeProfile(session.user, profile));
-      }
-      setLoading(false);
-    });
-
-    // Subscribe to future auth changes
+    // Single source of truth: onAuthStateChange fires INITIAL_SESSION immediately
+    // on subscription (reads from localStorage, no network), then SIGNED_IN / SIGNED_OUT
+    // as the session changes. No need for a separate getSession() call.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[BUAD:auth] event:', event, '| user:', session?.user?.email ?? null);
+
       if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(mergeProfile(session.user, profile));
+        try {
+          const profile = await fetchProfile(session.user.id);
+          console.log('[BUAD:auth] profile fetched:', profile?.role ?? 'none');
+          setUser(mergeProfile(session.user, profile));
+        } catch (err) {
+          // Profile table not accessible — use auth data only; user is still authenticated
+          console.warn('[BUAD:auth] fetchProfile error (using auth data only):', err?.message);
+          setUser(mergeProfile(session.user, null));
+        }
       } else {
         setUser(null);
       }
@@ -99,10 +101,16 @@ export function AuthProvider({ children }) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error('بريد إلكتروني أو كلمة مرور غير صحيحة');
-    // Set user immediately so the Navbar updates before onAuthStateChange's
-    // async fetchProfile resolves — prevents flash of unauthenticated state.
-    // onAuthStateChange will overwrite this with the full profile shortly after.
-    if (data.user) setUser(mergeProfile(data.user, null));
+    // Set user immediately (with auth data, before profile loads) so the useEffect in
+    // Login.jsx triggers navigation right away. onAuthStateChange SIGNED_IN will
+    // overwrite this with the full profile once fetchProfile resolves.
+    // IMPORTANT: Login.jsx must NOT call navigate('/') directly — it should only navigate
+    // via its useEffect that watches user, so navigation is guaranteed to happen AFTER
+    // React commits this setUser() call.
+    if (data.user) {
+      console.log('[BUAD:auth] signInWithPassword success, setting user immediately:', data.user.email);
+      setUser(mergeProfile(data.user, null));
+    }
     return data;
   };
 

@@ -92,9 +92,11 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === 'login') {
-        // login() handles both real Supabase and mock demo accounts
+        // login() triggers onAuthStateChange SIGNED_IN → setUser() → useEffect navigates to '/'.
+        // Do NOT call navigate('/') here — it would race with setUser() in concurrent React 18,
+        // causing Navbar to mount before user state is committed (shows "Sign in" flash).
         await login(form.email, form.password);
-        navigate('/');
+        // navigation is handled by the useEffect below that watches user
       } else {
         // authService.signUp() includes role in user_metadata for the DB trigger
         const role = userTypes[userTypeIdx].id;

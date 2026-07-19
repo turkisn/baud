@@ -24,6 +24,10 @@ export default function Navbar() {
   const location                    = useLocation();
   const navigate                    = useNavigate();
 
+  useEffect(() => {
+    console.log('[BUAD:navbar] user changed:', user?.email ?? null, '| role:', user?.role ?? null);
+  }, [user]);
+
   const isHome      = location.pathname === '/';
   const transparent = isHome && !scrolled;
 
