@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -36,8 +36,16 @@ function mapError(err) {
 
 export default function Login() {
   const { t, lang, toggleLang } = useLanguage();
-  const { login, register }     = useAuth();
-  const navigate                = useNavigate();
+  const { login, register, user } = useAuth();
+  const navigate                  = useNavigate();
+
+  // If user is already authenticated (e.g. arrived here after clicking the
+  // email confirmation link — Supabase appends #access_token=… to the URL,
+  // the JS client processes it via onAuthStateChange, and AuthContext sets user),
+  // redirect them away from the login page immediately.
+  useEffect(() => {
+    if (user) navigate('/', { replace: true });
+  }, [user, navigate]);
 
   const [mode, setMode]         = useState('login');
   const [showPass, setShowPass] = useState(false);

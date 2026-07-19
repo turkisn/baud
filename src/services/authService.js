@@ -6,7 +6,13 @@ export const authService = {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role } },
+      options: {
+        data: { full_name: fullName, role },
+        // Always redirect back to this domain, regardless of Supabase Site URL setting.
+        // The hash fragment (#access_token=…) is processed automatically by the Supabase
+        // JS client on the /login page, which then fires onAuthStateChange.
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
     if (error) throw error;
     // Profile is created automatically by the handle_new_user DB trigger,

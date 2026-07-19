@@ -110,7 +110,10 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, role } },
+      options: {
+        data: { full_name: fullName, role },
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
     if (error) throw error;
     // Profile created by handle_new_user DB trigger — no manual upsert.
