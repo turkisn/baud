@@ -99,6 +99,7 @@ export default function Login() {
         setSuccess(true);
       }
     } catch (err) {
+      console.error('[BUAD auth error]', err);
       setError(mapError(err));
     } finally {
       setLoading(false);
@@ -243,12 +244,27 @@ export default function Login() {
             </p>
           </motion.div>
 
-          {/* Demo accounts notice when Supabase is configured */}
+          {/* Demo accounts notice (login mode, no Supabase) */}
           {!SUPABASE_CONFIGURED && mode === 'login' && (
             <motion.div variants={fadeInUp} className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
               <p className="font-semibold">{t('Demo accounts:', 'حسابات تجريبية:')}</p>
               <p>admin@buad.com / admin123</p>
               <p>supplier@buad.com / sup123</p>
+            </motion.div>
+          )}
+
+          {/* Supabase not configured warning (signup mode) */}
+          {!SUPABASE_CONFIGURED && mode === 'signup' && (
+            <motion.div variants={fadeInUp} className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800">
+              <p className="font-semibold mb-1">
+                {t('Registration unavailable', 'التسجيل غير مفعّل')}
+              </p>
+              <p>
+                {t(
+                  'Supabase environment variables are not configured in Vercel. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel → Settings → Environment Variables, then redeploy.',
+                  'متغيرات Supabase غير موجودة في Vercel. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في Vercel → Settings → Environment Variables ثم أعد النشر.'
+                )}
+              </p>
             </motion.div>
           )}
 

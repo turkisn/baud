@@ -9,15 +9,10 @@ export const authService = {
       options: { data: { full_name: fullName, role } },
     });
     if (error) throw error;
-    // Update profile with role (trigger creates profile, but may miss role)
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: fullName,
-        email,
-        role,
-      });
-    }
+    // Profile is created automatically by the handle_new_user DB trigger,
+    // which reads role from raw_user_meta_data. No manual upsert needed —
+    // a direct upsert would bypass the trigger and fail RLS (no session
+    // while email confirmation is pending).
     return data;
   },
 

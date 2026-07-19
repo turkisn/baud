@@ -113,15 +113,7 @@ export function AuthProvider({ children }) {
       options: { data: { full_name: fullName, role } },
     });
     if (error) throw error;
-
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: fullName,
-        email,
-        role,
-      });
-    }
+    // Profile created by handle_new_user DB trigger — no manual upsert.
     return data;
   };
 
