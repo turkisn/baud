@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X, Globe, LogOut, LayoutDashboard } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 const navLinks = [
   { path: '/marketplace',  en: 'Marketplace',  ar: 'المتجر' },
@@ -19,10 +20,17 @@ export default function Navbar() {
   const [scrolled, setScrolled]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { lang, toggleLang, t }     = useLanguage();
+  const { user, logout }            = useAuth();
   const location                    = useLocation();
+  const navigate                    = useNavigate();
 
   const isHome      = location.pathname === '/';
   const transparent = isHome && !scrolled;
+
+  // First letter of name for avatar bubble
+  const initial = (user?.name || user?.email || '?')[0].toUpperCase();
+  // Truncate to first word for display
+  const displayName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
@@ -31,6 +39,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   return (
     <motion.nav
@@ -87,7 +100,7 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* ── Actions ── */}
+          {/* ── Desktop Actions ── */}
           <div className="hidden lg:flex items-center gap-2">
             <button
               onClick={toggleLang}
@@ -98,25 +111,56 @@ export default function Navbar() {
               {lang === 'ar' ? 'EN' : 'عربي'}
             </button>
 
-            <Link
-              to="/login"
-              className="px-3 py-2 rounded-lg text-[13px] font-medium transition-all"
-              style={{ color: transparent ? 'rgba(247,244,239,0.7)' : '#6E5847' }}
-            >
-              {t('Sign in', 'دخول')}
-            </Link>
+            {user ? (
+              <>
+                {/* User name → dashboard */}
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all"
+                  style={{ color: transparent ? 'rgba(247,244,239,0.85)' : '#2B1B0E' }}
+                >
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                    style={{ background: 'rgba(182,141,87,0.25)', color: '#B68D57' }}
+                  >
+                    {initial}
+                  </span>
+                  {displayName}
+                </Link>
 
-            <Link
-              to="/login"
-              className="flex items-center gap-2 font-semibold text-[13px] px-5 py-2.5 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: '#B68D57',
-                color: '#2B1B0E',
-                boxShadow: '0 4px 16px rgba(182,141,87,0.28)',
-              }}
-            >
-              {t('Get Started', 'ابدأ الآن')}
-            </Link>
+                {/* Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all hover:opacity-70"
+                  style={{ color: transparent ? 'rgba(247,244,239,0.7)' : '#6E5847' }}
+                >
+                  <LogOut size={14} />
+                  {t('Sign Out', 'خروج')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-3 py-2 rounded-lg text-[13px] font-medium transition-all"
+                  style={{ color: transparent ? 'rgba(247,244,239,0.7)' : '#6E5847' }}
+                >
+                  {t('Sign in', 'دخول')}
+                </Link>
+
+                <Link
+                  to="/login"
+                  className="flex items-center gap-2 font-semibold text-[13px] px-5 py-2.5 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: '#B68D57',
+                    color: '#2B1B0E',
+                    boxShadow: '0 4px 16px rgba(182,141,87,0.28)',
+                  }}
+                >
+                  {t('Get Started', 'ابدأ الآن')}
+                </Link>
+              </>
+            )}
           </div>
 
           {/* ── Mobile buttons ── */}
@@ -165,19 +209,57 @@ export default function Navbar() {
                   {lang === 'ar' ? link.ar : link.en}
                 </Link>
               ))}
+
               <div className="pt-4 flex flex-col gap-2 border-t mt-2" style={{ borderColor: 'rgba(182,141,87,0.2)' }}>
-                <Link to="/login"
-                  className="w-full text-center py-3 rounded-xl font-semibold text-sm transition-all"
-                  style={{ background: '#B68D57', color: '#2B1B0E' }}
-                >
-                  {t('Get Started', 'ابدأ الآن')}
-                </Link>
-                <Link to="/login"
-                  className="w-full text-center py-3 rounded-xl font-medium text-sm transition-all"
-                  style={{ border: '1.5px solid rgba(43,27,14,0.2)', color: '#2B1B0E' }}
-                >
-                  {t('Sign in', 'دخول')}
-                </Link>
+                {user ? (
+                  <>
+                    {/* User info row */}
+                    <div className="flex items-center gap-3 px-4 py-2">
+                      <span
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                        style={{ background: 'rgba(182,141,87,0.2)', color: '#B68D57' }}
+                      >
+                        {initial}
+                      </span>
+                      <span className="text-sm font-medium" style={{ color: '#2B1B0E' }}>
+                        {displayName}
+                      </span>
+                    </div>
+
+                    <Link
+                      to="/dashboard"
+                      className="w-full text-center py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                      style={{ background: '#B68D57', color: '#2B1B0E' }}
+                    >
+                      <LayoutDashboard size={15} />
+                      {t('Dashboard', 'لوحة التحكم')}
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-center py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2"
+                      style={{ border: '1.5px solid rgba(43,27,14,0.2)', color: '#2B1B0E' }}
+                    >
+                      <LogOut size={15} />
+                      {t('Sign Out', 'تسجيل الخروج')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login"
+                      className="w-full text-center py-3 rounded-xl font-semibold text-sm transition-all"
+                      style={{ background: '#B68D57', color: '#2B1B0E' }}
+                    >
+                      {t('Get Started', 'ابدأ الآن')}
+                    </Link>
+                    <Link to="/login"
+                      className="w-full text-center py-3 rounded-xl font-medium text-sm transition-all"
+                      style={{ border: '1.5px solid rgba(43,27,14,0.2)', color: '#2B1B0E' }}
+                    >
+                      {t('Sign in', 'دخول')}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

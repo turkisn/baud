@@ -99,6 +99,10 @@ export function AuthProvider({ children }) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error('بريد إلكتروني أو كلمة مرور غير صحيحة');
+    // Set user immediately so the Navbar updates before onAuthStateChange's
+    // async fetchProfile resolves — prevents flash of unauthenticated state.
+    // onAuthStateChange will overwrite this with the full profile shortly after.
+    if (data.user) setUser(mergeProfile(data.user, null));
     return data;
   };
 
