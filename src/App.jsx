@@ -24,6 +24,11 @@ import LibraryAdmin from './pages/LibraryAdmin';
 import AddProduct from './pages/products/AddProduct';
 import MyProducts from './pages/products/MyProducts';
 import ProductReview from './pages/admin/ProductReview';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminSuppliers from './pages/admin/AdminSuppliers';
+import AdminManufacturers from './pages/admin/AdminManufacturers';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminSettings from './pages/admin/AdminSettings';
 
 // Pages that should NOT show the shared Navbar/Footer
 const BARE_ROUTES = [
@@ -68,7 +73,12 @@ function Layout() {
           <Route path="/library-admin" element={<LibraryAdmin />} />
           <Route path="/products/add" element={<ProtectedRoute requireSupplier><AddProduct /></ProtectedRoute>} />
           <Route path="/my-products" element={<ProtectedRoute requireSupplier><MyProducts /></ProtectedRoute>} />
-          <Route path="/admin/products" element={<ProtectedRoute requireAdmin><ProductReview /></ProtectedRoute>} />
+          <Route path="/admin/products"       element={<ProtectedRoute requireAdmin><ProductReview /></ProtectedRoute>} />
+          <Route path="/admin/users"          element={<ProtectedRoute requireStrictAdmin><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/suppliers"      element={<ProtectedRoute requireStrictAdmin><AdminSuppliers /></ProtectedRoute>} />
+          <Route path="/admin/manufacturers"  element={<ProtectedRoute requireStrictAdmin><AdminManufacturers /></ProtectedRoute>} />
+          <Route path="/admin/categories"     element={<ProtectedRoute requireStrictAdmin><AdminCategories /></ProtectedRoute>} />
+          <Route path="/admin/settings"       element={<ProtectedRoute requireStrictAdmin><AdminSettings /></ProtectedRoute>} />
         </Routes>
       </main>
       {!isBare && <Footer />}

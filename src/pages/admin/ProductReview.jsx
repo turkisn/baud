@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CheckCircle, XCircle, MessageSquare, Eye, BadgeCheck,
-  Home, Search, ChevronDown, Package, Shield, X, ChevronRight,
+  Home, Search, Package, Shield, X, RotateCcw,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -15,19 +15,21 @@ import { CATEGORIES } from '../../data/categoriesData';
 import { fadeInUp, viewport } from '../../utils/animations';
 
 const STATUS_TABS = [
-  { id: 'all',            labelEn: 'All',              labelAr: 'الكل',              color: '#374151' },
-  { id: 'pending_review', labelEn: 'Pending Review',   labelAr: 'قيد المراجعة',      color: '#d97706' },
-  { id: 'approved',       labelEn: 'Approved',         labelAr: 'معتمد',              color: '#16a34a' },
-  { id: 'rejected',       labelEn: 'Rejected',         labelAr: 'مرفوض',              color: '#ef4444' },
-  { id: 'draft',          labelEn: 'Drafts',           labelAr: 'مسودات',             color: '#6B7280' },
+  { id: 'all',               labelEn: 'All',              labelAr: 'الكل',              color: '#374151' },
+  { id: 'pending_review',    labelEn: 'Pending Review',   labelAr: 'قيد المراجعة',      color: '#d97706' },
+  { id: 'approved',          labelEn: 'Approved',         labelAr: 'معتمد',              color: '#16a34a' },
+  { id: 'rejected',          labelEn: 'Rejected',         labelAr: 'مرفوض',              color: '#ef4444' },
+  { id: 'revision_required', labelEn: 'Needs Revision',   labelAr: 'يحتاج تعديل',       color: '#7c3aed' },
+  { id: 'draft',             labelEn: 'Drafts',           labelAr: 'مسودات',             color: '#6B7280' },
 ];
 
 const STATUS_CONFIG = {
-  draft:          { bg: '#F3F4F6', color: '#374151' },
-  pending_review: { bg: '#FEF3C7', color: '#92400E' },
-  approved:       { bg: '#D1FAE5', color: '#065F46' },
-  rejected:       { bg: '#FEE2E2', color: '#991B1B' },
-  archived:       { bg: '#F3F4F6', color: '#6B7280' },
+  draft:             { bg: '#F3F4F6', color: '#374151' },
+  pending_review:    { bg: '#FEF3C7', color: '#92400E' },
+  approved:          { bg: '#D1FAE5', color: '#065F46' },
+  rejected:          { bg: '#FEE2E2', color: '#991B1B' },
+  revision_required: { bg: '#EDE9FE', color: '#6D28D9' },
+  archived:          { bg: '#F3F4F6', color: '#6B7280' },
 };
 
 const GOLD = '#B68D57';
@@ -35,6 +37,40 @@ const DARK = '#2B1B0E';
 const IVORY = '#F7F4EF';
 const SAND = '#D6C2A1';
 const BEIGE = '#EBDFD1';
+
+function RevisionModal({ product, onConfirm, onClose, lang }) {
+  const [notes, setNotes] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md rounded-2xl p-6 border"
+        style={{ background: '#2B1B0E', borderColor: '#7c3aed30' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-white">{lang === 'ar' ? 'طلب تعديل' : 'Request Revision'}</h3>
+          <button onClick={onClose} style={{ color: '#6A5A48' }}><X size={18} /></button>
+        </div>
+        <p className="text-sm mb-3" style={{ color: '#C4A882' }}>{product.product_name_en}</p>
+        <textarea value={notes} onChange={e => setNotes(e.target.value)}
+          placeholder={lang === 'ar' ? 'ملاحظات التعديل المطلوب…' : 'Revision notes (required)…'}
+          rows={4}
+          className="w-full px-4 py-3 rounded-xl border text-sm resize-none outline-none mb-4"
+          style={{ background: '#1A1008', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold border"
+            style={{ borderColor: '#3A2A18', color: '#8A7A68' }}>
+            {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button onClick={() => notes.trim() && onConfirm(notes)} disabled={!notes.trim()}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold disabled:opacity-40"
+            style={{ background: '#7c3aed', color: 'white' }}>
+            {lang === 'ar' ? 'إرسال' : 'Send Request'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 function RejectModal({ product, onConfirm, onClose, lang }) {
   const [reason, setReason] = useState('');
@@ -72,7 +108,7 @@ function RejectModal({ product, onConfirm, onClose, lang }) {
   );
 }
 
-function ProductDetailPanel({ product, onClose, onApprove, onReject, lang }) {
+function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision, lang }) {
   if (!product) return null;
   const cat = CATEGORIES.find(c => c.id === product.category_id);
   const sc = STATUS_CONFIG[product.status] || STATUS_CONFIG.draft;
@@ -194,18 +230,24 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, lang }) {
 
           {/* Action buttons */}
           {product.status === 'pending_review' && (
-            <div className="flex gap-3 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
               <button onClick={() => onReject(product)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
+                className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-bold text-sm"
                 style={{ background: '#fee2e2', color: '#991B1B' }}>
                 <XCircle size={16} />
-                Reject
+                <span className="text-[11px]">Reject</span>
+              </button>
+              <button onClick={() => onRevision(product)}
+                className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-bold text-sm"
+                style={{ background: '#ede9fe', color: '#6d28d9' }}>
+                <RotateCcw size={16} />
+                <span className="text-[11px]">Revision</span>
               </button>
               <button onClick={() => onApprove(product.id)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm"
+                className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl font-bold text-sm"
                 style={{ background: '#d1fae5', color: '#065F46' }}>
                 <CheckCircle size={16} />
-                Approve
+                <span className="text-[11px]">Approve</span>
               </button>
             </div>
           )}
@@ -255,15 +297,16 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, lang }) {
 
 // ─── MAIN ─────────────────────────────────────────────────────
 export default function ProductReview() {
-  const { t, lang }  = useLanguage();
-  const { isAdmin }  = useAuth();
+  const { t, lang }       = useLanguage();
+  const { user, isAdmin } = useAuth();
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState('pending_review');
-  const [search, setSearch]     = useState('');
-  const [selected, setSelected] = useState(null);
-  const [rejectTarget, setRejT] = useState(null);
+  const [products, setProducts]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [tab, setTab]             = useState('pending_review');
+  const [search, setSearch]       = useState('');
+  const [selected, setSelected]   = useState(null);
+  const [rejectTarget, setRejT]   = useState(null);
+  const [revisionTarget, setRevT] = useState(null);
 
   const reload = () => {
     if (!SUPABASE_CONFIGURED) seedDemoProducts();
@@ -304,6 +347,13 @@ export default function ProductReview() {
     reload();
   };
 
+  const handleRevisionConfirm = async (notes) => {
+    await reviewService.requestRevision(revisionTarget.id, user?.id, notes);
+    setRevT(null);
+    setSelected(null);
+    reload();
+  };
+
   if (!isAdmin()) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#1A1008' }}>
@@ -328,10 +378,12 @@ export default function ProductReview() {
             <Link to="/" className="flex items-center gap-2 text-sm font-semibold hover:opacity-80"
               style={{ color: GOLD }}><Home size={15} /> BUAD</Link>
             <span style={{ color: '#4A3A28' }}>/</span>
-            <span className="text-white font-bold">Product Review Admin</span>
+            <Link to="/admin/dashboard" className="text-sm hover:opacity-80" style={{ color: '#C4A882' }}>Admin</Link>
+            <span style={{ color: '#4A3A28' }}>/</span>
+            <span className="text-white font-bold">Product Reviews</span>
           </div>
-          <Link to="/my-products" className="text-xs px-4 py-2 rounded-lg font-semibold border hover:opacity-80"
-            style={{ borderColor: '#3A2A18', color: GOLD }}>My Products</Link>
+          <Link to="/admin/dashboard" className="text-xs px-4 py-2 rounded-lg font-semibold border hover:opacity-80"
+            style={{ borderColor: '#3A2A18', color: GOLD }}>← Dashboard</Link>
         </div>
       </div>
 
@@ -428,10 +480,17 @@ export default function ProductReview() {
                           {p.status === 'pending_review' && (
                             <>
                               <button onClick={() => handleApprove(p.id)}
+                                title="Approve"
                                 className="p-1.5 rounded-lg hover:opacity-80" style={{ background: '#dcfce7', color: '#16a34a' }}>
                                 <CheckCircle size={13} />
                               </button>
+                              <button onClick={() => setRevT(p)}
+                                title="Request Revision"
+                                className="p-1.5 rounded-lg hover:opacity-80" style={{ background: '#ede9fe', color: '#6d28d9' }}>
+                                <RotateCcw size={13} />
+                              </button>
                               <button onClick={() => setRejT(p)}
+                                title="Reject"
                                 className="p-1.5 rounded-lg hover:opacity-80" style={{ background: '#fee2e2', color: '#ef4444' }}>
                                 <XCircle size={13} />
                               </button>
@@ -454,17 +513,26 @@ export default function ProductReview() {
           product={selected}
           onClose={() => setSelected(null)}
           onApprove={handleApprove}
-          onReject={(p) => { setRejT(p); }}
+          onReject={(p) => setRejT(p)}
+          onRevision={(p) => setRevT(p)}
           lang={lang}
         />
       )}
 
-      {/* Reject modal */}
       {rejectTarget && (
         <RejectModal
           product={rejectTarget}
           onConfirm={handleRejectConfirm}
           onClose={() => setRejT(null)}
+          lang={lang}
+        />
+      )}
+
+      {revisionTarget && (
+        <RevisionModal
+          product={revisionTarget}
+          onConfirm={handleRevisionConfirm}
+          onClose={() => setRevT(null)}
           lang={lang}
         />
       )}
