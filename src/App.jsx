@@ -13,7 +13,10 @@ import AIBQO from './pages/AIBQO';
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import DashboardRouter from './pages/DashboardRouter';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import SupplierDashboard from './pages/SupplierDashboard';
+import UserDashboard from './pages/UserDashboard';
 import BlockDetails from './pages/BlockDetails';
 import Library from './pages/Library';
 import LibraryDetail from './pages/LibraryDetail';
@@ -23,7 +26,16 @@ import MyProducts from './pages/products/MyProducts';
 import ProductReview from './pages/admin/ProductReview';
 
 // Pages that should NOT show the shared Navbar/Footer
-const BARE_ROUTES = ['/login', '/dashboard', '/library-admin', '/products/add', '/my-products', '/admin'];
+const BARE_ROUTES = [
+  '/login',
+  '/dashboard',
+  '/admin/dashboard',
+  '/supplier/dashboard',
+  '/library-admin',
+  '/products/add',
+  '/my-products',
+  '/admin',
+];
 
 function Layout() {
   const location = useLocation();
@@ -43,7 +55,13 @@ function Layout() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Dashboard routing — role-based redirect */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/supplier/dashboard" element={<ProtectedRoute requireSupplier><SupplierDashboard /></ProtectedRoute>} />
+          <Route path="/user/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+
           <Route path="/block/:id" element={<BlockDetails />} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/:id" element={<LibraryDetail />} />

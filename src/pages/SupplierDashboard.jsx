@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2 } from 'lucide-react';
+import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, LogOut, Home } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { blocks } from '../data/mockData';
 
 const mockLeads = [
@@ -28,9 +30,15 @@ const StatCard = ({ icon: Icon, value, label, change, color }) => (
 );
 
 export default function SupplierDashboard() {
-  const { t, lang } = useLanguage();
+  const { t, lang }          = useLanguage();
+  const { user, logout }     = useAuth();
+  const navigate             = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [uploadModal, setUploadModal] = useState(false);
+
+  const companyName  = user?.company_name || user?.name?.split(' ')[0] || 'Supplier';
+  const initial      = (user?.company_name || user?.name || user?.email || '?')[0].toUpperCase();
+
+  const handleLogout = async () => { await logout(); navigate('/'); };
 
   const tabs = [
     { id: 'overview', label: t('Overview', 'نظرة عامة') },
@@ -46,12 +54,16 @@ export default function SupplierDashboard() {
         {/* Sidebar */}
         <aside className="hidden lg:flex w-64 bg-dark-brown min-h-screen flex-col sticky top-0 h-screen overflow-y-auto">
           <div className="p-6 border-b border-medium-brown">
+            <Link to="/" className="block mb-4 text-warm-white font-bold text-lg opacity-80 hover:opacity-100 transition-opacity">
+              {lang === 'ar' ? 'بُعد' : 'Buad'}
+            </Link>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center">
-                <span className="font-bold text-dark-brown">ر</span>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-dark-brown flex-shrink-0"
+                style={{ background: '#B68D57' }}>
+                {initial}
               </div>
-              <div>
-                <div className="text-warm-white font-semibold text-sm">Al-Rajhi Materials</div>
+              <div className="min-w-0">
+                <div className="text-warm-white font-semibold text-sm truncate">{companyName}</div>
                 <div className="text-light-brown text-xs">{t('Verified Supplier', 'مورد موثق')}</div>
               </div>
             </div>
@@ -77,10 +89,18 @@ export default function SupplierDashboard() {
               </button>
             ))}
           </nav>
-          <div className="p-4 border-t border-medium-brown">
+          <div className="p-4 border-t border-medium-brown space-y-1">
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-light-brown hover:bg-medium-brown transition-all">
               <Settings size={18} />
               {t('Settings', 'الإعدادات')}
+            </button>
+            <Link to="/" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-light-brown hover:bg-medium-brown transition-all">
+              <Home size={18} />
+              {t('Back to Site', 'العودة للموقع')}
+            </Link>
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-light-brown hover:bg-medium-brown transition-all">
+              <LogOut size={18} />
+              {t('Sign Out', 'تسجيل الخروج')}
             </button>
           </div>
         </aside>
@@ -91,7 +111,7 @@ export default function SupplierDashboard() {
           <div className="bg-white border-b border-sand px-6 py-4 flex items-center justify-between sticky top-0 z-10">
             <div>
               <h1 className="text-xl font-bold text-dark-brown">{t('Supplier Dashboard', 'لوحة تحكم المورد')}</h1>
-              <p className="text-xs text-light-brown">{t('Al-Rajhi Building Materials', 'الراجحي لمواد البناء')}</p>
+              <p className="text-xs text-light-brown">{companyName}</p>
             </div>
             <div className="flex items-center gap-3">
               <button className="relative p-2 rounded-lg text-light-brown hover:bg-sand">
