@@ -53,7 +53,9 @@ export default function SupplierDashboard() {
   });
 
   useEffect(() => {
-    categoryService.getAllCategories().then(setCategories).catch(() => {});
+    categoryService.getAllCategories()
+      .then(data => { console.log('[BUAD] categories loaded:', data?.length, data); setCategories(data || []); })
+      .catch(err => { console.error('[BUAD] categories failed to load:', err); setUploadError(String(err?.message || err)); });
   }, []);
   const [selectedFiles,  setSelectedFiles]  = useState([]); // { file, name, size }
   const [selectedImages, setSelectedImages] = useState([]); // { file, name, preview }
