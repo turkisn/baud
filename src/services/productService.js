@@ -46,13 +46,11 @@ export const productService = {
     // intentional security — suppliers cannot self-approve on a single INSERT.
     // We promote to pending_review via a separate UPDATE after sub-tables are
     // saved, so that trg_auto_buod_reference can fire on the UPDATE.
-    console.log('[BUAD] INSERT payload:', { ...core, created_by: userId });
     const { data: product, error } = await supabase
       .from('products')
       .insert({ ...core, created_by: userId })
       .select()
       .single();
-    console.log('[BUAD] INSERT result:', { id: product?.id, status: product?.status, category_id: product?.category_id, error: error?.message });
     if (error) throw error;
 
     if (images.length > 0) {
@@ -144,9 +142,6 @@ export const productService = {
         .update({ status: 'pending_review' })
         .eq('id', product.id)
         .select('id, status, buod_reference');
-
-      // Log every time so browser console shows exactly what happened
-      console.log('[BUAD] status UPDATE result:', { updatedRows, error: statusErr?.message, productId: product.id });
 
       if (statusErr) throw statusErr;
 

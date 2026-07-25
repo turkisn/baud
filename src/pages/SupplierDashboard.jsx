@@ -54,7 +54,7 @@ export default function SupplierDashboard() {
 
   useEffect(() => {
     categoryService.getAllCategories()
-      .then(data => { console.log('[BUAD] categories loaded:', data?.length, data); setCategories(data || []); })
+      .then(data => setCategories(data || []))
       .catch(err => { console.error('[BUAD] categories failed to load:', err); setUploadError(String(err?.message || err)); });
   }, []);
   const [selectedFiles,  setSelectedFiles]  = useState([]); // { file, name, size }
