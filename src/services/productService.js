@@ -4,6 +4,13 @@ import * as mock from './productsService';
 // ── helpers ───────────────────────────────────────────────────
 function mapMockToDb(p) { return p; } // mock already matches display shape
 
+// Valid values for the product_files.file_format CHECK constraint.
+// '3DS' is added in migration 009; until that migration runs, the service
+// maps unknown extensions to 'OTHER' to avoid constraint violations.
+const VALID_FILE_FORMATS = new Set([
+  'RFA','RVT','MAX','FBX','OBJ','SKP','DWG','IFC','PDF','ZIP','3DS','OTHER',
+]);
+
 // ── public ────────────────────────────────────────────────────
 export const productService = {
   // ── My Products ──────────────────────────────────────────────
@@ -27,7 +34,18 @@ export const productService = {
   // ── Create product (draft or pending_review) ─────────────────
   async createProduct(userId, productData) {
     if (!SUPABASE_CONFIGURED) return mock.createProduct(userId, productData);
-    const { images = [], files = [], specifications = [], materials = [], components = [], ...core } = productData;
+
+    const {
+      images = [], files = [], specifications = [], materials = [], components = [],
+      status: requestedStatus,
+      ...core
+    } = productData;
+
+    // INSERT always produces status='draft': the enforce_product_column_acl
+    // BEFORE INSERT trigger forces it for all non-admin callers. This is
+    // intentional security — suppliers cannot self-approve on a single INSERT.
+    // We promote to pending_review via a separate UPDATE after sub-tables are
+    // saved, so that trg_auto_buod_reference can fire on the UPDATE.
     const { data: product, error } = await supabase
       .from('products')
       .insert({ ...core, created_by: userId })
@@ -36,7 +54,7 @@ export const productService = {
     if (error) throw error;
 
     if (images.length > 0) {
-      await supabase.from('product_images').insert(
+      const { error: imgErr } = await supabase.from('product_images').insert(
         images.map((img, i) => ({
           product_id: product.id,
           image_path: img.path || img.url,
@@ -45,21 +63,29 @@ export const productService = {
           is_primary: i === 0,
         }))
       );
+      if (imgErr) throw imgErr;
     }
 
     if (files.length > 0) {
-      await supabase.from('product_files').insert(
-        files.map(f => ({
-          product_id: product.id,
-          file_path: f.path,
-          original_file_name: f.name,
-          file_size: f.size,
-          file_format: (f.name?.split('.').pop() || 'OTHER').toUpperCase(),
-          software_name: f.software,
-          software_version: f.softwareVersion,
-          file_type: f.fileType || 'block',
-        }))
+      const { error: fileErr } = await supabase.from('product_files').insert(
+        files.map(f => {
+          const ext = (f.name?.split('.').pop() || '').toUpperCase();
+          // Map to the valid file_format values from the DB CHECK constraint.
+          // Unknown extensions (e.g. 3DS is not yet in the constraint) use 'OTHER'.
+          const file_format = VALID_FILE_FORMATS.has(ext) ? ext : 'OTHER';
+          return {
+            product_id:         product.id,
+            file_path:          f.path,
+            original_file_name: f.name,
+            file_size:          f.size,
+            file_format,
+            software_name:      f.software,
+            software_version:   f.softwareVersion,
+            file_type:          f.fileType || 'block',
+          };
+        })
       );
+      if (fileErr) throw fileErr;
     }
 
     if (specifications.length > 0) {
@@ -101,6 +127,25 @@ export const productService = {
           unit: c.unit,
         }))
       );
+    }
+
+    // Promote to pending_review via UPDATE so that:
+    //   1. enforce_product_column_acl (UPDATE path) resets only admin-only columns
+    //   2. trg_auto_buod_reference fires on status change draft→pending_review
+    //      and generates the BUOD reference.
+    // This UPDATE is permitted by the products_owner_update RLS policy:
+    //   USING  (created_by = auth.uid() AND OLD.status = 'draft')
+    //   WITH CHECK (NEW.status = 'pending_review')
+    if (requestedStatus === 'pending_review') {
+      const { error: statusErr } = await supabase
+        .from('products')
+        .update({ status: 'pending_review' })
+        .eq('id', product.id);
+      if (statusErr) throw statusErr;
+
+      const { data: updated } = await supabase
+        .from('products').select().eq('id', product.id).single();
+      return updated ?? product;
     }
 
     return product;

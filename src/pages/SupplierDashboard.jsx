@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, LogOut, Home, X, FileText, Image as ImgIcon, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { blocks } from '../data/mockData';
 import { storageService } from '../services/storageService';
 import { productService } from '../services/productService';
+import { categoryService } from '../services/categoryService';
 
 const mockLeads = [
   { name: 'Eng. Ahmad Al-Shehri', company: 'Dar Al-Omran Architects', product: 'Najdi Arch Column', date: '2025-05-12', status: 'hot' },
@@ -46,9 +47,14 @@ export default function SupplierDashboard() {
   const filesInputRef   = useRef(null);
   const imagesInputRef  = useRef(null);
 
+  const [categories, setCategories] = useState([]);
   const [uploadForm, setUploadForm] = useState({
-    productNameEn: '', productNameAr: '', category: '', price: '', description: '', materials: '',
+    productNameEn: '', productNameAr: '', categoryId: '', price: '', description: '', materials: '',
   });
+
+  useEffect(() => {
+    categoryService.getAllCategories().then(setCategories).catch(() => {});
+  }, []);
   const [selectedFiles,  setSelectedFiles]  = useState([]); // { file, name, size }
   const [selectedImages, setSelectedImages] = useState([]); // { file, name, preview }
   const [uploading,  setUploading]  = useState(false);
@@ -117,6 +123,7 @@ export default function SupplierDashboard() {
         product_name_ar:       uploadForm.productNameAr,
         short_description_en:  uploadForm.description,
         short_description_ar:  uploadForm.description,
+        category_id:           uploadForm.categoryId || null,
         is_free:               !uploadForm.price || parseFloat(uploadForm.price) === 0,
         price:                 parseFloat(uploadForm.price) || null,
         currency:              'SAR',
@@ -132,7 +139,7 @@ export default function SupplierDashboard() {
           ? t('✓ Product submitted for review!', '✓ تم إرسال المنتج للمراجعة!')
           : t('✓ Draft saved successfully!', '✓ تم حفظ المسودة!')
       );
-      setUploadForm({ productNameEn: '', productNameAr: '', category: '', price: '', description: '', materials: '' });
+      setUploadForm({ productNameEn: '', productNameAr: '', categoryId: '', price: '', description: '', materials: '' });
       setSelectedFiles([]);
       setSelectedImages([]);
     } catch (err) {
@@ -442,16 +449,15 @@ export default function SupplierDashboard() {
                       <label className="block text-sm font-medium text-dark-brown mb-2">{t('Category', 'الفئة')}</label>
                       <select
                         className="input-field"
-                        value={uploadForm.category}
-                        onChange={e => setUploadForm(f => ({ ...f, category: e.target.value }))}
+                        value={uploadForm.categoryId}
+                        onChange={e => setUploadForm(f => ({ ...f, categoryId: e.target.value }))}
                       >
                         <option value="">— {t('Select', 'اختر')} —</option>
-                        <option>Architectural Elements</option>
-                        <option>Decorative Screens</option>
-                        <option>Furniture</option>
-                        <option>Landscape</option>
-                        <option>Lighting</option>
-                        <option>Structural</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.icon ? `${cat.icon} ` : ''}{lang === 'ar' ? cat.name_ar : cat.name_en}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>

@@ -27,7 +27,8 @@ export const reviewService = {
         *,
         categories(code, name_ar, name_en),
         subcategories(code, name_ar, name_en),
-        product_images(image_path, is_primary)
+        product_images(image_path, is_primary),
+        files:product_files(file_format, original_file_name, software_name, file_size)
       `)
       .order('updated_at', { ascending: false });
     if (status) q = q.eq('status', status);

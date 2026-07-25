@@ -200,13 +200,13 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision,
           )}
 
           {/* Files */}
-          {product.files?.filter(f => f.file_name_original).length > 0 && (
+          {product.files?.filter(f => f.original_file_name).length > 0 && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#6E5847' }}>Files</p>
-              {product.files.filter(f => f.file_name_original).map((f, i) => (
+              {product.files.filter(f => f.original_file_name).map((f, i) => (
                 <div key={i} className="flex items-center gap-3 py-2 border-b" style={{ borderColor: SAND }}>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono" style={{ background: GOLD + '20', color: DARK }}>.{f.file_format?.toLowerCase()}</span>
-                  <span className="text-xs flex-1 truncate" style={{ color: DARK }}>{f.file_name_original}</span>
+                  <span className="text-xs flex-1 truncate" style={{ color: DARK }}>{f.original_file_name}</span>
                   <span className="text-[10px]" style={{ color: '#9CA3AF' }}>{f.software_name}</span>
                 </div>
               ))}
@@ -468,7 +468,7 @@ export default function ProductReview() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs font-bold" style={{ color: '#C4A882' }}>
-                        {p.files?.filter(f => f.file_name_original).length || 0}
+                        {p.files?.filter(f => f.original_file_name).length || 0}
                       </td>
                       <td className="px-4 py-3 text-xs" style={{ color: '#6A5A48' }}>{p.created_at}</td>
                       <td className="px-4 py-3">
