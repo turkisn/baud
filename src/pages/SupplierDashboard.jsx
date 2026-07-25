@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, LogOut, Home } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, LogOut, Home, X, FileText, Image as ImgIcon, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { blocks } from '../data/mockData';
+import { storageService } from '../services/storageService';
+import { productService } from '../services/productService';
 
 const mockLeads = [
   { name: 'Eng. Ahmad Al-Shehri', company: 'Dar Al-Omran Architects', product: 'Najdi Arch Column', date: '2025-05-12', status: 'hot' },
@@ -39,6 +41,107 @@ export default function SupplierDashboard() {
   const initial      = (user?.company_name || user?.name || user?.email || '?')[0].toUpperCase();
 
   const handleLogout = async () => { await logout(); navigate('/'); };
+
+  // ── Upload tab state ──────────────────────────────────────────
+  const filesInputRef   = useRef(null);
+  const imagesInputRef  = useRef(null);
+
+  const [uploadForm, setUploadForm] = useState({
+    productNameEn: '', productNameAr: '', category: '', price: '', description: '', materials: '',
+  });
+  const [selectedFiles,  setSelectedFiles]  = useState([]); // { file, name, size }
+  const [selectedImages, setSelectedImages] = useState([]); // { file, name, preview }
+  const [uploading,  setUploading]  = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [uploadError,   setUploadError]   = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+
+  const handleFilesChange = useCallback((e) => {
+    const picked = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [
+      ...prev,
+      ...picked.map(f => ({ file: f, name: f.name, size: f.size })),
+    ]);
+    e.target.value = '';
+  }, []);
+
+  const handleImagesChange = useCallback((e) => {
+    const picked = Array.from(e.target.files || []);
+    setSelectedImages(prev => [
+      ...prev,
+      ...picked.map(f => ({ file: f, name: f.name, preview: URL.createObjectURL(f) })),
+    ]);
+    e.target.value = '';
+  }, []);
+
+  const removeFile  = (i) => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i));
+  const removeImage = (i) => {
+    setSelectedImages(prev => {
+      URL.revokeObjectURL(prev[i].preview);
+      return prev.filter((_, idx) => idx !== i);
+    });
+  };
+
+  const fmtSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes > 1e6) return ` (${(bytes / 1e6).toFixed(1)} MB)`;
+    return ` (${(bytes / 1e3).toFixed(0)} KB)`;
+  };
+
+  const handleProductSubmit = async (status) => {
+    setUploadError('');
+    setUploadSuccess('');
+    if (!uploadForm.productNameEn && !uploadForm.productNameAr) {
+      setUploadError(t('Product name is required.', 'اسم المنتج مطلوب.'));
+      return;
+    }
+    setUploading(true);
+    try {
+      const uid = user?.id || 'u-guest';
+
+      setUploadProgress(t('Uploading 3D files…', 'جارٍ رفع الملفات ثلاثية الأبعاد…'));
+      const uploadedFiles = await Promise.all(
+        selectedFiles.map(({ file }) => storageService.uploadProductFile(uid, file))
+      );
+
+      setUploadProgress(t('Uploading images…', 'جارٍ رفع الصور…'));
+      const uploadedImages = await Promise.all(
+        selectedImages.map(({ file }, i) =>
+          storageService.uploadProductImage(uid, file).then(res => ({ ...res, is_primary: i === 0 }))
+        )
+      );
+
+      setUploadProgress(t('Saving product…', 'جارٍ حفظ المنتج…'));
+      await productService.createProduct(uid, {
+        product_name_en:       uploadForm.productNameEn,
+        product_name_ar:       uploadForm.productNameAr,
+        short_description_en:  uploadForm.description,
+        short_description_ar:  uploadForm.description,
+        is_free:               !uploadForm.price || parseFloat(uploadForm.price) === 0,
+        price:                 parseFloat(uploadForm.price) || null,
+        currency:              'SAR',
+        status,
+        visibility:            'private',
+        featured_image_path:   uploadedImages[0]?.path || null,
+        images:                uploadedImages,
+        files:                 uploadedFiles,
+      });
+
+      setUploadSuccess(
+        status === 'pending_review'
+          ? t('✓ Product submitted for review!', '✓ تم إرسال المنتج للمراجعة!')
+          : t('✓ Draft saved successfully!', '✓ تم حفظ المسودة!')
+      );
+      setUploadForm({ productNameEn: '', productNameAr: '', category: '', price: '', description: '', materials: '' });
+      setSelectedFiles([]);
+      setSelectedImages([]);
+    } catch (err) {
+      setUploadError(err.message || t('Upload failed. Please try again.', 'فشل الرفع. يرجى المحاولة مجددًا.'));
+    } finally {
+      setUploading(false);
+      setUploadProgress('');
+    }
+  };
 
   const tabs = [
     { id: 'overview', label: t('Overview', 'نظرة عامة') },
@@ -311,18 +414,38 @@ export default function SupplierDashboard() {
               <div className="max-w-2xl">
                 <h2 className="text-xl font-bold text-dark-brown mb-6">{t('Upload New Product', 'رفع منتج جديد')}</h2>
                 <div className="bg-white rounded-2xl border border-sand p-6 space-y-5">
+
+                  {/* Product names */}
                   <div>
                     <label className="block text-sm font-medium text-dark-brown mb-2">{t('Product Name (English)', 'اسم المنتج (الإنجليزية)')}</label>
-                    <input className="input-field" placeholder="e.g. Najdi Column Capital" />
+                    <input
+                      className="input-field"
+                      placeholder="e.g. Najdi Column Capital"
+                      value={uploadForm.productNameEn}
+                      onChange={e => setUploadForm(f => ({ ...f, productNameEn: e.target.value }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-brown mb-2">{t('Product Name (Arabic)', 'اسم المنتج (العربية)')}</label>
-                    <input className="input-field text-right" placeholder="مثال: تاج عمود نجدي" dir="rtl" />
+                    <input
+                      className="input-field text-right"
+                      placeholder="مثال: تاج عمود نجدي"
+                      dir="rtl"
+                      value={uploadForm.productNameAr}
+                      onChange={e => setUploadForm(f => ({ ...f, productNameAr: e.target.value }))}
+                    />
                   </div>
+
+                  {/* Category + Price */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-dark-brown mb-2">{t('Category', 'الفئة')}</label>
-                      <select className="input-field">
+                      <select
+                        className="input-field"
+                        value={uploadForm.category}
+                        onChange={e => setUploadForm(f => ({ ...f, category: e.target.value }))}
+                      >
+                        <option value="">— {t('Select', 'اختر')} —</option>
                         <option>Architectural Elements</option>
                         <option>Decorative Screens</option>
                         <option>Furniture</option>
@@ -333,39 +456,182 @@ export default function SupplierDashboard() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-dark-brown mb-2">{t('Price (SAR)', 'السعر (ريال)')}</label>
-                      <input type="number" className="input-field" placeholder="0" />
+                      <input
+                        type="number"
+                        className="input-field"
+                        placeholder="0"
+                        value={uploadForm.price}
+                        onChange={e => setUploadForm(f => ({ ...f, price: e.target.value }))}
+                      />
                     </div>
                   </div>
+
+                  {/* Description */}
                   <div>
                     <label className="block text-sm font-medium text-dark-brown mb-2">{t('Description', 'الوصف')}</label>
-                    <textarea className="input-field h-24 resize-none" placeholder={t('Describe your product...', 'صف منتجك...')} />
+                    <textarea
+                      className="input-field h-24 resize-none"
+                      placeholder={t('Describe your product...', 'صف منتجك...')}
+                      value={uploadForm.description}
+                      onChange={e => setUploadForm(f => ({ ...f, description: e.target.value }))}
+                    />
                   </div>
+
+                  {/* ── 3D Files ─────────────────────────────────── */}
                   <div>
                     <label className="block text-sm font-medium text-dark-brown mb-2">{t('3D Files', 'ملفات ثلاثية الأبعاد')}</label>
-                    <div className="border-2 border-dashed border-sand rounded-xl p-8 text-center hover:border-dark-brown transition-colors cursor-pointer">
+
+                    {/* Hidden file input */}
+                    <input
+                      ref={filesInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".dwg,.rvt,.skp,.obj,.fbx,.3ds"
+                      multiple
+                      onChange={handleFilesChange}
+                    />
+
+                    {/* Click target */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => filesInputRef.current?.click()}
+                      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && filesInputRef.current?.click()}
+                      className="border-2 border-dashed border-sand rounded-xl p-8 text-center hover:border-dark-brown transition-colors cursor-pointer select-none"
+                    >
                       <Upload size={28} className="text-light-brown mx-auto mb-3" />
                       <p className="text-sm font-medium text-dark-brown mb-1">
                         {t('Drop files here or click to browse', 'اسحب الملفات هنا أو انقر للاستعراض')}
                       </p>
                       <p className="text-xs text-light-brown">{t('Supports: DWG, RVT, SKP, OBJ, FBX, 3DS', 'يدعم: DWG, RVT, SKP, OBJ, FBX, 3DS')}</p>
                     </div>
+
+                    {/* Selected 3D files list */}
+                    {selectedFiles.length > 0 && (
+                      <ul className="mt-3 space-y-2">
+                        {selectedFiles.map((f, i) => (
+                          <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-warm-white border border-sand text-sm">
+                            <FileText size={15} className="text-gold flex-shrink-0" />
+                            <span className="flex-1 truncate text-dark-brown font-medium">
+                              {f.name}<span className="text-light-brown font-normal">{fmtSize(f.size)}</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(i)}
+                              className="text-light-brown hover:text-red-500 transition-colors flex-shrink-0"
+                              aria-label="Remove file"
+                            >
+                              <X size={15} />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
+
+                  {/* ── Product Images ────────────────────────────── */}
                   <div>
                     <label className="block text-sm font-medium text-dark-brown mb-2">{t('Product Images', 'صور المنتج')}</label>
-                    <div className="border-2 border-dashed border-sand rounded-xl p-6 text-center hover:border-dark-brown transition-colors cursor-pointer">
-                      <p className="text-sm text-light-brown">{t('Upload product renders or photos', 'ارفع صور أو مجسمات المنتج')}</p>
+
+                    {/* Hidden file input */}
+                    <input
+                      ref={imagesInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                      multiple
+                      onChange={handleImagesChange}
+                    />
+
+                    {/* Click target */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => imagesInputRef.current?.click()}
+                      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && imagesInputRef.current?.click()}
+                      className="border-2 border-dashed border-sand rounded-xl p-6 text-center hover:border-dark-brown transition-colors cursor-pointer select-none"
+                    >
+                      <ImgIcon size={26} className="text-light-brown mx-auto mb-2" />
+                      <p className="text-sm font-medium text-dark-brown mb-1">
+                        {t('Click to upload images', 'انقر لرفع الصور')}
+                      </p>
+                      <p className="text-xs text-light-brown">{t('JPG, PNG, WEBP — multiple allowed', 'JPG, PNG, WEBP — يمكن رفع أكثر من صورة')}</p>
                     </div>
+
+                    {/* Image thumbnails */}
+                    {selectedImages.length > 0 && (
+                      <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {selectedImages.map((img, i) => (
+                          <div key={i} className="relative group rounded-xl overflow-hidden border border-sand aspect-square">
+                            <img src={img.preview} alt={img.name} className="w-full h-full object-cover" />
+                            {i === 0 && (
+                              <span className="absolute top-1 left-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold text-white leading-none">
+                                {t('Primary', 'رئيسية')}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(i)}
+                              className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              aria-label="Remove image"
+                            >
+                              <X size={12} />
+                            </button>
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-[9px] px-1.5 py-0.5 truncate">
+                              {img.name}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Materials */}
                   <div>
                     <label className="block text-sm font-medium text-dark-brown mb-2">{t('Materials', 'المواد')}</label>
-                    <input className="input-field" placeholder={t('e.g. Limestone, Steel, Gypsum', 'مثال: حجر كلسي، فولاذ، جبس')} />
+                    <input
+                      className="input-field"
+                      placeholder={t('e.g. Limestone, Steel, Gypsum', 'مثال: حجر كلسي، فولاذ، جبس')}
+                      value={uploadForm.materials}
+                      onChange={e => setUploadForm(f => ({ ...f, materials: e.target.value }))}
+                    />
                   </div>
+
+                  {/* Progress / error / success banners */}
+                  {uploadProgress && (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
+                      <Loader2 size={16} className="animate-spin flex-shrink-0" />
+                      {uploadProgress}
+                    </div>
+                  )}
+                  {uploadError && (
+                    <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+                      {uploadError}
+                    </div>
+                  )}
+                  {uploadSuccess && (
+                    <div className="px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700 font-semibold">
+                      {uploadSuccess}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
                   <div className="flex gap-3 pt-2">
-                    <button className="btn-primary flex-1 justify-center py-3.5">
-                      <Upload size={16} />
+                    <button
+                      type="button"
+                      className="btn-primary flex-1 justify-center py-3.5"
+                      disabled={uploading}
+                      onClick={() => handleProductSubmit('pending_review')}
+                    >
+                      {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                       {t('Submit Product', 'إرسال المنتج')}
                     </button>
-                    <button className="btn-secondary px-6">
+                    <button
+                      type="button"
+                      className="btn-secondary px-6"
+                      disabled={uploading}
+                      onClick={() => handleProductSubmit('draft')}
+                    >
                       {t('Save Draft', 'حفظ كمسودة')}
                     </button>
                   </div>
