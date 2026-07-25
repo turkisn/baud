@@ -66,12 +66,13 @@ export function AuthProvider({ children }) {
 
   // ── Helpers ───────────────────────────────────────────────────
   async function fetchProfile(userId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    return data;
+    if (error) console.warn('[BUAD:auth] fetchProfile error:', error.code, error.message);
+    return data ?? null;
   }
 
   function mergeProfile(authUser, profile) {
@@ -101,16 +102,13 @@ export function AuthProvider({ children }) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error('بريد إلكتروني أو كلمة مرور غير صحيحة');
-    // Set user immediately (with auth data, before profile loads) so the useEffect in
-    // Login.jsx triggers navigation right away. onAuthStateChange SIGNED_IN will
-    // overwrite this with the full profile once fetchProfile resolves.
-    // IMPORTANT: Login.jsx must NOT call navigate('/') directly — it should only navigate
-    // via its useEffect that watches user, so navigation is guaranteed to happen AFTER
-    // React commits this setUser() call.
-    if (data.user) {
-      console.log('[BUAD:auth] signInWithPassword success, setting user immediately:', data.user.email);
-      setUser(mergeProfile(data.user, null));
-    }
+    // Do NOT call setUser here. onAuthStateChange SIGNED_IN fires next and calls
+    // fetchProfile, so user state is only committed once the real role is known.
+    // This prevents DashboardRouter from seeing a stale role='user' fallback and
+    // routing the user to /user/dashboard before the profile loads.
+    // Login.jsx's useEffect(()=>{ if(user) navigate('/') }) fires naturally after
+    // onAuthStateChange sets the real profile.
+    console.log('[BUAD:auth] signInWithPassword success, awaiting onAuthStateChange:', data.user?.email);
     return data;
   };
 

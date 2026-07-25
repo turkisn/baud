@@ -93,7 +93,7 @@ export default function UserDashboard() {
             </div>
             <div className="flex gap-2">
               <dt className="text-light-brown w-24 flex-shrink-0">{t('Role', 'الدور')}</dt>
-              <dd className="text-dark-brown font-medium capitalize">{user?.role || 'user'}</dd>
+              <dd className="text-dark-brown font-medium capitalize">{user?.role ?? '—'}</dd>
             </div>
             {user?.company_name && (
               <div className="flex gap-2">
