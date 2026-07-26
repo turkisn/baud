@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, LogOut, Home, X, FileText, Image as ImgIcon, Loader2 } from 'lucide-react';
+import { Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings, Plus, Star, BarChart2, LogOut, Home, X, FileText, Image as ImgIcon, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,15 @@ import { blocks } from '../data/mockData';
 import { storageService } from '../services/storageService';
 import { productService } from '../services/productService';
 import { categoryService } from '../services/categoryService';
+
+const MY_STATUS_CFG = {
+  draft:             { label: 'Draft',          bg: 'bg-gray-100',   text: 'text-gray-600'   },
+  pending_review:    { label: 'Under Review',   bg: 'bg-amber-50',   text: 'text-amber-700'  },
+  approved:          { label: 'Approved',       bg: 'bg-green-50',   text: 'text-green-700'  },
+  rejected:          { label: 'Rejected',       bg: 'bg-red-50',     text: 'text-red-700'    },
+  revision_required: { label: 'Needs Revision', bg: 'bg-purple-50',  text: 'text-purple-700' },
+  archived:          { label: 'Archived',       bg: 'bg-gray-100',   text: 'text-gray-500'   },
+};
 
 const mockLeads = [
   { name: 'Eng. Ahmad Al-Shehri', company: 'Dar Al-Omran Architects', product: 'Najdi Arch Column', date: '2025-05-12', status: 'hot' },
@@ -61,12 +70,30 @@ export default function SupplierDashboard() {
       .finally(() => setCategoriesLoading(false));
   }, []);
 
+  // Load real products from DB whenever the products tab becomes active.
+  useEffect(() => {
+    if (activeTab !== 'products' || !user?.id) return;
+    setMyProductsLoading(true);
+    setMyProductsError('');
+    productService.getMyProducts(user.id)
+      .then(data => setMyProducts(data || []))
+      .catch(err => setMyProductsError(err.message || 'Failed to load products.'))
+      .finally(() => setMyProductsLoading(false));
+  }, [activeTab, user?.id]);
+
   const [selectedFiles,  setSelectedFiles]  = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploading,      setUploading]      = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
   const [uploadError,    setUploadError]    = useState('');
   const [uploadSuccess,  setUploadSuccess]  = useState('');
+
+  // My Products tab
+  const [myProducts,        setMyProducts]        = useState([]);
+  const [myProductsLoading, setMyProductsLoading] = useState(false);
+  const [myProductsError,   setMyProductsError]   = useState('');
+  const [resubmitting,      setResubmitting]      = useState(null); // productId being resubmitted
+  const [editingProduct,    setEditingProduct]    = useState(null); // product being edited
 
   const handleFilesChange = useCallback((e) => {
     const picked = Array.from(e.target.files || []);
@@ -100,11 +127,75 @@ export default function SupplierDashboard() {
     return ` (${(bytes / 1e3).toFixed(0)} KB)`;
   };
 
+  // Submit or resubmit a product for review using the SECURITY DEFINER RPC.
+  // Works for draft → pending_review and revision_required/rejected → pending_review.
+  const handleResubmit = async (productId) => {
+    setResubmitting(productId);
+    setMyProductsError('');
+    try {
+      await productService.submitProduct(productId);
+      const fresh = await productService.getMyProducts(user.id);
+      setMyProducts(fresh || []);
+    } catch (err) {
+      setMyProductsError(err.message || 'Submission failed. Please try again.');
+    } finally {
+      setResubmitting(null);
+    }
+  };
+
+  // Prefill the upload form with an existing product's metadata and switch to edit mode.
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setUploadForm({
+      productNameEn: product.product_name_en || '',
+      productNameAr: product.product_name_ar || '',
+      categoryId:    product.category_id     || '',
+      price:         product.price != null   ? String(product.price) : '',
+      description:   product.short_description_en || '',
+      materials:     '',
+    });
+    setUploadError('');
+    setUploadSuccess('');
+    setSelectedFiles([]);
+    setSelectedImages([]);
+    setActiveTab('upload');
+  };
+
   const handleProductSubmit = async (status) => {
     setUploadError('');
     setUploadSuccess('');
 
-    // Validate required fields before touching any network call
+    // ── Edit mode: update metadata only, no file uploads ────────────────
+    if (editingProduct) {
+      if (!uploadForm.productNameEn && !uploadForm.productNameAr) {
+        setUploadError(t('Product name is required.', 'اسم المنتج مطلوب.'));
+        return;
+      }
+      setUploading(true);
+      try {
+        await productService.updateProduct(editingProduct.id, {
+          product_name_en:      uploadForm.productNameEn || null,
+          product_name_ar:      uploadForm.productNameAr || null,
+          category_id:          uploadForm.categoryId    || null,
+          short_description_en: uploadForm.description   || null,
+          short_description_ar: uploadForm.description   || null,
+          is_free:              !uploadForm.price || parseFloat(uploadForm.price) === 0,
+          price:                parseFloat(uploadForm.price) || null,
+        });
+        setUploadSuccess(t('✓ Product updated successfully!', '✓ تم تحديث المنتج بنجاح!'));
+        setEditingProduct(null);
+        const fresh = await productService.getMyProducts(user?.id);
+        setMyProducts(fresh || []);
+        setTimeout(() => { setUploadSuccess(''); setActiveTab('products'); }, 1500);
+      } catch (err) {
+        setUploadError(err.message || t('Update failed. Please try again.', 'فشل التحديث. يرجى المحاولة مجددًا.'));
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
+
+    // ── Create mode: validate then upload files + create draft ───────────
     if (!uploadForm.productNameEn && !uploadForm.productNameAr) {
       setUploadError(t('Product name is required.', 'اسم المنتج مطلوب.'));
       return;
@@ -340,72 +431,111 @@ export default function SupplierDashboard() {
               </div>
             )}
 
-            {/* Products Tab */}
+            {/* Products Tab — real data from Supabase */}
             {activeTab === 'products' && (
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-dark-brown">{t('My Products', 'منتجاتي')}</h2>
                   <button
-                    onClick={() => setActiveTab('upload')}
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setUploadForm({ productNameEn: '', productNameAr: '', categoryId: '', price: '', description: '', materials: '' });
+                      setActiveTab('upload');
+                    }}
                     className="btn-primary py-2.5"
                   >
                     <Plus size={16} /> {t('Add Product', 'إضافة منتج')}
                   </button>
                 </div>
-                <div className="bg-white rounded-2xl border border-sand overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-warm-white border-b border-sand">
-                        <tr>
-                          {[t('Product', 'المنتج'), t('Category', 'الفئة'), t('Downloads', 'التحميلات'), t('Rating', 'التقييم'), t('Price', 'السعر'), t('Status', 'الحالة'), ''].map((h, i) => (
-                            <th key={i} className="text-left px-4 py-3 text-xs font-semibold text-medium-brown uppercase tracking-wider">
-                              {h}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-sand">
-                        {blocks.slice(0, 5).map(block => (
-                          <tr key={block.id} className="hover:bg-warm-white transition-colors">
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 bg-sand rounded-lg flex items-center justify-center text-lg">
-                                  {block.category === 'Landscape' ? '🌴' : block.category === 'Lighting' ? '💡' : '📦'}
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium text-dark-brown">{lang === 'ar' ? block.nameAr : block.name}</div>
-                                  <div className="text-xs text-light-brown">{block.sku}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-sm text-medium-brown">{lang === 'ar' ? block.categoryAr : block.category}</td>
-                            <td className="px-4 py-4 text-sm text-medium-brown">{block.downloads}</td>
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-1">
-                                <Star size={12} fill="#C9A84C" className="text-gold" />
-                                <span className="text-sm text-medium-brown">{block.rating}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-sm font-medium text-dark-brown">{block.price.toLocaleString()} SAR</td>
-                            <td className="px-4 py-4">
-                              <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
-                                block.featured ? 'bg-green-50 text-gold' : 'bg-sand text-medium-brown'
-                              }`}>
-                                {block.featured ? <CheckCircle size={10} /> : <Clock size={10} />}
-                                {block.featured ? t('Active', 'نشط') : t('Draft', 'مسودة')}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4">
-                              <button className="p-1.5 rounded-lg text-light-brown hover:bg-sand hover:text-dark-brown transition-colors">
-                                <MoreVertical size={16} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+
+                {myProductsError && (
+                  <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 mb-4">
+                    {myProductsError}
                   </div>
-                </div>
+                )}
+
+                {myProductsLoading ? (
+                  <div className="flex items-center justify-center py-16 text-light-brown gap-2">
+                    <Loader2 size={22} className="animate-spin" />
+                    <span className="text-sm">{t('Loading products…', 'جارٍ تحميل المنتجات…')}</span>
+                  </div>
+                ) : myProducts.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-sand p-12 text-center">
+                    <Package size={36} className="text-light-brown mx-auto mb-3" />
+                    <p className="text-medium-brown font-medium mb-1">{t('No products yet', 'لا توجد منتجات بعد')}</p>
+                    <p className="text-sm text-light-brown">{t('Upload your first product to get started.', 'ارفع منتجك الأول للبدء.')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {myProducts.map(product => {
+                      const stCfg = MY_STATUS_CFG[product.status] || MY_STATUS_CFG.draft;
+                      const catName = product.categories
+                        ? (lang === 'ar' ? product.categories.name_ar : product.categories.name_en)
+                        : '—';
+                      const canEdit     = ['draft', 'rejected', 'revision_required'].includes(product.status);
+                      const canSubmit   = ['draft', 'rejected', 'revision_required'].includes(product.status);
+                      const submitLabel = product.status === 'draft'
+                        ? t('Submit for Review', 'إرسال للمراجعة')
+                        : t('Resubmit', 'إعادة الإرسال');
+                      const hasNote = ['rejected', 'revision_required'].includes(product.status) &&
+                        (product.rejection_reason || product.admin_notes);
+                      const noteText  = product.rejection_reason || product.admin_notes;
+                      const noteStyle = product.status === 'revision_required'
+                        ? { bg: '#ede9fe', border: '#c4b5fd', color: '#5B21B6',
+                            label: t('Revision notes:', 'ملاحظات التعديل:') }
+                        : { bg: '#fee2e2', border: '#fca5a5', color: '#991B1B',
+                            label: t('Rejection reason:', 'سبب الرفض:') };
+
+                      return (
+                        <div key={product.id} className="bg-white rounded-2xl border border-sand p-5">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-semibold text-dark-brown text-sm truncate">
+                                  {lang === 'ar' ? (product.product_name_ar || product.product_name_en) : (product.product_name_en || product.product_name_ar)}
+                                </span>
+                                <span className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0 ${stCfg.bg} ${stCfg.text}`}>
+                                  {stCfg.label}
+                                </span>
+                              </div>
+                              <div className="text-xs text-light-brown mb-1">{catName}</div>
+                              {product.buod_reference && (
+                                <div className="text-xs font-mono font-bold text-gold">{product.buod_reference}</div>
+                              )}
+                              {hasNote && (
+                                <div className="mt-2 px-3 py-2 rounded-lg text-xs border"
+                                  style={{ background: noteStyle.bg, borderColor: noteStyle.border, color: noteStyle.color }}>
+                                  <span className="font-semibold">{noteStyle.label} </span>{noteText}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {canEdit && (
+                                <button
+                                  onClick={() => handleEditProduct(product)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-sand text-medium-brown hover:bg-sand transition-colors"
+                                >
+                                  {t('Edit', 'تعديل')}
+                                </button>
+                              )}
+                              {canSubmit && (
+                                <button
+                                  onClick={() => handleResubmit(product.id)}
+                                  disabled={resubmitting === product.id}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-dark-brown text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                                >
+                                  {resubmitting === product.id
+                                    ? <Loader2 size={12} className="animate-spin inline" />
+                                    : submitLabel}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -447,10 +577,25 @@ export default function SupplierDashboard() {
               </div>
             )}
 
-            {/* Upload Tab */}
+            {/* Upload / Edit Tab */}
             {activeTab === 'upload' && (
               <div className="max-w-2xl">
-                <h2 className="text-xl font-bold text-dark-brown mb-6">{t('Upload New Product', 'رفع منتج جديد')}</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-dark-brown">
+                    {editingProduct
+                      ? t('Edit Product', 'تعديل المنتج')
+                      : t('Upload New Product', 'رفع منتج جديد')}
+                  </h2>
+                  {editingProduct && (
+                    <button
+                      type="button"
+                      className="btn-secondary text-sm px-4 py-2"
+                      onClick={() => { setEditingProduct(null); setActiveTab('products'); }}
+                    >
+                      {t('← Cancel Edit', '← إلغاء التعديل')}
+                    </button>
+                  )}
+                </div>
                 <div className="bg-white rounded-2xl border border-sand p-6 space-y-5">
 
                   {/* Product names */}
@@ -658,25 +803,47 @@ export default function SupplierDashboard() {
                   )}
 
                   {/* Action buttons */}
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      type="button"
-                      className="btn-primary flex-1 justify-center py-3.5"
-                      disabled={uploading || categoriesLoading}
-                      onClick={() => handleProductSubmit('pending_review')}
-                    >
-                      {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                      {t('Submit Product', 'إرسال المنتج')}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary px-6"
-                      disabled={uploading}
-                      onClick={() => handleProductSubmit('draft')}
-                    >
-                      {t('Save Draft', 'حفظ كمسودة')}
-                    </button>
-                  </div>
+                  {editingProduct ? (
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        className="btn-primary flex-1 justify-center py-3.5"
+                        disabled={uploading}
+                        onClick={() => handleProductSubmit('edit')}
+                      >
+                        {uploading ? <Loader2 size={16} className="animate-spin" /> : null}
+                        {t('Save Changes', 'حفظ التغييرات')}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary px-6"
+                        disabled={uploading}
+                        onClick={() => { setEditingProduct(null); setActiveTab('products'); }}
+                      >
+                        {t('Cancel', 'إلغاء')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        className="btn-primary flex-1 justify-center py-3.5"
+                        disabled={uploading || categoriesLoading}
+                        onClick={() => handleProductSubmit('pending_review')}
+                      >
+                        {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                        {t('Submit Product', 'إرسال المنتج')}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary px-6"
+                        disabled={uploading}
+                        onClick={() => handleProductSubmit('draft')}
+                      >
+                        {t('Save Draft', 'حفظ كمسودة')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

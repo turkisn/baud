@@ -11,7 +11,6 @@ import { reviewService } from '../../services/reviewService';
 import { productService } from '../../services/productService';
 import { seedDemoProducts } from '../../services/productsService';
 import { SUPABASE_CONFIGURED } from '../../lib/supabase';
-import { CATEGORIES } from '../../data/categoriesData';
 import { fadeInUp, viewport } from '../../utils/animations';
 
 const STATUS_TABS = [
@@ -108,10 +107,28 @@ function RejectModal({ product, onConfirm, onClose, lang }) {
   );
 }
 
-function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision, lang }) {
+function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision, onUpdateField, lang }) {
+  const [fieldUpdating, setFieldUpdating] = useState(null); // e.g. 'visibility:public'
+  const [fieldError, setFieldError]       = useState('');
+
   if (!product) return null;
-  const cat = CATEGORIES.find(c => c.id === product.category_id);
+
+  // Use the DB relation (categories join) instead of the local mock lookup.
+  // reviewService.getAllForReview fetches categories(code, name_ar, name_en).
+  const catName = product.categories?.name_en || product.categories?.name_ar || '—';
   const sc = STATUS_CONFIG[product.status] || STATUS_CONFIG.draft;
+
+  const doUpdate = async (field, value) => {
+    setFieldError('');
+    setFieldUpdating(`${field}:${value}`);
+    try {
+      await onUpdateField(field, value);
+    } catch (err) {
+      setFieldError(err.message || `Failed to update ${field.replace(/_/g, ' ')}.`);
+    } finally {
+      setFieldUpdating(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end" style={{ background: 'rgba(0,0,0,0.4)' }}
@@ -135,39 +152,47 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision,
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Status */}
+          {/* Status badge */}
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: sc.bg, color: sc.color }}>
-              {product.status.replace('_', ' ').toUpperCase()}
+              {product.status.replace(/_/g, ' ').toUpperCase()}
             </span>
             {product.verification_status !== 'unverified' && (
               <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: GOLD }}>
-                <BadgeCheck size={13} /> {product.verification_status.replace('_', ' ')}
+                <BadgeCheck size={13} /> {product.verification_status.replace(/_/g, ' ')}
               </span>
             )}
           </div>
 
-          {/* Rejection reason */}
-          {product.status === 'rejected' && product.rejection_reason && (
-            <div className="p-4 rounded-xl border" style={{ background: '#fee2e2', borderColor: '#fca5a5' }}>
-              <p className="text-xs font-bold text-red-700 mb-1">Rejection Reason:</p>
-              <p className="text-sm text-red-800">{product.rejection_reason}</p>
+          {/* Rejection / revision notes — also visible in admin panel for context */}
+          {(product.status === 'rejected' || product.status === 'revision_required') &&
+            (product.rejection_reason || product.admin_notes) && (
+            <div className="p-4 rounded-xl border" style={{
+              background: product.status === 'rejected' ? '#fee2e2' : '#ede9fe',
+              borderColor: product.status === 'rejected' ? '#fca5a5' : '#c4b5fd',
+            }}>
+              <p className="text-xs font-bold mb-1" style={{ color: product.status === 'rejected' ? '#991B1B' : '#5B21B6' }}>
+                {product.status === 'rejected' ? 'Rejection Reason:' : 'Revision Notes:'}
+              </p>
+              <p className="text-sm" style={{ color: product.status === 'rejected' ? '#7F1D1D' : '#4C1D95' }}>
+                {product.rejection_reason || product.admin_notes}
+              </p>
             </div>
           )}
 
           {/* Info rows */}
           {[
-            { label: 'Category',      value: cat ? `${cat.icon} ${cat.nameEn}` : '—' },
-            { label: 'Brand',         value: product.brand_name || '—' },
-            { label: 'Model No.',     value: product.model_number || '—' },
-            { label: 'Origin',        value: product.country_of_origin || '—' },
-            { label: 'Unit',          value: product.unit || '—' },
-            { label: 'Pricing',       value: product.is_free ? 'Free' : `${product.price} ${product.currency}` },
-            { label: 'License',       value: product.license_type || '—' },
-            { label: 'Rights OK',     value: product.rights_confirmed ? '✓ Yes' : '✗ No' },
-            { label: 'Created',       value: product.created_at },
-            { label: 'Downloads',     value: product.download_count || 0 },
-            { label: 'Views',         value: product.view_count || 0 },
+            { label: 'Category',  value: catName },
+            { label: 'Brand',     value: product.brand_name || '—' },
+            { label: 'Model No.', value: product.model_number || '—' },
+            { label: 'Origin',    value: product.country_of_origin || '—' },
+            { label: 'Unit',      value: product.unit || '—' },
+            { label: 'Pricing',   value: product.is_free ? 'Free' : `${product.price} ${product.currency}` },
+            { label: 'License',   value: product.license_type || '—' },
+            { label: 'Rights OK', value: product.rights_confirmed ? '✓ Yes' : '✗ No' },
+            { label: 'Created',   value: product.created_at },
+            { label: 'Downloads', value: product.download_count || 0 },
+            { label: 'Views',     value: product.view_count || 0 },
           ].map((r, i) => (
             <div key={i} className="flex justify-between py-2 border-b text-sm" style={{ borderColor: SAND }}>
               <span style={{ color: '#6E5847' }}>{r.label}</span>
@@ -228,7 +253,7 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision,
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* Review action buttons */}
           {product.status === 'pending_review' && (
             <div className="grid grid-cols-3 gap-2 pt-2">
               <button onClick={() => onReject(product)}
@@ -252,43 +277,55 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision,
             </div>
           )}
 
-          {/* Verify controls */}
+          {/* Verification Status — admin can set this on any product, visually shown only for approved */}
           {product.status === 'approved' && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#6E5847' }}>Verification Status</p>
               <div className="flex flex-wrap gap-2">
                 {['unverified','verified','manufacturer_verified','supplier_verified'].map(v => (
-                  <button key={v} onClick={() => productService.updateProduct(product.id, { verification_status: v })}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:opacity-80"
+                  <button key={v}
+                    disabled={fieldUpdating !== null}
+                    onClick={() => doUpdate('verification_status', v)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:opacity-80 disabled:opacity-50"
                     style={{
                       background: product.verification_status === v ? GOLD + '20' : 'white',
                       borderColor: product.verification_status === v ? GOLD : SAND,
                       color: product.verification_status === v ? DARK : '#6E5847',
                     }}>
-                    {v.replace(/_/g, ' ')}
+                    {fieldUpdating === `verification_status:${v}` ? '…' : v.replace(/_/g, ' ')}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Visibility toggle */}
+          {/* Visibility — admin can set this on any product */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#6E5847' }}>Visibility</p>
             <div className="flex gap-2">
               {['private','public','unlisted'].map(v => (
-                <button key={v} onClick={() => productService.updateProduct(product.id, { visibility: v })}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:opacity-80"
+                <button key={v}
+                  disabled={fieldUpdating !== null}
+                  onClick={() => doUpdate('visibility', v)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:opacity-80 disabled:opacity-50"
                   style={{
                     background: product.visibility === v ? GOLD + '20' : 'white',
                     borderColor: product.visibility === v ? GOLD : SAND,
                     color: DARK,
                   }}>
-                  {v}
+                  {fieldUpdating === `visibility:${v}` ? '…' : v}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Field-update error banner */}
+          {fieldError && (
+            <div className="px-3 py-2.5 rounded-lg text-xs font-semibold"
+              style={{ background: '#fee2e2', color: '#991B1B' }}>
+              {fieldError}
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
@@ -352,6 +389,15 @@ export default function ProductReview() {
     setRevT(null);
     setSelected(null);
     reload();
+  };
+
+  // Update a single field on the selected product, then sync both selected and list state.
+  // Throws on DB error so the panel can display it without a false-success flash.
+  const handleUpdateField = async (field, value) => {
+    if (!selected) return;
+    await productService.updateProduct(selected.id, { [field]: value });
+    setSelected(prev => ({ ...prev, [field]: value }));
+    setProducts(prev => prev.map(p => p.id === selected.id ? { ...p, [field]: value } : p));
   };
 
   if (!isAdmin()) {
@@ -437,7 +483,7 @@ export default function ProductReview() {
                     </td>
                   </tr>
                 ) : filtered.map((p, i) => {
-                  const cat = CATEGORIES.find(c => c.id === p.category_id);
+                  const cat = p.categories;
                   const sc  = STATUS_CONFIG[p.status] || STATUS_CONFIG.draft;
                   return (
                     <motion.tr key={p.id} variants={fadeInUp} initial="hidden" whileInView="visible"
@@ -455,7 +501,7 @@ export default function ProductReview() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs" style={{ color: '#C4A882' }}>
-                        {cat ? `${cat.icon} ${cat.nameEn}` : '—'}
+                        {cat ? cat.name_en : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold" style={{ background: sc.bg, color: sc.color }}>
@@ -515,6 +561,7 @@ export default function ProductReview() {
           onApprove={handleApprove}
           onReject={(p) => setRejT(p)}
           onRevision={(p) => setRevT(p)}
+          onUpdateField={handleUpdateField}
           lang={lang}
         />
       )}
