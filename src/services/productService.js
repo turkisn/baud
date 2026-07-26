@@ -252,4 +252,12 @@ export const productService = {
       .rpc('increment_view_count', { product_id: productId })
       .catch(() => { /* non-critical */ });
   },
+
+  // ── incrementDownloadCount ────────────────────────────────────
+  async incrementDownloadCount(productId) {
+    if (!SUPABASE_CONFIGURED) return;
+    await supabase
+      .rpc('increment_download_count', { product_id: productId })
+      .catch(() => { /* non-critical */ });
+  },
 };

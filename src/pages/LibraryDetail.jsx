@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -76,6 +76,10 @@ export default function LibraryDetail() {
   const [loading, setLoading]   = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [similar, setSimilar]   = useState([]);
+  // Tracks whether download_count has been incremented for this product in
+  // this page session. Prevents double-increment if the user downloads again
+  // within the same visit.
+  const downloadCounted = useRef(false);
 
   useEffect(() => {
     setLoading(true);
@@ -103,6 +107,7 @@ export default function LibraryDetail() {
 
   const handleDownloadFile = async (file) => {
     setDl(file.id);
+    let downloadStarted = false;
     try {
       const url = await storageService.createSignedDownloadUrl(
         storageService.BUCKETS.FILES,
@@ -116,10 +121,17 @@ export default function LibraryDetail() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      downloadStarted = true;
     } catch {
       // signed URL failed — open in new tab as fallback
     } finally {
       setDl(null);
+    }
+
+    if (downloadStarted && !downloadCounted.current && product?.id) {
+      downloadCounted.current = true;
+      productService.incrementDownloadCount(product.id).catch(() => {});
+      setProduct(prev => prev ? { ...prev, download_count: (prev.download_count || 0) + 1 } : prev);
     }
   };
 
