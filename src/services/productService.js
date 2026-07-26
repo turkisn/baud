@@ -1,19 +1,156 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 import * as mock from './productsService';
 
-// ── helpers ───────────────────────────────────────────────────
-function mapMockToDb(p) { return p; } // mock already matches display shape
-
 // Valid values for the product_files.file_format CHECK constraint.
-// '3DS' is added in migration 009; until that migration runs, the service
-// maps unknown extensions to 'OTHER' to avoid constraint violations.
 const VALID_FILE_FORMATS = new Set([
   'RFA','RVT','MAX','FBX','OBJ','SKP','DWG','IFC','PDF','ZIP','3DS','OTHER',
 ]);
 
-// ── public ────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────
+function buildFileRows(productId, files) {
+  return files.map(f => {
+    const ext = (f.name?.split('.').pop() || '').toUpperCase();
+    return {
+      product_id:         productId,
+      file_path:          f.path,
+      original_file_name: f.name,
+      file_size:          f.size,
+      file_format:        VALID_FILE_FORMATS.has(ext) ? ext : 'OTHER',
+      software_name:      f.software,
+      software_version:   f.softwareVersion,
+      file_type:          f.fileType || 'block',
+    };
+  });
+}
+
+function buildImageRows(productId, images) {
+  return images.map((img, i) => ({
+    product_id: productId,
+    image_path: img.path || img.url,
+    image_type: img.type || 'render',
+    sort_order: i,
+    is_primary: i === 0,
+  }));
+}
+
+// ── public API ────────────────────────────────────────────────────
 export const productService = {
-  // ── My Products ──────────────────────────────────────────────
+
+  // ── createDraft ───────────────────────────────────────────────
+  // Creates a product in draft state and links uploaded files/images.
+  // The enforce_product_column_acl BEFORE INSERT trigger forces
+  // status='draft' regardless of what is passed, so the status field
+  // in draftData is intentionally ignored here.
+  // Returns the newly created product row.
+  async createDraft(userId, draftData) {
+    if (!SUPABASE_CONFIGURED) return mock.createProduct(userId, draftData);
+
+    const {
+      images = [], files = [], specifications = [], materials = [], components = [],
+      status: _ignored,   // always becomes 'draft' via DB trigger
+      ...core
+    } = draftData;
+
+    const { data: product, error } = await supabase
+      .from('products')
+      .insert({ ...core, created_by: userId })
+      .select()
+      .single();
+    if (error) throw error;
+
+    if (images.length > 0) {
+      const { error: e } = await supabase
+        .from('product_images')
+        .insert(buildImageRows(product.id, images));
+      if (e) throw e;
+    }
+
+    if (files.length > 0) {
+      const { error: e } = await supabase
+        .from('product_files')
+        .insert(buildFileRows(product.id, files));
+      if (e) throw e;
+    }
+
+    if (specifications.length > 0) {
+      const { error: e } = await supabase.from('product_specifications').insert(
+        specifications.map((s, i) => ({
+          product_id:              product.id,
+          specification_name_ar:   s.nameAr,
+          specification_name_en:   s.nameEn,
+          specification_code:      s.code,
+          value:                   s.value,
+          unit:                    s.unit,
+          sort_order:              i,
+        }))
+      );
+      if (e) throw e;
+    }
+
+    if (materials.length > 0) {
+      const { error: e } = await supabase.from('product_materials').insert(
+        materials.map(m => ({
+          product_id:          product.id,
+          material_name_ar:    m.nameAr,
+          material_name_en:    m.nameEn,
+          material_type:       m.type,
+          finish:              m.finish,
+          color:               m.color,
+          quantity_per_product: m.quantity,
+          unit:                m.unit,
+        }))
+      );
+      if (e) throw e;
+    }
+
+    if (components.length > 0) {
+      const { error: e } = await supabase.from('product_components').insert(
+        components.map(c => ({
+          product_id:         product.id,
+          component_name_ar:  c.nameAr,
+          component_name_en:  c.nameEn,
+          quantity:           c.quantity,
+          unit:               c.unit,
+        }))
+      );
+      if (e) throw e;
+    }
+
+    return product;
+  },
+
+  // ── submitProduct ─────────────────────────────────────────────
+  // Transitions a draft product to pending_review via the
+  // submit_product_for_review() SECURITY DEFINER RPC.
+  //
+  // The RPC (migration 011) verifies ownership, state, and category
+  // server-side, then executes the UPDATE that fires:
+  //   - enforce_product_column_acl: preserves admin-only columns
+  //   - trg_auto_buod_reference: generates the BUOD reference
+  //
+  // Returns { id, status, buod_reference, category_id } on success.
+  // Throws with a user-readable message on any failure.
+  async submitProduct(productId) {
+    if (!SUPABASE_CONFIGURED) return mock.submitForReview(productId);
+
+    const { data, error } = await supabase
+      .rpc('submit_product_for_review', { p_product_id: productId });
+
+    if (error) {
+      const msg = error.message || '';
+      if (msg.includes('PRODUCT_NOT_FOUND'))   throw new Error('Product not found.');
+      if (msg.includes('NOT_OWNER'))            throw new Error('You do not own this product.');
+      if (msg.includes('INVALID_STATE'))        throw new Error('Product is not in a submittable state.');
+      if (msg.includes('CATEGORY_REQUIRED'))    throw new Error('A category must be selected before submitting for review.');
+      throw error;
+    }
+
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) throw new Error('Submission returned no data from the database.');
+    return row;
+  },
+
+  // ── getMyProducts ─────────────────────────────────────────────
   async getMyProducts(userId) {
     if (!SUPABASE_CONFIGURED) return mock.getMyProducts(userId);
     const { data, error } = await supabase
@@ -31,139 +168,8 @@ export const productService = {
     return data;
   },
 
-  // ── Create product (draft or pending_review) ─────────────────
-  async createProduct(userId, productData) {
-    if (!SUPABASE_CONFIGURED) return mock.createProduct(userId, productData);
-
-    const {
-      images = [], files = [], specifications = [], materials = [], components = [],
-      status: requestedStatus,
-      ...core
-    } = productData;
-
-    // INSERT always produces status='draft': the enforce_product_column_acl
-    // BEFORE INSERT trigger forces it for all non-admin callers. This is
-    // intentional security — suppliers cannot self-approve on a single INSERT.
-    // We promote to pending_review via a separate UPDATE after sub-tables are
-    // saved, so that trg_auto_buod_reference can fire on the UPDATE.
-    const { data: product, error } = await supabase
-      .from('products')
-      .insert({ ...core, created_by: userId })
-      .select()
-      .single();
-    if (error) throw error;
-
-    if (images.length > 0) {
-      const { error: imgErr } = await supabase.from('product_images').insert(
-        images.map((img, i) => ({
-          product_id: product.id,
-          image_path: img.path || img.url,
-          image_type: img.type || 'render',
-          sort_order: i,
-          is_primary: i === 0,
-        }))
-      );
-      if (imgErr) throw imgErr;
-    }
-
-    if (files.length > 0) {
-      const { error: fileErr } = await supabase.from('product_files').insert(
-        files.map(f => {
-          const ext = (f.name?.split('.').pop() || '').toUpperCase();
-          // Map to the valid file_format values from the DB CHECK constraint.
-          // Unknown extensions (e.g. 3DS is not yet in the constraint) use 'OTHER'.
-          const file_format = VALID_FILE_FORMATS.has(ext) ? ext : 'OTHER';
-          return {
-            product_id:         product.id,
-            file_path:          f.path,
-            original_file_name: f.name,
-            file_size:          f.size,
-            file_format,
-            software_name:      f.software,
-            software_version:   f.softwareVersion,
-            file_type:          f.fileType || 'block',
-          };
-        })
-      );
-      if (fileErr) throw fileErr;
-    }
-
-    if (specifications.length > 0) {
-      await supabase.from('product_specifications').insert(
-        specifications.map((s, i) => ({
-          product_id: product.id,
-          specification_name_ar: s.nameAr,
-          specification_name_en: s.nameEn,
-          specification_code: s.code,
-          value: s.value,
-          unit: s.unit,
-          sort_order: i,
-        }))
-      );
-    }
-
-    if (materials.length > 0) {
-      await supabase.from('product_materials').insert(
-        materials.map(m => ({
-          product_id: product.id,
-          material_name_ar: m.nameAr,
-          material_name_en: m.nameEn,
-          material_type: m.type,
-          finish: m.finish,
-          color: m.color,
-          quantity_per_product: m.quantity,
-          unit: m.unit,
-        }))
-      );
-    }
-
-    if (components.length > 0) {
-      await supabase.from('product_components').insert(
-        components.map(c => ({
-          product_id: product.id,
-          component_name_ar: c.nameAr,
-          component_name_en: c.nameEn,
-          quantity: c.quantity,
-          unit: c.unit,
-        }))
-      );
-    }
-
-    // Promote to pending_review via UPDATE so that:
-    //   1. enforce_product_column_acl (UPDATE path) resets only admin-only columns
-    //   2. trg_auto_buod_reference fires on status change draft→pending_review
-    //      and generates the BUOD reference.
-    // This UPDATE is permitted by the products_owner_update RLS policy:
-    //   USING  (created_by = auth.uid() AND OLD.status = 'draft')
-    //   WITH CHECK (NEW.status = 'pending_review')
-    if (requestedStatus === 'pending_review') {
-      const { data: updatedRows, error: statusErr } = await supabase
-        .from('products')
-        .update({ status: 'pending_review' })
-        .eq('id', product.id)
-        .select('id, status, buod_reference');
-
-      if (statusErr) throw statusErr;
-
-      // Without .select(), a 0-row update (RLS block) looks identical to success.
-      // With .select(), 0 rows returned = RLS blocked the UPDATE.
-      if (!updatedRows || updatedRows.length === 0) {
-        throw new Error(
-          `[BUAD] Status update returned 0 rows — RLS may be blocking the UPDATE. ` +
-          `Product ID: ${product.id}. Check products_owner_update policy ` +
-          `(USING: created_by = auth.uid() AND status IN (draft, rejected, revision_required)).`
-        );
-      }
-
-      const { data: updated } = await supabase
-        .from('products').select().eq('id', product.id).single();
-      return updated ?? product;
-    }
-
-    return product;
-  },
-
-  // ── Update product ────────────────────────────────────────────
+  // ── updateProduct ─────────────────────────────────────────────
+  // Used by the admin panel to approve / reject / set revision_required.
   async updateProduct(productId, updates) {
     if (!SUPABASE_CONFIGURED) return mock.updateProduct(productId, updates);
     const { data, error } = await supabase
@@ -176,27 +182,17 @@ export const productService = {
     return data;
   },
 
-  // ── Submit for review (changes status → triggers BUOD ref) ───
-  async submitForReview(productId) {
-    if (!SUPABASE_CONFIGURED) return mock.submitForReview(productId);
-    const { data, error } = await supabase
-      .from('products')
-      .update({ status: 'pending_review' })
-      .eq('id', productId)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  },
-
-  // ── Delete product ────────────────────────────────────────────
+  // ── deleteProduct ─────────────────────────────────────────────
   async deleteProduct(productId) {
     if (!SUPABASE_CONFIGURED) return mock.deleteProduct(productId);
-    const { error } = await supabase.from('products').delete().eq('id', productId);
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId);
     if (error) throw error;
   },
 
-  // ── Public library (approved + public) ───────────────────────
+  // ── getPublicProducts ─────────────────────────────────────────
   async getPublicProducts({ categoryId, search, page = 0, pageSize = 20 } = {}) {
     if (!SUPABASE_CONFIGURED) return mock.getAllProducts();
     let q = supabase
@@ -226,11 +222,10 @@ export const productService = {
     return data;
   },
 
-  // ── Get single product by id ──────────────────────────────────
+  // ── getProductById ────────────────────────────────────────────
   async getProductById(productId) {
     if (!SUPABASE_CONFIGURED) {
-      const all = mock.getAllProducts();
-      return all.find(p => p.id === productId) || null;
+      return mock.getAllProducts().find(p => p.id === productId) ?? null;
     }
     const { data, error } = await supabase
       .from('products')
@@ -250,11 +245,11 @@ export const productService = {
     return data;
   },
 
-  // ── Increment view count ──────────────────────────────────────
+  // ── incrementViewCount ────────────────────────────────────────
   async incrementViewCount(productId) {
     if (!SUPABASE_CONFIGURED) return;
-    await supabase.rpc('increment_view_count', { product_id: productId }).catch(() => {
-      // non-critical — ignore errors
-    });
+    await supabase
+      .rpc('increment_view_count', { product_id: productId })
+      .catch(() => { /* non-critical */ });
   },
 };

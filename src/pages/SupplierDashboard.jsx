@@ -47,22 +47,26 @@ export default function SupplierDashboard() {
   const filesInputRef   = useRef(null);
   const imagesInputRef  = useRef(null);
 
-  const [categories, setCategories] = useState([]);
+  const [categories,       setCategories]       = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [uploadForm, setUploadForm] = useState({
     productNameEn: '', productNameAr: '', categoryId: '', price: '', description: '', materials: '',
   });
 
   useEffect(() => {
+    setCategoriesLoading(true);
     categoryService.getAllCategories()
       .then(data => setCategories(data || []))
-      .catch(err => { console.error('[BUAD] categories failed to load:', err); setUploadError(String(err?.message || err)); });
+      .catch(err => console.error('Failed to load categories:', err))
+      .finally(() => setCategoriesLoading(false));
   }, []);
-  const [selectedFiles,  setSelectedFiles]  = useState([]); // { file, name, size }
-  const [selectedImages, setSelectedImages] = useState([]); // { file, name, preview }
-  const [uploading,  setUploading]  = useState(false);
+
+  const [selectedFiles,  setSelectedFiles]  = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [uploading,      setUploading]      = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
-  const [uploadError,   setUploadError]   = useState('');
-  const [uploadSuccess, setUploadSuccess] = useState('');
+  const [uploadError,    setUploadError]    = useState('');
+  const [uploadSuccess,  setUploadSuccess]  = useState('');
 
   const handleFilesChange = useCallback((e) => {
     const picked = Array.from(e.target.files || []);
@@ -99,14 +103,26 @@ export default function SupplierDashboard() {
   const handleProductSubmit = async (status) => {
     setUploadError('');
     setUploadSuccess('');
+
+    // Validate required fields before touching any network call
     if (!uploadForm.productNameEn && !uploadForm.productNameAr) {
       setUploadError(t('Product name is required.', 'اسم المنتج مطلوب.'));
       return;
     }
+    if (status === 'pending_review' && !uploadForm.categoryId) {
+      setUploadError(t(
+        'Please select a category before submitting for review.',
+        'يرجى اختيار التصنيف قبل إرسال المنتج للمراجعة.'
+      ));
+      return;
+    }
+
     setUploading(true);
     try {
-      const uid = user?.id || 'u-guest';
+      const uid = user?.id;
+      if (!uid) throw new Error('User session not found. Please log in again.');
 
+      // Step 1: Upload files to storage
       setUploadProgress(t('Uploading 3D files…', 'جارٍ رفع الملفات ثلاثية الأبعاد…'));
       const uploadedFiles = await Promise.all(
         selectedFiles.map(({ file }) => storageService.uploadProductFile(uid, file))
@@ -119,28 +135,41 @@ export default function SupplierDashboard() {
         )
       );
 
-      setUploadProgress(t('Saving product…', 'جارٍ حفظ المنتج…'));
-      await productService.createProduct(uid, {
-        product_name_en:       uploadForm.productNameEn,
-        product_name_ar:       uploadForm.productNameAr,
-        short_description_en:  uploadForm.description,
-        short_description_ar:  uploadForm.description,
-        category_id:           uploadForm.categoryId || null,
-        is_free:               !uploadForm.price || parseFloat(uploadForm.price) === 0,
-        price:                 parseFloat(uploadForm.price) || null,
-        currency:              'SAR',
-        status,
-        visibility:            'private',
-        featured_image_path:   uploadedImages[0]?.path || null,
-        images:                uploadedImages,
-        files:                 uploadedFiles,
+      // Step 2: Create the draft product row + link files/images
+      setUploadProgress(t('Creating product…', 'جارٍ إنشاء المنتج…'));
+      const draft = await productService.createDraft(uid, {
+        product_name_en:      uploadForm.productNameEn,
+        product_name_ar:      uploadForm.productNameAr,
+        short_description_en: uploadForm.description,
+        short_description_ar: uploadForm.description,
+        category_id:          uploadForm.categoryId || null,
+        is_free:              !uploadForm.price || parseFloat(uploadForm.price) === 0,
+        price:                parseFloat(uploadForm.price) || null,
+        currency:             'SAR',
+        visibility:           'private',
+        featured_image_path:  uploadedImages[0]?.path || null,
+        images:               uploadedImages,
+        files:                uploadedFiles,
       });
 
-      setUploadSuccess(
-        status === 'pending_review'
-          ? t('✓ Product submitted for review!', '✓ تم إرسال المنتج للمراجعة!')
-          : t('✓ Draft saved successfully!', '✓ تم حفظ المسودة!')
-      );
+      // Step 3: If submitting for review, call the server-side RPC.
+      // The RPC verifies ownership + category + state, then transitions
+      // draft → pending_review and generates the BUOD reference atomically.
+      // Success is only reported after the DB confirms pending_review.
+      if (status === 'pending_review') {
+        setUploadProgress(t('Submitting for review…', 'جارٍ الإرسال للمراجعة…'));
+        const submitted = await productService.submitProduct(draft.id);
+        setUploadSuccess(
+          t(
+            `✓ Submitted for review! Reference: ${submitted.buod_reference}`,
+            `✓ تم الإرسال للمراجعة! المرجع: ${submitted.buod_reference}`
+          )
+        );
+      } else {
+        setUploadSuccess(t('✓ Draft saved successfully!', '✓ تم حفظ المسودة بنجاح!'));
+      }
+
+      // Reset form only after confirmed success
       setUploadForm({ productNameEn: '', productNameAr: '', categoryId: '', price: '', description: '', materials: '' });
       setSelectedFiles([]);
       setSelectedImages([]);
@@ -451,10 +480,15 @@ export default function SupplierDashboard() {
                       <label className="block text-sm font-medium text-dark-brown mb-2">{t('Category', 'الفئة')}</label>
                       <select
                         className="input-field"
+                        disabled={categoriesLoading}
                         value={uploadForm.categoryId}
                         onChange={e => setUploadForm(f => ({ ...f, categoryId: e.target.value }))}
                       >
-                        <option value="">— {t('Select', 'اختر')} —</option>
+                        <option value="">
+                          {categoriesLoading
+                            ? t('Loading categories…', 'جارٍ تحميل التصنيفات…')
+                            : `— ${t('Select', 'اختر')} —`}
+                        </option>
                         {categories.map(cat => (
                           <option key={cat.id} value={cat.id}>
                             {cat.icon ? `${cat.icon} ` : ''}{lang === 'ar' ? cat.name_ar : cat.name_en}
@@ -628,7 +662,7 @@ export default function SupplierDashboard() {
                     <button
                       type="button"
                       className="btn-primary flex-1 justify-center py-3.5"
-                      disabled={uploading}
+                      disabled={uploading || categoriesLoading}
                       onClick={() => handleProductSubmit('pending_review')}
                     >
                       {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
