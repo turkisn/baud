@@ -237,7 +237,7 @@ export const productService = {
         product_files(*),
         product_specifications(*),
         product_materials(*),
-        product_components(*)
+        product_components!product_components_product_id_fkey(*)
       `)
       .eq('id', productId)
       .single();
