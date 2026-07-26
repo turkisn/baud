@@ -123,8 +123,15 @@ END $$;
 
 -- ─────────────────────────────────────────────────────────────────
 -- 4. Fix products_owner_update RLS policy
---    USING  → only allow edit when current status is owner-editable
---    WITH CHECK → after update, new status must be in allowed set
+--    USING     → row is editable only when current status is supplier-editable
+--    WITH CHECK → after update, new status must remain in supplier-editable set
+--
+--    'pending_review' is intentionally absent from WITH CHECK.
+--    A supplier cannot transition directly to pending_review via the API.
+--    That transition is exclusively performed by submit_product_for_review(),
+--    which is SECURITY DEFINER and bypasses RLS after enforcing all
+--    ownership / state / category checks server-side.
+--
 --    (migration 002 had no WITH CHECK; migration 006/010 may not have run)
 -- ─────────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "products_owner_update" ON public.products;
@@ -137,7 +144,7 @@ CREATE POLICY "products_owner_update" ON public.products
   )
   WITH CHECK (
     created_by = auth.uid()
-    AND status IN ('draft', 'pending_review', 'rejected', 'revision_required')
+    AND status IN ('draft', 'rejected', 'revision_required')
   );
 
 
@@ -361,15 +368,38 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_auto_buod_reference ON public.products;
-CREATE TRIGGER trg_auto_buod_reference
+-- Rename to numbered form to make execution order explicit and immutable.
+-- PostgreSQL fires BEFORE triggers alphabetically: trg_01_* before trg_02_*.
+-- Drop all prior names so the migration is idempotent regardless of which
+-- previous migration ran.
+DROP TRIGGER IF EXISTS trg_auto_buod_reference    ON public.products;
+DROP TRIGGER IF EXISTS trg_02_auto_buod_reference ON public.products;
+CREATE TRIGGER trg_02_auto_buod_reference
   BEFORE INSERT OR UPDATE OF status ON public.products
   FOR EACH ROW
   EXECUTE FUNCTION public.auto_set_buod_reference();
 
 
 -- ─────────────────────────────────────────────────────────────────
--- 10. Ensure enforce_product_column_acl trigger exists
+-- 10. enforce_product_column_acl trigger (supplier ACL guard)
+--
+--     Execution order guarantee
+--     ─────────────────────────
+--     PostgreSQL fires BEFORE triggers on the same table in alphabetical
+--     order by trigger name. Trigger names are chosen to enforce this:
+--
+--       trg_01_enforce_product_column_acl  ← fires FIRST  (this trigger)
+--       trg_02_auto_buod_reference         ← fires SECOND (section 9)
+--
+--     Critical invariant for buod_reference:
+--       1. trg_01 sets NEW.buod_reference := OLD.buod_reference
+--             → supplier cannot inject a value; resets to current DB value
+--       2. trg_02 then checks: if NEW.status='pending_review' AND
+--          NEW.buod_reference IS NULL → generates a new reference.
+--             → on first submit: OLD.buod_reference=NULL → trg_02 generates ✓
+--             → on resubmit:    OLD.buod_reference='BUOD-...' → trg_02 skips ✓
+--             → on direct supplier UPDATE (status stays draft): trg_02 skips ✓
+--
 --     (idempotent — migration 006 creates it; may not have run)
 -- ─────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.enforce_product_column_acl()
@@ -386,7 +416,7 @@ BEGIN
 
   IF TG_OP = 'INSERT' THEN
     -- Force all security-sensitive columns to safe defaults on INSERT.
-    -- This is the primary defence against a supplier self-approving via API.
+    -- Primary defence against a supplier self-approving via the REST API.
     NEW.status              := 'draft';
     NEW.visibility          := 'private';
     NEW.verification_status := 'unverified';
@@ -397,24 +427,33 @@ BEGIN
     NEW.buod_reference      := NULL;
 
   ELSIF TG_OP = 'UPDATE' THEN
-    -- Preserve admin-only columns; supplier may NOT modify these.
-    -- status is intentionally excluded — suppliers must be able to
-    -- change it (draft → pending_review) via submit_product_for_review().
+    -- Preserve all admin-only columns; supplier may NOT modify these.
+    -- status is intentionally NOT reset here — the RLS WITH CHECK on
+    -- products_owner_update already prevents supplier from setting it to
+    -- 'pending_review' or 'approved' via the direct API. The SECURITY
+    -- DEFINER RPC submit_product_for_review() bypasses RLS and is the
+    -- only path that legitimately sets status = 'pending_review'.
     NEW.approved_by         := OLD.approved_by;
     NEW.approved_at         := OLD.approved_at;
     NEW.verification_status := OLD.verification_status;
     NEW.visibility          := OLD.visibility;
     NEW.admin_notes         := OLD.admin_notes;
     NEW.rejection_reason    := OLD.rejection_reason;
-    -- buod_reference excluded: trg_auto_buod_reference is sole authority.
+    -- Preserve buod_reference so supplier cannot set it via the REST API.
+    -- trg_02_auto_buod_reference fires after this trigger and overwrites
+    -- this value only when status transitions to 'pending_review' AND the
+    -- value is NULL (i.e., first submission). See execution-order note above.
+    NEW.buod_reference      := OLD.buod_reference;
   END IF;
 
   RETURN NEW;
 END;
 $$;
 
-DROP TRIGGER IF EXISTS enforce_product_column_acl ON public.products;
-CREATE TRIGGER enforce_product_column_acl
+-- Drop all prior trigger names (idempotent across all previous migrations).
+DROP TRIGGER IF EXISTS enforce_product_column_acl        ON public.products;
+DROP TRIGGER IF EXISTS trg_01_enforce_product_column_acl ON public.products;
+CREATE TRIGGER trg_01_enforce_product_column_acl
   BEFORE INSERT OR UPDATE ON public.products
   FOR EACH ROW
   EXECUTE FUNCTION public.enforce_product_column_acl();
@@ -433,12 +472,14 @@ CREATE TRIGGER enforce_product_column_acl
 --     affected by the role switch. Ownership is therefore verifiable.
 --
 --     Trigger behaviour inside SECURITY DEFINER context:
---     - enforce_product_column_acl fires on the UPDATE statement.
---       get_my_role() inside that trigger reads auth.uid() → supplier role
---       → UPDATE path preserves admin-only cols, does NOT touch status. ✓
---     - trg_auto_buod_reference fires on UPDATE OF status.
---       generate_buod_reference() is also SECURITY DEFINER → bypasses
---       counters deny-all RLS → counter increments correctly. ✓
+--     - trg_01_enforce_product_column_acl fires first (alphabetical order).
+--       get_my_role() reads auth.uid() → supplier role → UPDATE path fires:
+--       preserves admin-only cols AND sets NEW.buod_reference := OLD.buod_reference.
+--       For a new draft OLD.buod_reference = NULL, so NEW.buod_reference = NULL. ✓
+--     - trg_02_auto_buod_reference fires second on UPDATE OF status.
+--       Sees NEW.status='pending_review' AND NEW.buod_reference IS NULL →
+--       generates the BUOD reference. generate_buod_reference() is also
+--       SECURITY DEFINER → bypasses counters deny-all RLS → counter OK. ✓
 --
 --     The function returns the product row after all triggers have run,
 --     so the caller receives the actual status and buod_reference that
@@ -517,22 +558,56 @@ GRANT  EXECUTE ON FUNCTION public.submit_product_for_review(UUID) TO authenticat
 -- ─────────────────────────────────────────────────────────────────
 -- SECURITY INVARIANTS AFTER MIGRATION 011
 --
--- ✓ products_owner_update WITH CHECK prevents supplier from setting
---   status to 'approved' or 'archived' via direct UPDATE.
--- ✓ enforce_product_column_acl BEFORE INSERT forces status='draft'
---   regardless of what the supplier sends.
--- ✓ enforce_product_column_acl BEFORE UPDATE preserves admin-only
---   columns; supplier cannot set approved_by, verified_status, etc.
--- ✓ submit_product_for_review() checks ownership server-side before
---   touching any data; a supplier cannot submit another user's product.
--- ✓ submit_product_for_review() requires category_id != NULL; a product
---   without a category cannot reach pending_review.
--- ✓ generate_buod_reference() is SECURITY DEFINER; the counter INSERT
---   bypasses deny-all RLS on buod_reference_counters.
--- ✓ BUOD reference is set by the server-side trigger only, never by
---   the supplier directly.
--- ✓ Concurrent submissions of the same product are prevented by
---   SELECT ... FOR UPDATE in submit_product_for_review().
+-- SUPPLIER DIRECT API (supabase-js .from('products').update/insert)
+-- ─────────────────────────────────────────────────────────────────
+-- ✓ Cannot set status = 'pending_review':
+--     products_owner_update WITH CHECK only allows ('draft','rejected',
+--     'revision_required'). Any attempt to set pending_review via direct
+--     UPDATE returns 0 rows with no error (PostgreSQL RLS behaviour).
+--
+-- ✓ Cannot set status = 'approved' or 'archived':
+--     Same WITH CHECK blocks those values unconditionally.
+--
+-- ✓ Cannot set buod_reference:
+--     trg_01_enforce_product_column_acl BEFORE INSERT forces buod_reference=NULL.
+--     trg_01 BEFORE UPDATE sets NEW.buod_reference := OLD.buod_reference,
+--     resetting any supplier-supplied value back to the current DB value.
+--
+-- ✓ Cannot set approved_by, approved_at, verification_status, visibility,
+--   admin_notes, rejection_reason:
+--     trg_01 BEFORE UPDATE preserves all OLD values for these columns.
+--
+-- ✓ Cannot submit another user's product:
+--     products_owner_update USING requires created_by = auth.uid().
+--
+-- SUBMIT VIA RPC submit_product_for_review(product_id)
+-- ─────────────────────────────────────────────────────────────────
+-- ✓ Only path to pending_review for suppliers.
+--     SECURITY DEFINER bypasses RLS; all business rules enforced in code.
+--
+-- ✓ Ownership verified: created_by IS DISTINCT FROM auth.uid() → NOT_OWNER.
+--
+-- ✓ State verified: only ('draft','rejected','revision_required') → pending_review.
+--
+-- ✓ Category required: category_id IS NULL → CATEGORY_REQUIRED exception.
+--
+-- ✓ Race-safe: SELECT … FOR UPDATE locks the row for the transaction.
+--
+-- ✓ BUOD reference generated exactly once:
+--     trg_01 sets NEW.buod_reference := OLD.buod_reference (NULL on first submit).
+--     trg_02 sees NULL → generates reference. On resubmit, trg_02 sees
+--     existing reference → skips generation. Reference never changes after
+--     first submission.
+--
+-- TRIGGER ORDERING (deterministic, alphabetical)
+-- ─────────────────────────────────────────────────────────────────
+-- ✓ trg_01_enforce_product_column_acl fires before trg_02_auto_buod_reference.
+--     Numbered prefix makes this ordering explicit and immune to future
+--     trigger additions that might fall alphabetically between 'e' and 't'.
+--
+-- GENERAL
+-- ─────────────────────────────────────────────────────────────────
 -- ✓ All SECURITY DEFINER functions have SET search_path = public.
--- ✓ submit_product_for_review() is callable only by authenticated users.
+-- ✓ generate_buod_reference() bypasses deny-all RLS on buod_reference_counters.
+-- ✓ submit_product_for_review() is callable only by 'authenticated' role.
 -- ─────────────────────────────────────────────────────────────────
