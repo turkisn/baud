@@ -24,7 +24,7 @@ export default function ProductCard({ product }) {
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{t('Image unavailable', 'الصورة غير متاحة')}</span></div>
         )}
-        {product.buod_reference && <span className="absolute left-3 top-3 rounded-lg bg-deep-brown/90 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-warm-white">{product.buod_reference}</span>}
+        {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg bg-deep-brown/90 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-warm-white">{product.buod_reference}</span>}
       </div>
       <div className="p-5">
         <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-gold"><Box size={12} />{category || t('Uncategorised', 'غير مصنف')}</div>

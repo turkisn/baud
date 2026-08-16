@@ -82,7 +82,7 @@ export default function Home() {
                     <path d="m37 52 58 32 58-32M95 84v64" fill="none" stroke="#6A5744" />
                     <path d="M52 61v47l43 24M138 61v47l-43 24" fill="none" stroke="#C9A84C" strokeDasharray="3 3" />
                   </svg>
-                  <span className="absolute bottom-3 left-3 rounded-md bg-white/90 px-2 py-1 font-mono text-[9px] text-medium-brown">3D PREVIEW</span>
+                  <span className="absolute bottom-3 start-3 rounded-md bg-white/90 px-2 py-1 font-mono text-[9px] text-medium-brown">3D PREVIEW</span>
                 </div>
                 <div className="space-y-3">
                   {[['01', t('Product identity', 'هوية المنتج')], ['02', t('Specifications', 'المواصفات')], ['03', t('Supplier data', 'بيانات المورد')], ['04', 'BIM / 3D']].map(([number, label]) => <div key={number} className="flex items-center gap-3 rounded-xl border border-sand bg-white p-3"><span className="font-mono text-[10px] text-gold">{number}</span><span className="text-xs font-semibold">{label}</span></div>)}

@@ -30,7 +30,7 @@ export default function Blocks() {
     return () => window.clearTimeout(timer);
   }, [query, categoryId]);
 
-  return <div className="min-h-screen bg-ivory pt-[70px]">
+  return <div className="min-h-screen bg-ivory pt-[76px]">
     <header className="bg-dark-brown px-6 py-16 text-warm-white"><div className="mx-auto max-w-7xl"><p className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-gold">{t('BUOD data library', 'مكتبة بيانات بُعد')}</p><h1 className="text-4xl font-black sm:text-5xl">{t('Construction blocks', 'بلوكات البناء')}</h1><p className="mt-4 max-w-2xl text-sand/75">{t('Search professional construction products and their available BIM and 3D data.', 'ابحث في منتجات البناء الاحترافية وبيانات BIM والمجسمات المتاحة.')}</p></div></header>
     <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8 grid gap-3 rounded-2xl border border-sand bg-white p-4 shadow-card sm:grid-cols-[1fr_280px]">

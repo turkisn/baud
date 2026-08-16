@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Eye, EyeOff, Mail, Lock, User, Building,
@@ -26,32 +26,41 @@ const userTypes = [
 ].map((u, i) => ({ ...u, key: i }));
 
 // Map Arabic Supabase errors to readable Arabic messages
-function mapError(err) {
+function mapError(err, lang) {
   if (!err) return null;
   const msg = err.message || String(err);
-  if (msg.includes('Invalid login credentials'))    return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-  if (msg.includes('Email not confirmed'))          return 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
-  if (msg.includes('User already registered'))      return 'هذا البريد الإلكتروني مسجّل مسبقاً. جرّب تسجيل الدخول.';
-  if (msg.includes('Password should be'))           return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.';
-  if (msg.includes('Unable to validate email'))     return 'صيغة البريد الإلكتروني غير صحيحة.';
-  if (msg.includes('rate limit'))                   return 'عدد كبير من المحاولات. انتظر دقيقة وحاول مجدداً.';
-  if (msg.includes('Supabase not configured'))      return 'التسجيل غير مفعّل في هذه البيئة. أضف متغيرات VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في Vercel ثم أعد النشر.';
-  return msg;
+  const message = (en, ar) => lang === 'ar' ? ar : en;
+  if (msg.includes('Invalid login credentials')) return message('Email or password is incorrect.', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+  if (msg.includes('Email not confirmed')) return message('Confirm your email before signing in.', 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.');
+  if (msg.includes('User already registered')) return message('This email is already registered. Try signing in.', 'هذا البريد مسجّل مسبقاً. جرّب تسجيل الدخول.');
+  if (msg.includes('Password should be')) return message('Password must be at least 8 characters.', 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.');
+  if (msg.includes('Unable to validate email')) return message('Enter a valid email address.', 'أدخل بريداً إلكترونياً صحيحاً.');
+  if (msg.toLowerCase().includes('rate limit')) return message('Too many attempts. Wait a moment and try again.', 'محاولات كثيرة. انتظر قليلاً ثم حاول مجدداً.');
+  return message('Authentication is temporarily unavailable. Please try again.', 'المصادقة غير متاحة مؤقتاً. يرجى المحاولة مجدداً.');
 }
 
 export default function Login() {
   const { t, lang, toggleLang } = useLanguage();
   const { login, register, user } = useAuth();
   const navigate                  = useNavigate();
+  const routerLocation            = useLocation();
   const [searchParams]            = useSearchParams();
+
+  const requestedFrom = routerLocation.state?.from;
+  const requestedPath = typeof requestedFrom === 'string' ? requestedFrom : requestedFrom?.pathname;
+  const returnPath = typeof requestedPath === 'string'
+    && requestedPath.startsWith('/')
+    && !requestedPath.startsWith('//')
+    ? requestedPath
+    : '/';
 
   // If user is already authenticated (e.g. arrived here after clicking the
   // email confirmation link — Supabase appends #access_token=… to the URL,
   // the JS client processes it via onAuthStateChange, and AuthContext sets user),
   // redirect them away from the login page immediately.
   useEffect(() => {
-    if (user) navigate('/', { replace: true });
-  }, [user, navigate]);
+    if (user) navigate(returnPath, { replace: true });
+  }, [user, navigate, returnPath]);
 
   const [mode, setMode]         = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
   const [showPass, setShowPass] = useState(false);
@@ -78,8 +87,10 @@ export default function Login() {
       errs.name = lang === 'ar' ? 'الاسم مطلوب.' : 'Name is required.';
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
       errs.email = lang === 'ar' ? 'بريد إلكتروني صحيح مطلوب.' : 'Valid email required.';
-    if (!form.password || form.password.length < 6)
-      errs.password = lang === 'ar' ? 'كلمة المرور 6 أحرف على الأقل.' : 'Password must be at least 6 characters.';
+    if (!form.password)
+      errs.password = lang === 'ar' ? 'كلمة المرور مطلوبة.' : 'Password is required.';
+    else if (mode === 'signup' && form.password.length < 8)
+      errs.password = lang === 'ar' ? 'كلمة المرور 8 أحرف على الأقل.' : 'Password must be at least 8 characters.';
     return errs;
   }
 
@@ -114,8 +125,7 @@ export default function Login() {
         setSuccess(true);
       }
     } catch (err) {
-      console.error('[BUOD auth error]', err);
-      setError(mapError(err));
+      setError(mapError(err, lang));
     } finally {
       setLoading(false);
     }
@@ -173,9 +183,6 @@ export default function Login() {
 
         <div className="relative">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-dark-brown rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-xl" style={{ fontFamily: 'Tajawal' }}>ب</span>
-            </div>
             <span className="text-warm-white font-black text-2xl tracking-[0.16em]">BUOD</span>
           </Link>
         </div>
@@ -210,18 +217,15 @@ export default function Login() {
       </div>
 
       {/* Right Form Panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-warm-white overflow-y-auto">
+      <div className="min-h-screen flex-1 flex items-start justify-center overflow-y-auto bg-warm-white px-6 py-8 lg:items-center lg:py-12">
         <motion.div variants={stagger} initial="hidden" animate="visible" className="w-full max-w-md">
 
           {/* Language toggle */}
           <motion.div variants={fadeInUp} className="flex justify-between items-center mb-8">
             <Link to="/" className="lg:hidden flex items-center gap-2">
-              <div className="w-8 h-8 bg-dark-brown rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm" style={{ fontFamily: 'Tajawal' }}>ب</span>
-              </div>
               <span className="font-black tracking-[0.14em] text-dark-brown">BUOD</span>
             </Link>
-            <button onClick={toggleLang} className="flex items-center gap-1.5 text-sm text-medium-brown hover:text-dark-brown ml-auto">
+            <button onClick={toggleLang} className="flex items-center gap-1.5 text-sm text-medium-brown hover:text-dark-brown ms-auto">
               <Globe size={15} /> {lang === 'ar' ? 'EN' : 'عربي'}
             </button>
           </motion.div>
@@ -281,9 +285,9 @@ export default function Login() {
               <div>
                 <label className="label">{t('Full Name', 'الاسم الكامل')}</label>
                 <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                  <User size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                   <input
-                    className={`input-field pl-10 ${fieldErrors.name ? 'border-red-400' : ''}`}
+                    className={`input-field ps-10 ${fieldErrors.name ? 'border-red-400' : ''}`}
                     placeholder={t('Your full name', 'اسمك الكامل')}
                     value={form.name}
                     onChange={set('name')}
@@ -301,10 +305,10 @@ export default function Login() {
             <div>
               <label className="label">{t('Email Address', 'البريد الإلكتروني')}</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                <Mail size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                 <input
                   type="email"
-                  className={`input-field pl-10 ${fieldErrors.email ? 'border-red-400' : ''}`}
+                  className={`input-field ps-10 ${fieldErrors.email ? 'border-red-400' : ''}`}
                   placeholder="email@company.com"
                   value={form.email}
                   onChange={set('email')}
@@ -322,9 +326,9 @@ export default function Login() {
               <div>
                 <label className="label">{t('Company / University', 'الشركة / الجامعة')}</label>
                 <div className="relative">
-                  <Building size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                  <Building size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                   <input
-                    className="input-field pl-10"
+                    className="input-field ps-10"
                     placeholder={t('Where you work or study', 'جهة عملك أو دراستك')}
                     value={form.company}
                     onChange={set('company')}
@@ -338,10 +342,10 @@ export default function Login() {
             <div>
               <label className="label">{t('Password', 'كلمة المرور')}</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                <Lock size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                 <input
                   type={showPass ? 'text' : 'password'}
-                  className={`input-field pl-10 pr-10 ${fieldErrors.password ? 'border-red-400' : ''}`}
+                  className={`input-field ps-10 pe-10 ${fieldErrors.password ? 'border-red-400' : ''}`}
                   placeholder="••••••••"
                   value={form.password}
                   onChange={set('password')}
@@ -351,7 +355,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-light-brown hover:text-dark-brown"
+                  className="absolute end-3.5 top-1/2 -translate-y-1/2 text-light-brown hover:text-dark-brown"
                   tabIndex={-1}
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -362,7 +366,7 @@ export default function Login() {
               )}
               {mode === 'signup' && !fieldErrors.password && (
                 <p className="mt-1 text-xs text-light-brown">
-                  {t('Minimum 6 characters', 'الحد الأدنى 6 أحرف')}
+                  {t('Minimum 8 characters', 'الحد الأدنى 8 أحرف')}
                 </p>
               )}
             </div>

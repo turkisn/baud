@@ -31,16 +31,14 @@ export function AuthProvider({ children }) {
     // on subscription (reads from localStorage, no network), then SIGNED_IN / SIGNED_OUT
     // as the session changes. No need for a separate getSession() call.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[BUOD:auth] event:', event, '| user:', session?.user?.email ?? null);
+      if (import.meta.env.DEV) console.debug('[BUOD:auth]', event);
 
       if (session?.user) {
         try {
           const profile = await fetchProfile(session.user.id);
-          console.log('[BUOD:auth] profile fetched:', profile?.role ?? 'none');
           setUser(mergeProfile(session.user, profile));
-        } catch (err) {
+        } catch {
           // Profile table not accessible — use auth data only; user is still authenticated
-          console.warn('[BUOD:auth] fetchProfile error (using auth data only):', err?.message);
           setUser(mergeProfile(session.user, null));
         }
       } else {
@@ -59,7 +57,7 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single();
-    if (error) console.warn('[BUOD:auth] fetchProfile error:', error.code, error.message);
+    if (error && import.meta.env.DEV) console.debug('[BUOD:auth] Profile unavailable:', error.code);
     return data ?? null;
   }
 
@@ -83,21 +81,19 @@ export function AuthProvider({ children }) {
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error('بريد إلكتروني أو كلمة مرور غير صحيحة');
+    if (error) throw new Error('Invalid login credentials');
     // Do NOT call setUser here. onAuthStateChange SIGNED_IN fires next and calls
     // fetchProfile, so user state is only committed once the real role is known.
     // This prevents DashboardRouter from seeing a stale role='user' fallback and
     // routing the user to /user/dashboard before the profile loads.
-    // Login.jsx's useEffect(()=>{ if(user) navigate('/') }) fires naturally after
-    // onAuthStateChange sets the real profile.
-    console.log('[BUOD:auth] signInWithPassword success, awaiting onAuthStateChange:', data.user?.email);
+    // Login.jsx navigates only after onAuthStateChange commits the server profile.
     return data;
   };
 
   // ── Register ──────────────────────────────────────────────────
   const register = async ({ email, password, fullName, userType, companyName }) => {
     if (!SUPABASE_CONFIGURED) {
-      throw new Error('التسجيل غير متاح في وضع التجريبي');
+      throw new Error('Account registration is unavailable.');
     }
     const { data, error } = await supabase.auth.signUp({
       email,
