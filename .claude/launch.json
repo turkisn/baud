@@ -2,8 +2,8 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "buad-dev",
-      "runtimeExecutable": "/Users/macbook/nodejs-local/bin/npm",
+      "name": "buod-dev",
+      "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173,
       "autoPort": false

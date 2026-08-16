@@ -1,4 +1,4 @@
-# BUAD Admin Backoffice — Status
+# BUOD Admin Backoffice — Status
 
 Last updated: 2026-07-19
 

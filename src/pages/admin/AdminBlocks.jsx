@@ -221,7 +221,7 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
       });
       const productId = saved?.id || product.id;
       if (!productId) throw new Error('The backend did not return the saved product ID.');
-      setProduct((current) => ({ ...current, id: productId, publication_state: publicationState }));
+      setProduct((current) => ({ ...current, id: productId }));
       await mvpAdminService.replaceSpecifications(productId, product.specifications || []);
       const fresh = await mvpAdminService.getProduct(productId);
       setProduct({ ...EMPTY_PRODUCT, ...fresh, price: fresh.price ?? '' });

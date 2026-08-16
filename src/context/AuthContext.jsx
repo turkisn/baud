@@ -111,7 +111,7 @@ export function AuthProvider({ children }) {
   // ── Logout ────────────────────────────────────────────────────
   const logout = async () => {
     if (!SUPABASE_CONFIGURED) {
-      localStorage.removeItem('buad_session');
+      localStorage.removeItem('buod_session');
       setUser(null);
       return;
     }
