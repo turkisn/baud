@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart2, ClipboardList, Users, Store, Factory,
-  Tag, Settings, Home, LogOut, ChevronRight,
+  Tag, Settings, Home, LogOut,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';

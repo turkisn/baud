@@ -1,4 +1,4 @@
-import { Settings, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { SUPABASE_CONFIGURED } from '../../lib/supabase';

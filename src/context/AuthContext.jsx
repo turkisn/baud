@@ -3,14 +3,6 @@ import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 
 const AuthContext = createContext();
 
-// ── Demo accounts (used when Supabase is not yet configured) ──
-const DEMO_USERS = {
-  'admin@buad.com':    { id: 'u-admin',    name: 'Admin BUAD',     nameAr: 'مدير بُعد',      role: 'admin',    email: 'admin@buad.com',    password: 'admin123' },
-  'supplier@buad.com': { id: 'u-supplier', name: 'Saudi Supplier',  nameAr: 'مورد سعودي',    role: 'supplier', email: 'supplier@buad.com', password: 'sup123' },
-  'designer@buad.com': { id: 'u-designer', name: 'Ali Designer',    nameAr: 'علي المصمم',    role: 'designer', email: 'designer@buad.com', password: 'des123' },
-  'user@buad.com':     { id: 'u-user',     name: 'Test User',       nameAr: 'مستخدم تجريبي', role: 'user',     email: 'user@buad.com',     password: 'user123' },
-};
-
 export const ROLES = {
   USER:         'user',
   DESIGNER:     'designer',
@@ -31,10 +23,6 @@ export function AuthProvider({ children }) {
   // ── Supabase mode: listen to auth state ──────────────────────
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) {
-      const saved = localStorage.getItem('buad_session');
-      if (saved) {
-        try { setUser(JSON.parse(saved)); } catch {}
-      }
       setLoading(false);
       return;
     }
@@ -83,21 +71,15 @@ export function AuthProvider({ children }) {
       nameAr: profile?.full_name || authUser.email,
       role: profile?.role || 'user',
       avatar_url: profile?.avatar_url || null,
-      company_name: profile?.company_name || null,
+      user_type: profile?.user_type || authUser.user_metadata?.user_type || 'general_user',
+      company_name: profile?.company_name || authUser.user_metadata?.company_name || null,
     };
   }
 
   // ── Login ─────────────────────────────────────────────────────
   const login = async (email, password) => {
     if (!SUPABASE_CONFIGURED) {
-      const found = DEMO_USERS[email];
-      if (!found || found.password !== password) {
-        throw new Error('بريد إلكتروني أو كلمة مرور غير صحيحة');
-      }
-      const { password: _, ...safeUser } = found;
-      localStorage.setItem('buad_session', JSON.stringify(safeUser));
-      setUser(safeUser);
-      return safeUser;
+      throw new Error('Authentication is not configured in this environment.');
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -113,7 +95,7 @@ export function AuthProvider({ children }) {
   };
 
   // ── Register ──────────────────────────────────────────────────
-  const register = async ({ email, password, fullName, role = 'user' }) => {
+  const register = async ({ email, password, fullName, userType, companyName }) => {
     if (!SUPABASE_CONFIGURED) {
       throw new Error('التسجيل غير متاح في وضع التجريبي');
     }
@@ -121,7 +103,7 @@ export function AuthProvider({ children }) {
       email,
       password,
       options: {
-        data: { full_name: fullName, role },
+        data: { full_name: fullName, user_type: userType, company_name: companyName || null },
         emailRedirectTo: `${window.location.origin}/login`,
       },
     });

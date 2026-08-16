@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  CheckCircle, XCircle, MessageSquare, Eye, BadgeCheck,
+  CheckCircle, XCircle, Eye, BadgeCheck,
   Home, Search, Package, Shield, X, RotateCcw,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -107,7 +107,7 @@ function RejectModal({ product, onConfirm, onClose, lang }) {
   );
 }
 
-function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision, onUpdateField, lang }) {
+function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision, onUpdateField }) {
   const [fieldUpdating, setFieldUpdating] = useState(null); // e.g. 'visibility:public'
   const [fieldError, setFieldError]       = useState('');
 
@@ -334,7 +334,7 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision,
 
 // ─── MAIN ─────────────────────────────────────────────────────
 export default function ProductReview() {
-  const { t, lang }       = useLanguage();
+  const { lang }          = useLanguage();
   const { user, isAdmin } = useAuth();
 
   const [products, setProducts]   = useState([]);
@@ -562,7 +562,6 @@ export default function ProductReview() {
           onReject={(p) => setRejT(p)}
           onRevision={(p) => setRevT(p)}
           onUpdateField={handleUpdateField}
-          lang={lang}
         />
       )}
 

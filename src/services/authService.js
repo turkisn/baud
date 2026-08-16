@@ -1,13 +1,13 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 
 export const authService = {
-  async signUp({ email, password, fullName, role = 'user' }) {
+  async signUp({ email, password, fullName, userType, companyName }) {
     if (!SUPABASE_CONFIGURED) throw new Error('Supabase not configured');
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, role },
+        data: { full_name: fullName, user_type: userType, company_name: companyName || null },
         // Always redirect back to this domain, regardless of Supabase Site URL setting.
         // The hash fragment (#access_token=…) is processed automatically by the Supabase
         // JS client on the /login page, which then fires onAuthStateChange.

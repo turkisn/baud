@@ -7,18 +7,23 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
 import { fadeInUp, stagger } from '../utils/animations';
 
-// Roles that match the DB enum exactly
 const userTypes = [
-  { id: 'designer',     icon: '🎨', en: 'Designer',     ar: 'مصمم'    },
-  { id: 'designer',     icon: '🏛️', en: 'Architect',    ar: 'معماري'  },
-  { id: 'user',         icon: '🔨', en: 'Contractor',   ar: 'مقاول'   },
-  { id: 'supplier',     icon: '📦', en: 'Supplier',     ar: 'مورد'    },
-  { id: 'user',         icon: '🎓', en: 'Student',      ar: 'طالب'    },
-].map((u, i) => ({ ...u, key: i })); // unique key per item
+  { id: 'general_user', en: 'General user', ar: 'مستخدم عام' },
+  { id: 'interior_designer', en: 'Interior designer', ar: 'مصمم داخلي' },
+  { id: 'architect', en: 'Architect', ar: 'معماري' },
+  { id: 'engineer', en: 'Engineer', ar: 'مهندس' },
+  { id: 'design_office', en: 'Design office', ar: 'مكتب تصميم' },
+  { id: 'engineering_office', en: 'Engineering office', ar: 'مكتب هندسي' },
+  { id: 'contractor', en: 'Contractor', ar: 'مقاول' },
+  { id: 'developer', en: 'Developer', ar: 'مطور' },
+  { id: 'student', en: 'Student', ar: 'طالب' },
+  { id: 'supplier_representative', en: 'Supplier representative', ar: 'ممثل مورد' },
+  { id: 'manufacturer_representative', en: 'Manufacturer representative', ar: 'ممثل مصنّع' },
+  { id: 'other', en: 'Other', ar: 'أخرى' },
+].map((u, i) => ({ ...u, key: i }));
 
 // Map Arabic Supabase errors to readable Arabic messages
 function mapError(err) {
@@ -98,13 +103,12 @@ export default function Login() {
         await login(form.email, form.password);
         // navigation is handled by the useEffect below that watches user
       } else {
-        // authService.signUp() includes role in user_metadata for the DB trigger
-        const role = userTypes[userTypeIdx].id;
-        await authService.signUp({
+        await register({
           email:    form.email,
           password: form.password,
           fullName: form.name,
-          role,
+          userType: userTypes[userTypeIdx].id,
+          companyName: form.company,
         });
         setSuccess(true);
       }
