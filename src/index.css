@@ -47,6 +47,20 @@ body {
            hover:bg-beige active:scale-[0.98] transition-all duration-200
            inline-flex items-center gap-2;
   }
+  .admin-primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-dark-brown px-4 py-2.5
+           text-sm font-semibold text-warm-white transition hover:bg-deep-brown focus:outline-none
+           focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .admin-secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-sand bg-white px-4 py-2.5
+           text-sm font-semibold text-medium-brown transition hover:border-beige hover:bg-warm-white
+           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .admin-icon-button {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-medium-brown transition
+           hover:bg-sand focus:outline-none focus:ring-2 focus:ring-gold disabled:cursor-not-allowed disabled:opacity-40;
+  }
 
   /* ─── Cards ────────────────────────────────────────────── */
   .card {
@@ -140,4 +154,3 @@ body {
 .hero-gradient {
   background: linear-gradient(135deg, #4A392D 0%, #2E1F13 55%, #4A392D 100%);
 }
-

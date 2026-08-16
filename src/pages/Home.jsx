@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Box, Building2, Database, FileBox, Layers3, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ProductCard from '../components/mvp/ProductCard';
-import { EmptyState, LoadingState } from '../components/mvp/States';
+import { EmptyState, ErrorState, LoadingState } from '../components/mvp/States';
 import { useLanguage } from '../context/LanguageContext';
 import { mvpService } from '../services/mvpService';
 
@@ -13,18 +13,30 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [productState, setProductState] = useState({ loading: true, error: '' });
+  const [categoryState, setCategoryState] = useState({ loading: true, error: '' });
+  const [supplierState, setSupplierState] = useState({ loading: true, error: '' });
 
   useEffect(() => {
-    Promise.all([
-      mvpService.getLatestProducts(8),
-      mvpService.getCategories(),
-      mvpService.getSuppliers({ limit: 4 }),
-    ]).then(([productRows, categoryRows, supplierRows]) => {
-      setProducts(productRows);
-      setCategories(categoryRows);
-      setSuppliers(supplierRows);
-    }).catch(() => {}).finally(() => setLoading(false));
+    let active = true;
+    mvpService.recordEvent('page_view', { page: 'home' });
+
+    mvpService.getLatestProducts(8)
+      .then((rows) => { if (active) setProducts(rows); })
+      .catch((error) => { if (active) setProductState({ loading: false, error: error.message }); })
+      .finally(() => { if (active) setProductState((state) => ({ ...state, loading: false })); });
+
+    mvpService.getCategories()
+      .then((rows) => { if (active) setCategories(rows); })
+      .catch((error) => { if (active) setCategoryState({ loading: false, error: error.message }); })
+      .finally(() => { if (active) setCategoryState((state) => ({ ...state, loading: false })); });
+
+    mvpService.getSuppliers({ limit: 4 })
+      .then((rows) => { if (active) setSuppliers(rows); })
+      .catch((error) => { if (active) setSupplierState({ loading: false, error: error.message }); })
+      .finally(() => { if (active) setSupplierState((state) => ({ ...state, loading: false })); });
+
+    return () => { active = false; };
   }, []);
 
   const submit = (event) => {
@@ -100,7 +112,7 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
         <SectionHeading eyebrow={t('Browse the library', 'تصفح المكتبة')} title={t('Product categories', 'فئات المنتجات')} link="/blocks" t={t} lang={lang} />
-        {loading ? <LoadingState /> : categories.length ? (
+        {categoryState.loading ? <LoadingState /> : categoryState.error ? <ErrorState message={categoryState.error} /> : categories.length ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {categories.slice(0, 8).map((category, index) => <Link key={category.id} to={`/blocks?category=${category.id}`} className="group flex min-h-28 items-end justify-between rounded-2xl border border-sand bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:border-gold/60"><div><span className="font-mono text-[10px] text-gold">{String(index + 1).padStart(2, '0')}</span><h3 className="mt-3 font-bold text-dark-brown">{lang === 'ar' ? category.name_ar : category.name_en}</h3></div><span className="text-2xl text-gold">{category.icon || '◇'}</span></Link>)}
           </div>
@@ -110,14 +122,14 @@ export default function Home() {
       <section className="border-y border-sand/70 bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading eyebrow={t('Product library', 'مكتبة المنتجات')} title={t('Featured / Latest Blocks', 'البلوكات المميزة / الأحدث')} link="/blocks" t={t} lang={lang} />
-          {loading ? <LoadingState /> : products.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product} />)}</div> : <EmptyState title={t('No published blocks yet', 'لا توجد بلوكات منشورة حالياً')} description={t('Approved database records will appear here when available.', 'ستظهر سجلات قاعدة البيانات المعتمدة هنا عند توفرها.')} />}
+          {productState.loading ? <LoadingState /> : productState.error ? <ErrorState message={productState.error} /> : products.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product} />)}</div> : <EmptyState title={t('No published blocks yet', 'لا توجد بلوكات منشورة حالياً')} description={t('Published database records will appear here when available.', 'ستظهر سجلات قاعدة البيانات المنشورة هنا عند توفرها.')} />}
         </div>
       </section>
 
       <section className="bg-[#EEE6DA] py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading eyebrow={t('From the source', 'من المصدر')} title={t('Supplier Windows', 'نوافذ الموردين')} link="/suppliers" t={t} lang={lang} />
-          {loading ? <LoadingState /> : suppliers.length ? (
+          {supplierState.loading ? <LoadingState /> : supplierState.error ? <ErrorState message={supplierState.error} /> : suppliers.length ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {suppliers.map((supplier) => {
                 const name = lang === 'ar' ? supplier.company_name_ar || supplier.name_ar : supplier.company_name_en || supplier.name_en;

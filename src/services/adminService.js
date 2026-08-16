@@ -228,33 +228,30 @@ export const categoryAdminService = {
 export const adminStatsService = {
   async getOverviewStats() {
     if (!SUPABASE_CONFIGURED) {
-      return { users: 0, products: 0, pending: 0, approved: 0, rejected: 0, revision: 0, suppliers: 0, manufacturers: 0, designers: 0 };
+      return { users: 0, products: 0, draft: 0, published: 0, archived: 0, suppliers: 0, categories: 0 };
     }
 
-    const [users, productStats, suppliers, manufacturers, designers] = await Promise.all([
+    const [users, products, drafts, published, archived, suppliers, categories] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('products').select('status'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'supplier'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'manufacturer'),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'designer'),
+      supabase.from('products').select('*', { count: 'exact', head: true }),
+      supabase.from('products').select('*', { count: 'exact', head: true }).eq('publication_state', 'draft'),
+      supabase.from('products').select('*', { count: 'exact', head: true }).eq('publication_state', 'published'),
+      supabase.from('products').select('*', { count: 'exact', head: true }).eq('publication_state', 'archived'),
+      supabase.from('suppliers').select('*', { count: 'exact', head: true }),
+      supabase.from('categories').select('*', { count: 'exact', head: true }),
     ]);
 
-    const pStats = (productStats.data ?? []).reduce((acc, p) => {
-      acc[p.status] = (acc[p.status] || 0) + 1;
-      return acc;
-    }, {});
+    const failed = [users, products, drafts, published, archived, suppliers, categories].find((result) => result.error);
+    if (failed?.error) throw failed.error;
 
     return {
-      users:         users.count         ?? 0,
-      products:      (productStats.data ?? []).length,
-      pending:       pStats.pending_review ?? 0,
-      approved:      pStats.approved       ?? 0,
-      rejected:      pStats.rejected       ?? 0,
-      revision:      pStats.revision_required ?? 0,
-      draft:         pStats.draft          ?? 0,
-      suppliers:     suppliers.count      ?? 0,
-      manufacturers: manufacturers.count  ?? 0,
-      designers:     designers.count      ?? 0,
+      users: users.count ?? 0,
+      products: products.count ?? 0,
+      draft: drafts.count ?? 0,
+      published: published.count ?? 0,
+      archived: archived.count ?? 0,
+      suppliers: suppliers.count ?? 0,
+      categories: categories.count ?? 0,
     };
   },
 };

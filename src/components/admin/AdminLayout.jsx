@@ -1,19 +1,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  BarChart2, ClipboardList, Users, Store, Factory,
+  BarChart2, ClipboardList, Users, Store,
   Tag, Settings, Home, LogOut,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 
 const NAV = [
-  { path: '/admin/dashboard',     icon: BarChart2,     en: 'Overview',          ar: 'نظرة عامة',        roles: ['admin', 'super_admin', 'reviewer'] },
-  { path: '/admin/products',      icon: ClipboardList,  en: 'Product Reviews',   ar: 'مراجعة المنتجات',   roles: ['admin', 'super_admin', 'reviewer'] },
-  { path: '/admin/users',         icon: Users,          en: 'Users',             ar: 'المستخدمون',        roles: ['admin', 'super_admin'] },
-  { path: '/admin/suppliers',     icon: Store,          en: 'Suppliers',         ar: 'الموردون',          roles: ['admin', 'super_admin'] },
-  { path: '/admin/manufacturers', icon: Factory,        en: 'Manufacturers',     ar: 'المصنّعون',         roles: ['admin', 'super_admin'] },
-  { path: '/admin/categories',    icon: Tag,            en: 'Categories',        ar: 'الفئات',            roles: ['admin', 'super_admin'] },
-  { path: '/admin/settings',      icon: Settings,       en: 'Settings',          ar: 'الإعدادات',         roles: ['admin', 'super_admin'] },
+  { path: '/admin/dashboard',  icon: BarChart2,    en: 'Dashboard',  ar: 'لوحة التحكم', roles: ['admin', 'super_admin'] },
+  { path: '/admin/products',   icon: ClipboardList, en: 'Blocks',     ar: 'البلوكات',     roles: ['admin', 'super_admin'] },
+  { path: '/admin/suppliers',  icon: Store,         en: 'Suppliers',  ar: 'الموردون',     roles: ['admin', 'super_admin'] },
+  { path: '/admin/categories', icon: Tag,           en: 'Categories', ar: 'الفئات',       roles: ['admin', 'super_admin'] },
+  { path: '/admin/users',      icon: Users,         en: 'Users',      ar: 'المستخدمون',   roles: ['admin', 'super_admin'] },
+  { path: '/admin/settings',   icon: Settings,      en: 'Settings',   ar: 'الإعدادات',    roles: ['admin', 'super_admin'] },
 ];
 
 const ROLE_STYLES = {
@@ -188,7 +187,7 @@ export function AdminTable({ headers, children, loading, colSpan }) {
           <thead className="bg-warm-white border-b border-sand">
             <tr>
               {headers.map(h => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-medium-brown uppercase tracking-wider">
+                <th key={h} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wider text-medium-brown">
                   {h}
                 </th>
               ))}

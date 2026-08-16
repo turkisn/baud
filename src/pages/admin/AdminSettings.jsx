@@ -4,8 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { SUPABASE_CONFIGURED } from '../../lib/supabase';
 import AdminLayout from '../../components/admin/AdminLayout';
 
-const ALLOWED_FORMATS = ['RFA', 'RVT', 'MAX', 'FBX', 'OBJ', 'SKP', 'DWG', 'IFC', 'PDF', 'ZIP'];
-const ALLOWED_IMAGE_FORMATS = ['JPG', 'JPEG', 'PNG', 'WEBP', 'SVG'];
+const ALLOWED_FORMATS = ['RFA', 'RVT', 'MAX', 'FBX', 'OBJ', 'SKP', 'DWG', 'IFC', 'ZIP', '3DS', 'OTHER'];
+const ALLOWED_IMAGE_FORMATS = ['JPG', 'JPEG', 'PNG', 'WEBP'];
 
 function InfoRow({ label, value }) {
   return (
@@ -50,16 +50,17 @@ export default function AdminSettings() {
           <h2 className="font-bold text-dark-brown mb-4">{t('File Upload Limits', 'حدود رفع الملفات')}</h2>
           <InfoRow label={t('3D File formats', 'صيغ الملفات ثلاثية الأبعاد')} value={ALLOWED_FORMATS.join(', ')} />
           <InfoRow label={t('Image formats', 'صيغ الصور')}   value={ALLOWED_IMAGE_FORMATS.join(', ')} />
-          <InfoRow label={t('Max file size', 'الحجم الأقصى')} value="50 MB per file" />
+          <InfoRow label={t('Image / datasheet limit', 'حد الصور / أوراق البيانات')} value="20 MB per file" />
+          <InfoRow label={t('Datasheets', 'أوراق البيانات')} value="PDF only" />
         </section>
 
-        {/* Review workflow */}
+        {/* Publication workflow */}
         <section className="bg-white rounded-2xl border border-sand p-5">
-          <h2 className="font-bold text-dark-brown mb-4">{t('Review Workflow', 'سير عمل المراجعة')}</h2>
-          <InfoRow label={t('Submit flow', 'مسار الإرسال')}     value="draft → pending_review → approved / rejected / revision_required" />
-          <InfoRow label={t('BUOD ref generated', 'BUOD Ref')}   value="On first pending_review submission" />
-          <InfoRow label={t('Public visibility', 'الظهور العام')} value="Only approved + visibility=public" />
-          <InfoRow label={t('Who can approve', 'من يعتمد')}      value="admin, super_admin, reviewer" />
+          <h2 className="font-bold text-dark-brown mb-4">{t('MVP data workflow', 'سير عمل بيانات MVP')}</h2>
+          <InfoRow label={t('Block publication', 'نشر البلوك')} value="draft → published → archived" />
+          <InfoRow label={t('BUOD reference', 'مرجع BUOD')} value="Backend managed" />
+          <InfoRow label={t('Asset storage', 'تخزين الملفات')} value="Private buckets + short-lived signed reads" />
+          <InfoRow label={t('Admin writes', 'كتابات المدير')} value="Strict admin RPCs" />
         </section>
 
         {/* Role matrix */}
@@ -69,7 +70,7 @@ export default function AdminSettings() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-sand">
-                  {['Role', 'Admin Panel', 'Product Review', 'Users', 'Suppliers', 'Categories'].map(h => (
+                  {['Role', 'Admin Panel', 'Block Data', 'Users', 'Suppliers', 'Categories'].map(h => (
                     <th key={h} className="text-left pb-2 font-semibold text-medium-brown pr-4">{h}</th>
                   ))}
                 </tr>
@@ -78,7 +79,6 @@ export default function AdminSettings() {
                 {[
                   ['super_admin', '✓', '✓', '✓ (all)', '✓', '✓'],
                   ['admin',       '✓', '✓', '✓ (limited)', '✓', '✓'],
-                  ['reviewer',    '✓ (limited)', '✓', '✗', '✗', '✗'],
                   ['supplier',    '✗', '✗', '✗', '✗', '✗'],
                   ['designer',    '✗', '✗', '✗', '✗', '✗'],
                   ['user',        '✗', '✗', '✗', '✗', '✗'],
@@ -99,8 +99,8 @@ export default function AdminSettings() {
           <Info size={16} className="flex-shrink-0 mt-0.5" />
           <p>
             {t(
-              'To change platform settings that are not shown here, contact the super_admin or update environment variables in Vercel.',
-              'لتغيير الإعدادات التي لا تظهر هنا، تواصل مع super_admin أو حدّث متغيرات البيئة في Vercel.'
+              'This page is read-only. Backend authorization, storage, and environment configuration are managed outside this screen.',
+              'هذه الصفحة للقراءة فقط. تتم إدارة صلاحيات الخلفية والتخزين وإعدادات البيئة خارج هذه الشاشة.'
             )}
           </p>
         </div>

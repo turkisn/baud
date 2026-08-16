@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, Package, ClipboardList, Store,
-  Factory, Tag, ChevronRight, AlertCircle,
+  Tag, ChevronRight, AlertCircle, Settings,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -11,11 +11,9 @@ import { adminStatsService } from '../../services/adminService';
 import AdminLayout, { AdminStatCard } from '../../components/admin/AdminLayout';
 
 const STATUS_DOT = {
-  pending:  { color: '#d97706' },
-  approved: { color: '#16a34a' },
-  rejected: { color: '#ef4444' },
-  revision: { color: '#7c3aed' },
-  draft:    { color: '#6b7280' },
+  draft: { color: '#6b7280' },
+  published: { color: '#16a34a' },
+  archived: { color: '#92400e' },
 };
 
 export default function AdminDashboard() {
@@ -36,28 +34,26 @@ export default function AdminDashboard() {
 
   const STAT_CARDS = [
     { icon: Users,         value: stats?.users,        label: t('Total Users', 'إجمالي المستخدمين'),  color: 'bg-blue-50 text-blue-600'    },
-    { icon: Package,       value: stats?.products,      label: t('Total Products', 'إجمالي المنتجات'), color: 'bg-purple-50 text-purple-600' },
-    { icon: ClipboardList, value: stats?.pending,       label: t('Pending Review', 'قيد المراجعة'),    color: 'bg-amber-50 text-amber-600',
-      sub: stats?.pending > 0 ? t('Needs attention', 'يحتاج مراجعة') : undefined },
-    { icon: Package,       value: stats?.approved,      label: t('Approved', 'معتمد'),                 color: 'bg-green-50 text-green-600'   },
-    { icon: Package,       value: stats?.rejected,      label: t('Rejected', 'مرفوض'),                 color: 'bg-red-50 text-red-600'      },
-    { icon: ClipboardList, value: stats?.revision,      label: t('Needs Revision', 'يحتاج تعديل'),     color: 'bg-violet-50 text-violet-600' },
-    { icon: Store,         value: stats?.suppliers,     label: t('Suppliers', 'الموردون'),              color: 'bg-teal-50 text-teal-600'    },
-    { icon: Factory,       value: stats?.manufacturers, label: t('Manufacturers', 'المصنّعون'),         color: 'bg-cyan-50 text-cyan-600'    },
+    { icon: Package,       value: stats?.products,      label: t('Total Blocks', 'إجمالي البلوكات'),  color: 'bg-purple-50 text-purple-600' },
+    { icon: ClipboardList, value: stats?.draft,         label: t('Draft Blocks', 'البلوكات المسودة'), color: 'bg-amber-50 text-amber-600' },
+    { icon: Package,       value: stats?.published,     label: t('Published Blocks', 'البلوكات المنشورة'), color: 'bg-green-50 text-green-600' },
+    { icon: Package,       value: stats?.archived,      label: t('Archived Blocks', 'البلوكات المؤرشفة'), color: 'bg-gray-100 text-gray-600' },
+    { icon: Store,         value: stats?.suppliers,     label: t('Supplier Windows', 'نوافذ الموردين'), color: 'bg-teal-50 text-teal-600' },
+    { icon: Tag,           value: stats?.categories,    label: t('Categories', 'الفئات'), color: 'bg-cyan-50 text-cyan-600' },
   ];
 
   const ACTIONS = [
-    { icon: ClipboardList, title: t('Product Reviews', 'مراجعة المنتجات'),
-      desc: t('Approve, reject, or request revision', 'اعتماد أو رفض أو طلب تعديل'),
-      href: '/admin/products', badge: (!loading && stats?.pending > 0) ? stats.pending : null },
+    { icon: ClipboardList, title: t('Manage Blocks', 'إدارة البلوكات'),
+      desc: t('Create product data and manage private assets', 'إنشاء بيانات المنتجات وإدارة الملفات الخاصة'),
+      href: '/admin/products' },
     { icon: Users,   title: t('Manage Users', 'إدارة المستخدمين'),
       desc: t('View users and change roles', 'عرض المستخدمين وتغيير الأدوار'), href: '/admin/users' },
-    { icon: Store,   title: t('Suppliers', 'الموردون'),
-      desc: t('Verify and manage suppliers', 'التحقق وإدارة الموردين'), href: '/admin/suppliers' },
-    { icon: Factory, title: t('Manufacturers', 'المصنّعون'),
-      desc: t('Verify and manage manufacturers', 'التحقق وإدارة المصنّعين'), href: '/admin/manufacturers' },
+    { icon: Store,   title: t('Supplier Windows', 'نوافذ الموردين'),
+      desc: t('Create, publish, and verify supplier data', 'إنشاء بيانات الموردين ونشرها والتحقق منها'), href: '/admin/suppliers' },
     { icon: Tag,     title: t('Categories', 'الفئات'),
       desc: t('Manage product categories', 'إدارة فئات المنتجات'), href: '/admin/categories' },
+    { icon: Settings, title: t('Settings', 'الإعدادات'),
+      desc: t('View MVP configuration', 'عرض إعدادات MVP'), href: '/admin/settings' },
   ];
 
   return (
@@ -85,15 +81,13 @@ export default function AdminDashboard() {
       {!loading && stats && (
         <div className="bg-white rounded-2xl border border-sand p-5 mb-8">
           <h2 className="text-xs font-bold text-medium-brown uppercase tracking-wider mb-3">
-            {t('Product Status', 'حالات المنتجات')}
+            {t('Block publication state', 'حالة نشر البلوكات')}
           </h2>
           <div className="flex flex-wrap gap-5">
             {[
-              ['pending',  t('Pending', 'قيد المراجعة')],
-              ['approved', t('Approved', 'معتمد')      ],
-              ['rejected', t('Rejected', 'مرفوض')      ],
-              ['revision', t('Revision', 'يحتاج تعديل')],
-              ['draft',    t('Draft', 'مسودة')          ],
+              ['draft', t('Draft', 'مسودة')],
+              ['published', t('Published', 'منشور')],
+              ['archived', t('Archived', 'مؤرشف')],
             ].map(([key, lbl]) => (
               <div key={key} className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: STATUS_DOT[key].color }} />
