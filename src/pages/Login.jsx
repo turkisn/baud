@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Eye, EyeOff, Mail, Lock, User, Building,
@@ -43,6 +43,7 @@ export default function Login() {
   const { t, lang, toggleLang } = useLanguage();
   const { login, register, user } = useAuth();
   const navigate                  = useNavigate();
+  const [searchParams]            = useSearchParams();
 
   // If user is already authenticated (e.g. arrived here after clicking the
   // email confirmation link — Supabase appends #access_token=… to the URL,
@@ -52,7 +53,7 @@ export default function Login() {
     if (user) navigate('/', { replace: true });
   }, [user, navigate]);
 
-  const [mode, setMode]         = useState('login');
+  const [mode, setMode]         = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
   const [showPass, setShowPass] = useState(false);
   const [userTypeIdx, setUserTypeIdx] = useState(0); // index into userTypes
   const [loading, setLoading]   = useState(false);
@@ -113,7 +114,7 @@ export default function Login() {
         setSuccess(true);
       }
     } catch (err) {
-      console.error('[BUAD auth error]', err);
+      console.error('[BUOD auth error]', err);
       setError(mapError(err));
     } finally {
       setLoading(false);
@@ -175,27 +176,26 @@ export default function Login() {
             <div className="w-10 h-10 bg-dark-brown rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl" style={{ fontFamily: 'Tajawal' }}>ب</span>
             </div>
-            <span className="text-warm-white font-bold text-2xl">{lang === 'ar' ? 'بُعد' : 'Buad'}</span>
+            <span className="text-warm-white font-black text-2xl tracking-[0.16em]">BUOD</span>
           </Link>
         </div>
 
         <div className="relative">
-          <span className="badge-gold mb-6 inline-flex">🇸🇦 {t('Saudi Architecture Platform', 'منصة العمارة السعودية')}</span>
+          <span className="badge-gold mb-6 inline-flex">{t('Professional product data library', 'مكتبة بيانات منتجات احترافية')}</span>
           <h2 className="text-4xl font-bold text-warm-white mb-4 leading-tight">
-            {t('Design with real\nSaudi products', 'صمّم بمنتجات\nسعودية حقيقية')}
+            {t('Product data for professional design workflows.', 'بيانات منتجات لسير عمل تصميمي احترافي.')}
           </h2>
           <p className="text-light-brown text-lg leading-relaxed mb-8">
             {t(
-              'Join 15,000+ architects and designers who use Buad to find, download, and specify real Saudi products.',
-              'انضم إلى أكثر من 15,000 معماري ومصمم يستخدمون بُعد للعثور على منتجات سعودية حقيقية وتحميلها.'
+              'Access available BIM, 3D and technical datasheet files through one focused construction library.',
+              'ادخل إلى ملفات BIM وثلاثية الأبعاد وملفات البيانات الفنية المتاحة من خلال مكتبة إنشائية واحدة متخصصة.'
             )}
           </p>
           <div className="space-y-3">
             {[
-              t('2,400+ 3D blocks from real Saudi products', 'أكثر من 2,400 كتلة ثلاثية الأبعاد من منتجات سعودية حقيقية'),
-              t('180+ verified Saudi suppliers', 'أكثر من 180 مورد سعودي موثق'),
-              t('DWG, RVT, SKP and all major formats', 'DWG, RVT, SKP وجميع الصيغ الرئيسية'),
-              t('Free for students and small firms', 'مجاني للطلاب والشركات الصغيرة'),
+              t('Structured product information', 'معلومات منتجات منظمة'),
+              t('BIM and 3D file metadata', 'بيانات ملفات BIM وثلاثية الأبعاد'),
+              t('Supplier windows and source links', 'نوافذ الموردين وروابط المصدر'),
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 text-light-brown text-sm">
                 <CheckCircle size={15} className="text-gold flex-shrink-0" /> {feat}
@@ -205,7 +205,7 @@ export default function Login() {
         </div>
 
         <div className="relative text-xs text-medium-brown flex items-center gap-2">
-          <span>🇸🇦</span> {t('Aligned with Saudi Vision 2030', 'متوافق مع رؤية السعودية 2030')}
+          {t('Structured · Secure · Bilingual', 'منظمة · آمنة · ثنائية اللغة')}
         </div>
       </div>
 
@@ -219,7 +219,7 @@ export default function Login() {
               <div className="w-8 h-8 bg-dark-brown rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm" style={{ fontFamily: 'Tajawal' }}>ب</span>
               </div>
-              <span className="font-bold text-dark-brown">{lang === 'ar' ? 'بُعد' : 'Buad'}</span>
+              <span className="font-black tracking-[0.14em] text-dark-brown">BUOD</span>
             </Link>
             <button onClick={toggleLang} className="flex items-center gap-1.5 text-sm text-medium-brown hover:text-dark-brown ml-auto">
               <Globe size={15} /> {lang === 'ar' ? 'EN' : 'عربي'}
@@ -253,19 +253,10 @@ export default function Login() {
             </h1>
             <p className="text-light-brown text-sm mb-7">
               {mode === 'login'
-                ? t('Sign in to your Buad account', 'سجّل الدخول إلى حسابك في بُعد')
-                : t('Create your free Buad account', 'أنشئ حسابك المجاني في بُعد')}
+                ? t('Sign in to your BUOD account', 'سجّل الدخول إلى حسابك في BUOD')
+                : t('Create your BUOD account', 'أنشئ حسابك في BUOD')}
             </p>
           </motion.div>
-
-          {/* Demo accounts notice (login mode, no Supabase) */}
-          {!SUPABASE_CONFIGURED && mode === 'login' && (
-            <motion.div variants={fadeInUp} className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-              <p className="font-semibold">{t('Demo accounts:', 'حسابات تجريبية:')}</p>
-              <p>admin@buad.com / admin123</p>
-              <p>supplier@buad.com / sup123</p>
-            </motion.div>
-          )}
 
           {/* Supabase not configured warning (signup mode) */}
           {!SUPABASE_CONFIGURED && mode === 'signup' && (
@@ -275,8 +266,8 @@ export default function Login() {
               </p>
               <p>
                 {t(
-                  'Supabase environment variables are not configured in Vercel. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel → Settings → Environment Variables, then redeploy.',
-                  'متغيرات Supabase غير موجودة في Vercel. أضف VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY في Vercel → Settings → Environment Variables ثم أعد النشر.'
+                  'Account creation is temporarily unavailable in this environment.',
+                  'إنشاء الحسابات غير متاح مؤقتاً في هذه البيئة.'
                 )}
               </p>
             </motion.div>
@@ -380,24 +371,9 @@ export default function Login() {
             {mode === 'signup' && (
               <div>
                 <label className="label">{t('I am a…', 'أنا…')}</label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                  {userTypes.map((ut, i) => (
-                    <button
-                      key={ut.key}
-                      type="button"
-                      onClick={() => setUserTypeIdx(i)}
-                      disabled={loading}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-medium transition-all ${
-                        userTypeIdx === i
-                          ? 'border-dark-brown bg-gold/5 text-gold'
-                          : 'border-sand text-medium-brown hover:border-dark-brown/40'
-                      }`}
-                    >
-                      <span className="text-xl">{ut.icon}</span>
-                      {lang === 'ar' ? ut.ar : ut.en}
-                    </button>
-                  ))}
-                </div>
+                <select value={userTypeIdx} onChange={(event) => setUserTypeIdx(Number(event.target.value))} disabled={loading} className="input-field mt-2">
+                  {userTypes.map((userType, index) => <option key={userType.key} value={index}>{lang === 'ar' ? userType.ar : userType.en}</option>)}
+                </select>
               </div>
             )}
 

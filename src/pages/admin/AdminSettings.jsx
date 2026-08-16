@@ -39,7 +39,7 @@ export default function AdminSettings() {
         <section className="bg-white rounded-2xl border border-sand p-5">
           <h2 className="font-bold text-dark-brown mb-1">{t('Platform Info', 'معلومات المنصة')}</h2>
           <p className="text-xs text-light-brown mb-4">{t('Read-only. Contact super_admin to change.', 'للقراءة فقط.')}</p>
-          <InfoRow label="Platform"     value="BUAD — Building Unified Asset Database" />
+          <InfoRow label="Platform"     value="BUOD — Building Unified Object Data" />
           <InfoRow label="Stack"        value="React 18 + Vite + Supabase + Vercel" />
           <InfoRow label="Supabase"     value={SUPABASE_CONFIGURED ? '✓ Connected' : '✗ Not configured'} />
           <InfoRow label="Environment"  value={import.meta.env.MODE} />

@@ -422,7 +422,7 @@ export default function ProductReview() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2 text-sm font-semibold hover:opacity-80"
-              style={{ color: GOLD }}><Home size={15} /> BUAD</Link>
+              style={{ color: GOLD }}><Home size={15} /> BUOD</Link>
             <span style={{ color: '#4A3A28' }}>/</span>
             <Link to="/admin/dashboard" className="text-sm hover:opacity-80" style={{ color: '#C4A882' }}>Admin</Link>
             <span style={{ color: '#4A3A28' }}>/</span>
@@ -455,7 +455,7 @@ export default function ProductReview() {
         <div className="relative mb-6">
           <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3" style={{ color: '#6A5A48' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name or BUAD ref…"
+            placeholder="Search by name or BUOD ref…"
             className="w-full max-w-md pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-none"
             style={{ background: '#2B1B0E', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
         </div>
@@ -466,7 +466,7 @@ export default function ProductReview() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: '#2B1B0E' }}>
-                  {['Product','BUAD Ref','Category','Status','Verify','Files','Created','Actions'].map(h => (
+                  {['Product','BUOD Ref','Category','Status','Verify','Files','Created','Actions'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-[10px] uppercase tracking-widest font-bold"
                       style={{ color: '#6A5A48' }}>{h}</th>
                   ))}

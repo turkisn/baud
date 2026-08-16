@@ -53,7 +53,7 @@ export default function AdminLayout({ children, title, subtitle }) {
         {/* Identity */}
         <div className="p-6 border-b border-medium-brown/40">
           <Link to="/" className="block mb-5 text-warm-white font-bold text-lg hover:text-gold transition-colors">
-            {lang === 'ar' ? 'بُعد' : 'Buad'}
+            BUOD
           </Link>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-dark-brown flex-shrink-0"

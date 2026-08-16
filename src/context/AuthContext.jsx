@@ -31,16 +31,16 @@ export function AuthProvider({ children }) {
     // on subscription (reads from localStorage, no network), then SIGNED_IN / SIGNED_OUT
     // as the session changes. No need for a separate getSession() call.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[BUAD:auth] event:', event, '| user:', session?.user?.email ?? null);
+      console.log('[BUOD:auth] event:', event, '| user:', session?.user?.email ?? null);
 
       if (session?.user) {
         try {
           const profile = await fetchProfile(session.user.id);
-          console.log('[BUAD:auth] profile fetched:', profile?.role ?? 'none');
+          console.log('[BUOD:auth] profile fetched:', profile?.role ?? 'none');
           setUser(mergeProfile(session.user, profile));
         } catch (err) {
           // Profile table not accessible — use auth data only; user is still authenticated
-          console.warn('[BUAD:auth] fetchProfile error (using auth data only):', err?.message);
+          console.warn('[BUOD:auth] fetchProfile error (using auth data only):', err?.message);
           setUser(mergeProfile(session.user, null));
         }
       } else {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single();
-    if (error) console.warn('[BUAD:auth] fetchProfile error:', error.code, error.message);
+    if (error) console.warn('[BUOD:auth] fetchProfile error:', error.code, error.message);
     return data ?? null;
   }
 
@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
     // routing the user to /user/dashboard before the profile loads.
     // Login.jsx's useEffect(()=>{ if(user) navigate('/') }) fires naturally after
     // onAuthStateChange sets the real profile.
-    console.log('[BUAD:auth] signInWithPassword success, awaiting onAuthStateChange:', data.user?.email);
+    console.log('[BUOD:auth] signInWithPassword success, awaiting onAuthStateChange:', data.user?.email);
     return data;
   };
 
