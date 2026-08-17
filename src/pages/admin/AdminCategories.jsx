@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import {
   Tag, Plus, ChevronDown, ChevronRight, Pencil, Power, PowerOff,
   RefreshCw, AlertCircle, X, Check,
@@ -11,10 +11,12 @@ import AdminLayout, { AdminEmptyState, AdminErrorState } from '../../components/
 
 // ── Inline editor form ────────────────────────────────────────
 function FieldRow({ label, value, onChange, required, mono }) {
+  const inputId = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-medium-brown">{label}{required && ' *'}</label>
+      <label htmlFor={inputId} className="text-xs font-medium text-medium-brown">{label}{required && ' *'}</label>
       <input
+        id={inputId}
         value={value}
         onChange={e => onChange(e.target.value)}
         required={required}
@@ -24,7 +26,7 @@ function FieldRow({ label, value, onChange, required, mono }) {
   );
 }
 
-function CategoryForm({ initial = {}, onSave, onCancel, loading }) {
+function CategoryForm({ initial = {}, onSave, onCancel, loading, t }) {
   const [form, setForm] = useState({
     code: initial.code || '',
     name_en: initial.name_en || '',
@@ -43,29 +45,29 @@ function CategoryForm({ initial = {}, onSave, onCancel, loading }) {
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-warm-white rounded-xl border border-sand">
-      <FieldRow label="Code (e.g. ARCH)" value={form.code} onChange={set('code')} required mono />
-      <FieldRow label="Icon (emoji)" value={form.icon} onChange={set('icon')} />
-      <FieldRow label="Name (English)" value={form.name_en} onChange={set('name_en')} required />
-      <FieldRow label="Name (Arabic)" value={form.name_ar} onChange={set('name_ar')} required />
-      <FieldRow label="Description (EN)" value={form.description_en} onChange={set('description_en')} />
-      <FieldRow label="Description (AR)" value={form.description_ar} onChange={set('description_ar')} />
-      <FieldRow label="Sort order" value={String(form.sort_order)} onChange={set('sort_order')} />
+      <FieldRow label={t('Code (e.g. ARCH)', 'الرمز (مثال ARCH)')} value={form.code} onChange={set('code')} required mono />
+      <FieldRow label={t('Icon (emoji)', 'الأيقونة (رمز تعبيري)')} value={form.icon} onChange={set('icon')} />
+      <FieldRow label={t('Name (English)', 'الاسم (الإنجليزية)')} value={form.name_en} onChange={set('name_en')} required />
+      <FieldRow label={t('Name (Arabic)', 'الاسم (العربية)')} value={form.name_ar} onChange={set('name_ar')} required />
+      <FieldRow label={t('Description (EN)', 'الوصف (الإنجليزية)')} value={form.description_en} onChange={set('description_en')} />
+      <FieldRow label={t('Description (AR)', 'الوصف (العربية)')} value={form.description_ar} onChange={set('description_ar')} />
+      <FieldRow label={t('Sort order', 'ترتيب العرض')} value={String(form.sort_order)} onChange={set('sort_order')} />
       <div className="sm:col-span-2 flex gap-2 pt-2">
         <button type="submit" disabled={loading}
           className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
           style={{ background: '#B68D57', color: '#2B1B0E' }}>
-          <Check size={14} /> {loading ? 'Saving…' : 'Save'}
+          <Check size={14} /> {loading ? t('Saving…', 'جارٍ الحفظ…') : t('Save', 'حفظ')}
         </button>
         <button type="button" onClick={onCancel}
           className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium border border-sand text-medium-brown hover:bg-sand transition-all">
-          <X size={14} /> Cancel
+          <X size={14} /> {t('Cancel', 'إلغاء')}
         </button>
       </div>
     </form>
   );
 }
 
-function SubcategoryForm({ categoryId, initial = {}, onSave, onCancel, loading }) {
+function SubcategoryForm({ categoryId, initial = {}, onSave, onCancel, loading, t }) {
   const [form, setForm] = useState({
     code: initial.code || '',
     name_en: initial.name_en || '',
@@ -81,19 +83,19 @@ function SubcategoryForm({ categoryId, initial = {}, onSave, onCancel, loading }
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-      <FieldRow label="Code" value={form.code} onChange={set('code')} required mono />
-      <FieldRow label="Sort" value={String(form.sort_order)} onChange={set('sort_order')} />
-      <FieldRow label="Name EN" value={form.name_en} onChange={set('name_en')} required />
-      <FieldRow label="Name AR" value={form.name_ar} onChange={set('name_ar')} required />
+      <FieldRow label={t('Code', 'الرمز')} value={form.code} onChange={set('code')} required mono />
+      <FieldRow label={t('Sort', 'الترتيب')} value={String(form.sort_order)} onChange={set('sort_order')} />
+      <FieldRow label={t('Name EN', 'الاسم بالإنجليزية')} value={form.name_en} onChange={set('name_en')} required />
+      <FieldRow label={t('Name AR', 'الاسم بالعربية')} value={form.name_ar} onChange={set('name_ar')} required />
       <div className="col-span-2 sm:col-span-4 flex gap-2">
         <button type="submit" disabled={loading}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
           style={{ background: '#B68D57', color: '#2B1B0E' }}>
-          <Check size={12} /> {loading ? 'Saving…' : 'Save Subcategory'}
+          <Check size={12} /> {loading ? t('Saving…', 'جارٍ الحفظ…') : t('Save Subcategory', 'حفظ الفئة الفرعية')}
         </button>
         <button type="button" onClick={onCancel}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs border border-sand text-medium-brown hover:bg-sand transition-all">
-          <X size={12} /> Cancel
+          <X size={12} /> {t('Cancel', 'إلغاء')}
         </button>
       </div>
     </form>
@@ -101,7 +103,7 @@ function SubcategoryForm({ categoryId, initial = {}, onSave, onCancel, loading }
 }
 
 // ── Category row ──────────────────────────────────────────────
-function CategoryRow({ cat, onUpdated }) {
+function CategoryRow({ cat, onUpdated, t }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [addSub, setAddSub]     = useState(false);
@@ -167,7 +169,7 @@ function CategoryRow({ cat, onUpdated }) {
     <div className={`rounded-2xl border transition-all ${cat.is_active ? 'border-sand bg-white' : 'border-sand bg-warm-white opacity-60'}`}>
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
-        <button onClick={() => setExpanded(e => !e)}
+        <button type="button" onClick={() => setExpanded(e => !e)} aria-expanded={expanded} aria-controls={`subcategories-${cat.id}`} aria-label={expanded ? t('Collapse category', 'طي الفئة') : t('Expand category', 'توسيع الفئة')}
           className="text-light-brown hover:text-dark-brown transition-colors flex-shrink-0">
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
@@ -180,20 +182,20 @@ function CategoryRow({ cat, onUpdated }) {
             <span className="text-light-brown text-sm">{cat.name_ar}</span>
             <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-sand text-medium-brown">{cat.code}</span>
             {!cat.is_active && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">Disabled</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">{t('Disabled', 'معطلة')}</span>
             )}
           </div>
           <div className="text-xs text-light-brown mt-0.5">
-            {(cat.subcategories || []).length} subcategories · sort {cat.sort_order}
+            {(cat.subcategories || []).length} {t('subcategories', 'فئات فرعية')} · {t('sort', 'الترتيب')} {cat.sort_order}
           </div>
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0">
-          <button onClick={() => { setEditing(e => !e); setExpanded(true); }} title="Edit"
+          <button type="button" onClick={() => { setEditing(e => !e); setExpanded(true); }} title={t('Edit', 'تعديل')} aria-label={t(`Edit ${cat.name_en}`, `تعديل ${cat.name_ar}`)}
             className="p-1.5 rounded-lg text-medium-brown hover:bg-sand transition-all">
             <Pencil size={14} />
           </button>
-          <button onClick={handleToggleActive} disabled={saving} title={cat.is_active ? 'Disable' : 'Enable'}
+          <button type="button" onClick={handleToggleActive} disabled={saving} title={cat.is_active ? t('Disable', 'تعطيل') : t('Enable', 'تفعيل')} aria-label={cat.is_active ? t(`Disable ${cat.name_en}`, `تعطيل ${cat.name_ar}`) : t(`Enable ${cat.name_en}`, `تفعيل ${cat.name_ar}`)}
             className="p-1.5 rounded-lg transition-all disabled:opacity-40"
             style={{ color: cat.is_active ? '#ef4444' : '#16a34a' }}>
             {cat.is_active ? <PowerOff size={14} /> : <Power size={14} />}
@@ -202,20 +204,20 @@ function CategoryRow({ cat, onUpdated }) {
       </div>
 
       {err && (
-        <div className="mx-4 mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">{err}</div>
+        <div role="alert" className="mx-4 mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">{err}</div>
       )}
 
       {/* Edit form */}
       {editing && (
         <div className="px-4 pb-4">
-          <CategoryForm initial={cat} onSave={handleUpdateCategory} onCancel={() => setEditing(false)} loading={saving} />
+          <CategoryForm initial={cat} onSave={handleUpdateCategory} onCancel={() => setEditing(false)} loading={saving} t={t} />
         </div>
       )}
 
       {/* Subcategories */}
       {expanded && !editing && (
-        <div className="px-4 pb-4 space-y-2">
-          {(cat.subcategories || []).sort((a, b) => a.sort_order - b.sort_order).map(sub => (
+        <div id={`subcategories-${cat.id}`} className="px-4 pb-4 space-y-2">
+          {[...(cat.subcategories || [])].sort((a, b) => a.sort_order - b.sort_order).map(sub => (
             <div key={sub.id}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${sub.is_active ? 'border-sand bg-warm-white' : 'border-sand opacity-50'}`}>
               {editSub === sub.id ? (
@@ -226,6 +228,7 @@ function CategoryRow({ cat, onUpdated }) {
                     onSave={(data) => handleUpdateSubcategory(sub.id, data)}
                     onCancel={() => setEditSub(null)}
                     loading={saving}
+                    t={t}
                   />
                 </div>
               ) : (
@@ -236,14 +239,14 @@ function CategoryRow({ cat, onUpdated }) {
                       <span className="text-light-brown">{sub.name_ar}</span>
                       <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-sand text-medium-brown">{sub.code}</span>
                       {!sub.is_active && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600">Disabled</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600">{t('Disabled', 'معطلة')}</span>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
-                    <button onClick={() => setEditSub(sub.id)}
+                    <button type="button" onClick={() => setEditSub(sub.id)} aria-label={t(`Edit ${sub.name_en}`, `تعديل ${sub.name_ar}`)}
                       className="p-1.5 rounded-lg text-medium-brown hover:bg-sand transition-all"><Pencil size={12} /></button>
-                    <button onClick={() => handleToggleSubActive(sub)} disabled={saving}
+                    <button type="button" onClick={() => handleToggleSubActive(sub)} disabled={saving} aria-label={sub.is_active ? t(`Disable ${sub.name_en}`, `تعطيل ${sub.name_ar}`) : t(`Enable ${sub.name_en}`, `تفعيل ${sub.name_ar}`)}
                       className="p-1.5 rounded-lg transition-all disabled:opacity-40"
                       style={{ color: sub.is_active ? '#ef4444' : '#16a34a' }}>
                       {sub.is_active ? <PowerOff size={12} /> : <Power size={12} />}
@@ -261,11 +264,12 @@ function CategoryRow({ cat, onUpdated }) {
               onSave={handleAddSubcategory}
               onCancel={() => setAddSub(false)}
               loading={saving}
+              t={t}
             />
           ) : (
-            <button onClick={() => setAddSub(true)}
+            <button type="button" onClick={() => setAddSub(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-medium-brown border border-dashed border-sand hover:bg-sand transition-all">
-              <Plus size={13} /> Add Subcategory
+              <Plus size={13} /> {t('Add Subcategory', 'إضافة فئة فرعية')}
             </button>
           )}
         </div>
@@ -312,7 +316,7 @@ export default function AdminCategories() {
 
   if (!['admin', 'super_admin'].includes(me?.role)) {
     return (
-      <AdminLayout title="Access Denied">
+      <AdminLayout title={t('Access denied', 'الوصول مرفوض')}>
         <p className="text-light-brown">{t('Admin access required.', 'مطلوب صلاحية مدير.')}</p>
       </AdminLayout>
     );
@@ -327,11 +331,11 @@ export default function AdminCategories() {
       <div className="flex items-center justify-between mb-5">
         <div />
         <div className="flex gap-2">
-          <button onClick={load}
+          <button type="button" onClick={load}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-medium-brown border border-sand hover:bg-sand transition-all">
             <RefreshCw size={14} /> {t('Refresh', 'تحديث')}
           </button>
-          <button onClick={() => setAdding(a => !a)}
+          <button type="button" onClick={() => setAdding(a => !a)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
             style={{ background: '#B68D57', color: '#2B1B0E' }}>
             <Plus size={16} /> {t('Add Category', 'إضافة فئة')}
@@ -350,7 +354,7 @@ export default function AdminCategories() {
       {adding && (
         <div className="mb-5">
           <h3 className="text-sm font-bold text-dark-brown mb-3">{t('New Category', 'فئة جديدة')}</h3>
-          <CategoryForm onSave={handleCreate} onCancel={() => setAdding(false)} loading={saving} />
+          <CategoryForm onSave={handleCreate} onCancel={() => setAdding(false)} loading={saving} t={t} />
           {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         </div>
       )}
@@ -365,8 +369,8 @@ export default function AdminCategories() {
         <AdminEmptyState icon={Tag} message={t('No categories found.', 'لا توجد فئات.')} />
       ) : (
         <div className="space-y-3">
-          {cats.sort((a, b) => a.sort_order - b.sort_order).map(cat => (
-            <CategoryRow key={cat.id} cat={cat} onUpdated={handleUpdated} />
+          {[...cats].sort((a, b) => a.sort_order - b.sort_order).map(cat => (
+            <CategoryRow key={cat.id} cat={cat} onUpdated={handleUpdated} t={t} />
           ))}
         </div>
       )}

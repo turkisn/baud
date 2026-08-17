@@ -3,11 +3,13 @@ import { ArrowRight, Box, Building2, Database, FileBox, Layers3, Search } from '
 import { Link, useNavigate } from 'react-router-dom';
 import ProductCard from '../components/mvp/ProductCard';
 import { EmptyState, ErrorState, LoadingState } from '../components/mvp/States';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { mvpService } from '../services/mvpService';
 
 export default function Home() {
   const { lang, t } = useLanguage();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState([]);
@@ -142,8 +144,8 @@ export default function Home() {
 
       <section className="bg-ivory px-6 py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl items-center gap-8 rounded-3xl border border-sand bg-white p-8 shadow-card sm:p-12 lg:grid-cols-[1fr_auto]">
-          <div><p className="mb-3 text-xs font-bold uppercase tracking-[.22em] text-gold">{t('Your professional library', 'مكتبتك الاحترافية')}</p><h2 className="text-3xl font-black text-dark-brown">{t('Access available BIM, 3D and datasheet files.', 'ادخل إلى ملفات BIM و3D وملفات البيانات المتاحة.')}</h2><p className="mt-4 max-w-2xl leading-7 text-light-brown">{t('Create an account to securely download the product assets available in the BUOD library.', 'أنشئ حساباً لتحميل ملفات المنتجات المتاحة في مكتبة BUOD بأمان.')}</p></div>
-          <Link to="/login?mode=signup" className="btn-gold justify-center px-8 py-4">{t('Create account', 'إنشاء حساب')}<ArrowRight className={lang === 'ar' ? 'rotate-180' : ''} size={17} /></Link>
+          <div><p className="mb-3 text-xs font-bold uppercase tracking-[.22em] text-gold">{t('Your professional library', 'مكتبتك الاحترافية')}</p><h2 className="text-3xl font-black text-dark-brown">{t('Access available BIM, 3D and datasheet files.', 'ادخل إلى ملفات BIM و3D وملفات البيانات المتاحة.')}</h2><p className="mt-4 max-w-2xl leading-7 text-light-brown">{user ? t('Continue to the library and access the product resources available to your account.', 'تابع إلى المكتبة للوصول إلى موارد المنتجات المتاحة لحسابك.') : t('Create an account to securely download the product assets available in the BUOD library.', 'أنشئ حساباً لتحميل ملفات المنتجات المتاحة في مكتبة BUOD بأمان.')}</p></div>
+          <Link to={user ? (isAdmin() ? '/admin/dashboard' : '/blocks') : '/login?mode=signup'} className="btn-gold justify-center px-8 py-4">{user ? (isAdmin() ? t('Go to dashboard', 'الذهاب للوحة التحكم') : t('Browse library', 'تصفح المكتبة')) : t('Create account', 'إنشاء حساب')}<ArrowRight className={lang === 'ar' ? 'rotate-180' : ''} size={17} /></Link>
         </div>
       </section>
     </div>

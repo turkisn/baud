@@ -45,6 +45,13 @@ export const authService = {
     if (error) throw error;
   },
 
+  async updatePassword(password) {
+    if (!SUPABASE_CONFIGURED) throw new Error('Supabase not configured');
+    const { data, error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+    return data;
+  },
+
   async getCurrentUser() {
     if (!SUPABASE_CONFIGURED) return null;
     const { data: { user } } = await supabase.auth.getUser();

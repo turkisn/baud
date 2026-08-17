@@ -7,6 +7,7 @@ import { SUPABASE_CONFIGURED } from '../../lib/supabase';
 import AdminLayout, {
   AdminTable, AdminEmptyState, AdminErrorState, Pagination,
 } from '../../components/admin/AdminLayout';
+import { formatAdminDate } from '../../utils/date';
 
 const PAGE_SIZE = 25;
 
@@ -184,7 +185,7 @@ export default function AdminUsers() {
 
   if (!['admin', 'super_admin'].includes(me?.role)) {
     return (
-      <AdminLayout title="Access Denied">
+      <AdminLayout title={t('Access denied', 'الوصول مرفوض')}>
         <p className="text-light-brown">{t('You do not have permission to view this page.', 'ليس لديك صلاحية لعرض هذه الصفحة.')}</p>
       </AdminLayout>
     );
@@ -260,7 +261,7 @@ export default function AdminUsers() {
                       <span className="font-medium text-dark-brown truncate max-w-[160px]">
                         {u.full_name || '—'}
                         {u.id === me?.id && (
-                          <span className="ml-1 text-[10px] font-normal text-light-brown">(you)</span>
+                          <span className="ms-1 text-[10px] font-normal text-light-brown">({t('you', 'أنت')})</span>
                         )}
                       </span>
                     </div>
@@ -279,7 +280,7 @@ export default function AdminUsers() {
                   <td className="px-4 py-3"><UserTypeBadge userType={u.user_type} lang={lang} /></td>
                   <td className="px-4 py-3 text-medium-brown text-xs">{u.company_name || '—'}</td>
                   <td className="px-4 py-3 text-light-brown text-xs">
-                    {u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
+                    {u.created_at ? <time dateTime={u.created_at} dir="ltr">{formatAdminDate(u.created_at)}</time> : '—'}
                   </td>
                 </tr>
               ))}

@@ -11,7 +11,7 @@ function InfoRow({ label, value }) {
   return (
     <div className="flex items-start justify-between py-3 border-b border-sand last:border-0 text-sm">
       <span className="text-light-brown w-48 flex-shrink-0">{label}</span>
-      <span className="font-medium text-dark-brown text-right flex-1">{value}</span>
+      <span className="flex-1 text-end font-medium text-dark-brown">{value}</span>
     </div>
   );
 }
@@ -22,7 +22,7 @@ export default function AdminSettings() {
 
   if (!['admin', 'super_admin'].includes(me?.role)) {
     return (
-      <AdminLayout title="Access Denied">
+      <AdminLayout title={t('Access denied', 'الوصول مرفوض')}>
         <p className="text-light-brown">{t('Admin access required.', 'مطلوب صلاحية مدير.')}</p>
       </AdminLayout>
     );
@@ -39,29 +39,29 @@ export default function AdminSettings() {
         <section className="bg-white rounded-2xl border border-sand p-5">
           <h2 className="font-bold text-dark-brown mb-1">{t('Platform Info', 'معلومات المنصة')}</h2>
           <p className="text-xs text-light-brown mb-4">{t('Read-only. Contact super_admin to change.', 'للقراءة فقط.')}</p>
-          <InfoRow label="Platform"     value="BUOD — Building Unified Object Data" />
-          <InfoRow label="Stack"        value="React 18 + Vite + Supabase + Vercel" />
-          <InfoRow label="Supabase"     value={SUPABASE_CONFIGURED ? '✓ Connected' : '✗ Not configured'} />
-          <InfoRow label="Environment"  value={import.meta.env.MODE} />
+          <InfoRow label={t('Platform', 'المنصة')} value="BUOD — Building Unified Object Data" />
+          <InfoRow label={t('Stack', 'التقنيات')} value="React 18 + Vite + Supabase + Vercel" />
+          <InfoRow label="Supabase" value={SUPABASE_CONFIGURED ? t('✓ Connected', '✓ متصل') : t('✗ Not configured', '✗ غير مهيأ')} />
+          <InfoRow label={t('Environment', 'البيئة')} value={import.meta.env.VITE_BUOD_ENV || (import.meta.env.DEV ? 'development' : 'production')} />
         </section>
 
         {/* Upload limits */}
         <section className="bg-white rounded-2xl border border-sand p-5">
           <h2 className="font-bold text-dark-brown mb-4">{t('File Upload Limits', 'حدود رفع الملفات')}</h2>
           <InfoRow label={t('3D File formats', 'صيغ الملفات ثلاثية الأبعاد')} value={ALLOWED_FORMATS.join(', ')} />
-          <InfoRow label={t('BIM / 3D file limit', 'حد ملفات BIM / 3D')} value="100 MB per file" />
+          <InfoRow label={t('BIM / 3D file limit', 'حد ملفات BIM / 3D')} value={t('100 MB per file', '100 ميجابايت لكل ملف')} />
           <InfoRow label={t('Image formats', 'صيغ الصور')}   value={ALLOWED_IMAGE_FORMATS.join(', ')} />
-          <InfoRow label={t('Image / datasheet limit', 'حد الصور / أوراق البيانات')} value="20 MB per file" />
-          <InfoRow label={t('Datasheets', 'أوراق البيانات')} value="PDF only" />
+          <InfoRow label={t('Image / datasheet limit', 'حد الصور / أوراق البيانات')} value={t('20 MB per file', '20 ميجابايت لكل ملف')} />
+          <InfoRow label={t('Datasheets', 'أوراق البيانات')} value={t('PDF only', 'PDF فقط')} />
         </section>
 
         {/* Publication workflow */}
         <section className="bg-white rounded-2xl border border-sand p-5">
           <h2 className="font-bold text-dark-brown mb-4">{t('MVP data workflow', 'سير عمل بيانات MVP')}</h2>
           <InfoRow label={t('Block publication', 'نشر البلوك')} value="draft → published → archived" />
-          <InfoRow label={t('BUOD reference', 'مرجع BUOD')} value="Backend managed" />
-          <InfoRow label={t('Asset storage', 'تخزين الملفات')} value="Private buckets + short-lived signed reads" />
-          <InfoRow label={t('Admin writes', 'كتابات المدير')} value="Strict admin RPCs" />
+          <InfoRow label={t('BUOD reference', 'مرجع BUOD')} value={t('Backend managed', 'تديره الواجهة الخلفية')} />
+          <InfoRow label={t('Asset storage', 'تخزين الملفات')} value={t('Private buckets + short-lived signed reads', 'حاويات خاصة + روابط قراءة موقعة قصيرة الأجل')} />
+          <InfoRow label={t('Admin writes', 'كتابات المدير')} value={t('Strict admin RPCs', 'دوال إدارية صارمة')} />
         </section>
 
         {/* Role matrix */}
@@ -71,8 +71,11 @@ export default function AdminSettings() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-sand">
-                  {['Role', 'Admin Panel', 'Block Data', 'Users', 'Suppliers', 'Categories'].map(h => (
-                    <th key={h} className="text-left pb-2 font-semibold text-medium-brown pr-4">{h}</th>
+                  {[
+                    t('Role', 'الدور'), t('Admin Panel', 'لوحة الإدارة'), t('Block Data', 'بيانات البلوكات'),
+                    t('Users', 'المستخدمون'), t('Suppliers', 'الموردون'), t('Categories', 'الفئات'),
+                  ].map(h => (
+                    <th key={h} className="pb-2 pe-4 text-start font-semibold text-medium-brown">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -84,9 +87,9 @@ export default function AdminSettings() {
                   ['user',        '✗', '✗', '✗', '✗', '✗'],
                 ].map(([role, ...perms]) => (
                   <tr key={role}>
-                    <td className="py-2 font-semibold text-dark-brown pr-4">{role}</td>
+                    <td className="py-2 pe-4 font-semibold text-dark-brown">{role}</td>
                     {perms.map((p, i) => (
-                      <td key={i} className={`py-2 pr-4 ${p === '✗' ? 'text-red-400' : 'text-green-600'}`}>{p}</td>
+                      <td key={i} className={`py-2 pe-4 ${p === '✗' ? 'text-red-400' : 'text-green-600'}`}>{p}</td>
                     ))}
                   </tr>
                 ))}

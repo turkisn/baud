@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart2, ClipboardList, Users, Store,
-  Tag, Settings, Home, LogOut,
+  Tag, Settings, Home, LogOut, Globe,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -16,23 +16,24 @@ const NAV = [
 ];
 
 const ROLE_STYLES = {
-  super_admin:  { bg: '#fef3c7', color: '#92400e', label: 'Super Admin' },
-  admin:        { bg: '#dbeafe', color: '#1d4ed8', label: 'Admin'       },
-  reviewer:     { bg: '#ede9fe', color: '#6d28d9', label: 'Reviewer'    },
+  super_admin:  { bg: '#fef3c7', color: '#92400e', en: 'Super Admin', ar: 'مدير أعلى' },
+  admin:        { bg: '#dbeafe', color: '#1d4ed8', en: 'Admin', ar: 'مدير' },
+  reviewer:     { bg: '#ede9fe', color: '#6d28d9', en: 'Reviewer', ar: 'مراجع' },
 };
 
 function RoleBadge({ role }) {
-  const s = ROLE_STYLES[role] || { bg: '#f3f4f6', color: '#374151', label: role };
+  const { lang } = useLanguage();
+  const s = ROLE_STYLES[role] || { bg: '#f3f4f6', color: '#374151', en: role, ar: role };
   return (
     <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold"
       style={{ background: s.bg, color: s.color }}>
-      {s.label}
+      {lang === 'ar' ? s.ar : s.en}
     </span>
   );
 }
 
 export default function AdminLayout({ children, title, subtitle }) {
-  const { lang, t }        = useLanguage();
+  const { lang, t, toggleLang } = useLanguage();
   const { user, logout }   = useAuth();
   const location           = useLocation();
   const navigate           = useNavigate();
@@ -90,6 +91,11 @@ export default function AdminLayout({ children, title, subtitle }) {
 
         {/* Bottom */}
         <div className="p-4 border-t border-medium-brown/40 space-y-0.5">
+          <button type="button" onClick={toggleLang} aria-label={t('Switch language', 'تغيير اللغة')}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-light-brown hover:bg-medium-brown/40 hover:text-warm-white transition-all">
+            <Globe size={17} />
+            {lang === 'ar' ? 'English' : 'العربية'}
+          </button>
           <Link to="/"
             className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-light-brown hover:bg-medium-brown/40 hover:text-warm-white transition-all">
             <Home size={17} />
@@ -107,13 +113,15 @@ export default function AdminLayout({ children, title, subtitle }) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <div className="sticky top-0 z-20 border-b border-sand bg-white px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               {title && <h1 className="text-lg font-bold text-dark-brown">{title}</h1>}
               {subtitle && <p className="text-xs text-light-brown mt-0.5">{subtitle}</p>}
             </div>
-            {/* Mobile nav */}
-            <nav aria-label={t('Admin navigation', 'تنقل لوحة الإدارة')} dir={lang === 'ar' ? 'rtl' : 'ltr'} className="w-full min-w-0 max-w-full overflow-x-auto pb-1 sm:w-auto sm:max-w-[70%] lg:hidden">
+            <button type="button" onClick={toggleLang} aria-label={t('Switch language', 'تغيير اللغة')} className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-sand px-3 py-2 text-sm font-semibold text-medium-brown transition hover:bg-warm-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold lg:hidden"><Globe size={15}/>{lang === 'ar' ? 'EN' : 'عربي'}</button>
+          </div>
+          {/* Mobile nav */}
+          <nav aria-label={t('Admin navigation', 'تنقل لوحة الإدارة')} dir={lang === 'ar' ? 'rtl' : 'ltr'} className="mt-3 w-full min-w-0 max-w-full overflow-x-auto pb-1 lg:hidden">
               <div className="flex min-w-max gap-2">
                 {visible.map(item => {
                   const active = location.pathname === item.path ||
@@ -131,8 +139,7 @@ export default function AdminLayout({ children, title, subtitle }) {
                   </Link>;
                 })}
               </div>
-            </nav>
-          </div>
+          </nav>
         </div>
 
         {/* Content */}
@@ -173,12 +180,13 @@ export function AdminEmptyState({ icon: Icon, message }) {
 }
 
 export function AdminErrorState({ message, onRetry }) {
+  const { t } = useLanguage();
   return (
     <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-sm text-red-700 flex items-start gap-3">
       <span className="flex-1">{message}</span>
       {onRetry && (
         <button onClick={onRetry} className="font-semibold underline underline-offset-2 flex-shrink-0">
-          Retry
+          {t('Retry', 'إعادة المحاولة')}
         </button>
       )}
     </div>
@@ -215,6 +223,7 @@ export function AdminTable({ headers, children, loading, colSpan }) {
 }
 
 export function Pagination({ page, totalPages, onPage }) {
+  const { t } = useLanguage();
   if (totalPages <= 1) return null;
   return (
     <div className="flex items-center justify-between mt-4 text-sm text-medium-brown">
@@ -223,25 +232,26 @@ export function Pagination({ page, totalPages, onPage }) {
         onClick={() => onPage(page - 1)}
         className="px-4 py-2 rounded-lg bg-white border border-sand disabled:opacity-40 hover:bg-sand transition-all"
       >
-        ← Prev
+        {t('← Prev', 'السابق →')}
       </button>
-      <span>Page {page + 1} of {totalPages}</span>
+      <span>{t(`Page ${page + 1} of ${totalPages}`, `صفحة ${page + 1} من ${totalPages}`)}</span>
       <button
         disabled={page >= totalPages - 1}
         onClick={() => onPage(page + 1)}
         className="px-4 py-2 rounded-lg bg-white border border-sand disabled:opacity-40 hover:bg-sand transition-all"
       >
-        Next →
+        {t('Next →', '← التالي')}
       </button>
     </div>
   );
 }
 
 export function VerifyBadge({ status }) {
+  const { t } = useLanguage();
   const map = {
-    verified:   { bg: '#d1fae5', color: '#065f46', label: 'Verified'   },
-    pending:    { bg: '#fef3c7', color: '#92400e', label: 'Pending'    },
-    unverified: { bg: '#f3f4f6', color: '#374151', label: 'Unverified' },
+    verified:   { bg: '#d1fae5', color: '#065f46', label: t('Verified', 'موثق') },
+    pending:    { bg: '#fef3c7', color: '#92400e', label: t('Pending', 'قيد المراجعة') },
+    unverified: { bg: '#f3f4f6', color: '#374151', label: t('Unverified', 'غير موثق') },
   };
   const s = map[status] || map.unverified;
   return (

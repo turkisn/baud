@@ -251,6 +251,7 @@ export default function Login() {
                 key={tab.id}
                 type="button"
                 onClick={() => { setMode(tab.id); setError(null); setFieldErrors({}); }}
+                aria-pressed={mode === tab.id}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   mode === tab.id
                     ? 'bg-white text-dark-brown shadow-sm'
@@ -294,30 +295,34 @@ export default function Login() {
             {/* Full Name */}
             {mode === 'signup' && (
               <div>
-                <label className="label">{t('Full Name', 'الاسم الكامل')}</label>
+                <label htmlFor="full-name" className="label">{t('Full Name', 'الاسم الكامل')}</label>
                 <div className="relative">
-                  <User size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                  <User aria-hidden="true" size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                   <input
+                    id="full-name"
                     className={`input-field ps-10 ${fieldErrors.name ? 'border-red-400' : ''}`}
                     placeholder={t('Your full name', 'اسمك الكامل')}
                     value={form.name}
                     onChange={set('name')}
                     autoComplete="name"
                     disabled={loading}
+                    aria-invalid={Boolean(fieldErrors.name)}
+                    aria-describedby={fieldErrors.name ? 'name-error' : undefined}
                   />
                 </div>
                 {fieldErrors.name && (
-                  <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>
+                  <p id="name-error" className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>
                 )}
               </div>
             )}
 
             {/* Email */}
             <div>
-              <label className="label">{t('Email Address', 'البريد الإلكتروني')}</label>
+              <label htmlFor="email" className="label">{t('Email Address', 'البريد الإلكتروني')}</label>
               <div className="relative">
-                <Mail size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                <Mail aria-hidden="true" size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                 <input
+                  id="email"
                   type="email"
                   className={`input-field ps-10 ${fieldErrors.email ? 'border-red-400' : ''}`}
                   placeholder="email@company.com"
@@ -325,20 +330,23 @@ export default function Login() {
                   onChange={set('email')}
                   autoComplete="email"
                   disabled={loading}
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  aria-describedby={fieldErrors.email ? 'email-error' : undefined}
                 />
               </div>
               {fieldErrors.email && (
-                <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+                <p id="email-error" className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
               )}
             </div>
 
             {/* Company */}
             {mode === 'signup' && (
               <div>
-                <label className="label">{t('Company / University', 'الشركة / الجامعة')}</label>
+                <label htmlFor="company" className="label">{t('Company / University', 'الشركة / الجامعة')}</label>
                 <div className="relative">
-                  <Building size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                  <Building aria-hidden="true" size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                   <input
+                    id="company"
                     className="input-field ps-10"
                     placeholder={t('Where you work or study', 'جهة عملك أو دراستك')}
                     value={form.company}
@@ -351,10 +359,11 @@ export default function Login() {
 
             {/* Password */}
             <div>
-              <label className="label">{t('Password', 'كلمة المرور')}</label>
+              <label htmlFor="password" className="label">{t('Password', 'كلمة المرور')}</label>
               <div className="relative">
-                <Lock size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
+                <Lock aria-hidden="true" size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown" />
                 <input
+                  id="password"
                   type={showPass ? 'text' : 'password'}
                   className={`input-field ps-10 pe-10 ${fieldErrors.password ? 'border-red-400' : ''}`}
                   placeholder="••••••••"
@@ -362,21 +371,24 @@ export default function Login() {
                   onChange={set('password')}
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   disabled={loading}
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  aria-describedby={fieldErrors.password ? 'password-error' : (mode === 'signup' ? 'password-hint' : undefined)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
                   className="absolute end-3.5 top-1/2 -translate-y-1/2 text-light-brown hover:text-dark-brown"
-                  tabIndex={-1}
+                  aria-label={showPass ? t('Hide password', 'إخفاء كلمة المرور') : t('Show password', 'إظهار كلمة المرور')}
+                  aria-pressed={showPass}
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {fieldErrors.password && (
-                <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
+                <p id="password-error" className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
               )}
               {mode === 'signup' && !fieldErrors.password && (
-                <p className="mt-1 text-xs text-light-brown">
+                <p id="password-hint" className="mt-1 text-xs text-light-brown">
                   {t('Minimum 8 characters', 'الحد الأدنى 8 أحرف')}
                 </p>
               )}
@@ -385,8 +397,8 @@ export default function Login() {
             {/* Role selector */}
             {mode === 'signup' && (
               <div>
-                <label className="label">{t('I am a…', 'أنا…')}</label>
-                <select value={userTypeIdx} onChange={(event) => setUserTypeIdx(Number(event.target.value))} disabled={loading} className="input-field mt-2">
+                <label htmlFor="user-type" className="label">{t('I am a…', 'أنا…')}</label>
+                <select id="user-type" value={userTypeIdx} onChange={(event) => setUserTypeIdx(Number(event.target.value))} disabled={loading} className="input-field mt-2">
                   {userTypes.map((userType, index) => <option key={userType.key} value={index}>{lang === 'ar' ? userType.ar : userType.en}</option>)}
                 </select>
               </div>
@@ -395,9 +407,9 @@ export default function Login() {
             {/* Forgot password */}
             {mode === 'login' && (
               <div className="flex justify-end">
-                <a href="#" className="text-sm text-gold hover:underline">
+                <Link to="/forgot-password" className="text-sm text-gold hover:underline">
                   {t('Forgot password?', 'نسيت كلمة المرور؟')}
-                </a>
+                </Link>
               </div>
             )}
 
@@ -405,6 +417,7 @@ export default function Login() {
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                role="alert"
                 className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-sm text-red-700"
               >
                 <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
@@ -439,9 +452,9 @@ export default function Login() {
           {mode === 'signup' && (
             <p className="text-xs text-light-brown text-center mt-4">
               {t('By signing up, you agree to our', 'بالتسجيل توافق على')}{' '}
-              <a href="#" className="text-gold hover:underline">{t('Terms', 'الشروط')}</a>
+              <Link to="/terms" className="text-gold hover:underline">{t('Terms', 'الشروط')}</Link>
               {' & '}
-              <a href="#" className="text-gold hover:underline">{t('Privacy Policy', 'الخصوصية')}</a>
+              <Link to="/privacy" className="text-gold hover:underline">{t('Privacy Policy', 'الخصوصية')}</Link>
             </p>
           )}
         </motion.div>

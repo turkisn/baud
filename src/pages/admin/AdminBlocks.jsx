@@ -11,6 +11,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import {
   ADMIN_PAGE_SIZE, mvpAdminService, PRODUCT_FILE_FORMATS, SPECIFICATION_DATA_TYPES,
 } from '../../services/mvpAdminService';
+import { formatAdminDate, formatAdminDateTime } from '../../utils/date';
 
 const EMPTY_PRODUCT = {
   product_name_ar: '', product_name_en: '', slug: '', category_id: '', subcategory_id: '',
@@ -58,12 +59,14 @@ function SelectField({ label, required, children, className = '', ...props }) {
 }
 
 function StatusBadge({ status }) {
+  const { t } = useLanguage();
   const styles = {
     draft: 'bg-sand text-medium-brown',
     published: 'bg-green-100 text-green-800',
     archived: 'bg-gray-200 text-gray-700',
   };
-  return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status] || styles.draft}`}>{status || 'draft'}</span>;
+  const labels = { draft: t('Draft', 'مسودة'), published: t('Published', 'منشور'), archived: t('Archived', 'مؤرشف') };
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status] || styles.draft}`}>{labels[status] || labels.draft}</span>;
 }
 
 function SpecificationsEditor({ items, onChange, disabled, t }) {
@@ -199,6 +202,10 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
       setError(t('Category and supplier are required before publishing.', 'الفئة والمورد مطلوبان قبل النشر.'));
       return;
     }
+    if (publicationState === 'published' && !product.rights_confirmed) {
+      setError(t('Confirm the product data and asset rights before publishing.', 'أكد حقوق بيانات المنتج وملفاته قبل النشر.'));
+      return;
+    }
     if (!validHttpUrl(product.supplier_product_url) || !validHttpUrl(product.source_url)) {
       setError(t('Supplier and source links must use http or https.', 'يجب أن تستخدم روابط المورد والمصدر http أو https.'));
       return;
@@ -265,6 +272,15 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
     }
     return choices;
   }, [availableSuppliers, product.supplier_id]);
+  const canPublish = Boolean(
+    product.product_name_en.trim()
+    && product.product_name_ar.trim()
+    && product.category_id
+    && product.supplier_id
+    && product.rights_confirmed
+    && validHttpUrl(product.supplier_product_url)
+    && validHttpUrl(product.source_url)
+  );
 
   return <div className="fixed inset-0 z-50 overflow-y-auto bg-deep-brown/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={t('Block editor', 'محرر البلوك')}><div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-ivory shadow-2xl"><header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-sand bg-white px-5 py-4"><div><p className="text-xs font-bold uppercase tracking-wider text-gold">{product.id ? t('Edit block', 'تعديل البلوك') : t('New block', 'بلوك جديد')}</p><h2 className="mt-1 text-xl font-black text-dark-brown">{product.product_name_en || t('Untitled product', 'منتج بدون عنوان')}</h2>{product.buod_reference && <p className="mt-1 font-mono text-xs text-light-brown">{product.buod_reference}</p>}</div><button type="button" onClick={onClose} aria-label={t('Close editor', 'إغلاق المحرر')} className="admin-icon-button"><X/></button></header>
     <div className="space-y-6 p-5 sm:p-7">{error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}{success && <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"><CheckCircle2 size={17}/>{success}</div>}
@@ -274,7 +290,7 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
       <SpecificationsEditor items={product.specifications || []} onChange={(items) => setProduct((current) => ({ ...current, specifications: items }))} disabled={Boolean(saving)} t={t}/>
       <ProductAssets product={product} onRefresh={refresh} disabled={Boolean(saving)} t={t}/>
     </div>
-    <footer className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-sand bg-white px-5 py-4"><div className="flex items-center gap-2"><StatusBadge status={product.publication_state}/>{product.updated_at && <span className="text-xs text-light-brown">{t('Updated', 'آخر تحديث')} {new Date(product.updated_at).toLocaleString()}</span>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => save('draft')} disabled={Boolean(saving)} className="admin-secondary-button">{saving === 'draft' ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} {t('Save draft', 'حفظ كمسودة')}</button><button type="button" onClick={() => save('archived')} disabled={Boolean(saving) || !product.id} className="admin-secondary-button text-red-700"><Archive size={14}/>{t('Archive', 'أرشفة')}</button><button type="button" onClick={() => save('published')} disabled={Boolean(saving)} className="admin-primary-button">{saving === 'published' ? <Loader2 className="animate-spin" size={14}/> : <Send size={14}/>} {t('Publish', 'نشر')}</button></div></footer>
+    <footer className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-sand bg-white px-5 py-4"><div className="flex flex-wrap items-center gap-2"><StatusBadge status={product.publication_state}/>{product.updated_at && <span className="text-xs text-light-brown">{t('Updated', 'آخر تحديث')} <time dateTime={product.updated_at} dir="ltr">{formatAdminDateTime(product.updated_at)}</time></span>}{!canPublish && <span id="publish-requirements" className="text-xs text-amber-700">{t('Publishing requires both names, category, supplier, and confirmed rights.', 'يتطلب النشر الاسمين والفئة والمورد وتأكيد الحقوق.')}</span>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => save('draft')} disabled={Boolean(saving)} className="admin-secondary-button">{saving === 'draft' ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} {t('Save draft', 'حفظ كمسودة')}</button><button type="button" onClick={() => save('archived')} disabled={Boolean(saving) || !product.id} className="admin-secondary-button text-red-700"><Archive size={14}/>{t('Archive', 'أرشفة')}</button><button type="button" onClick={() => save('published')} disabled={Boolean(saving) || !canPublish} aria-describedby={!canPublish ? 'publish-requirements' : undefined} className="admin-primary-button disabled:cursor-not-allowed disabled:opacity-50">{saving === 'published' ? <Loader2 className="animate-spin" size={14}/> : <Send size={14}/>} {t('Publish', 'نشر')}</button></div></footer>
   </div></div>;
 }
 
@@ -351,7 +367,7 @@ export default function AdminBlocks() {
 
   return <AdminLayout title={t('Blocks', 'البلوكات')} subtitle={`${count} ${t('database records', 'سجلات قاعدة البيانات')}`}><div className="mb-5 flex flex-wrap items-center gap-3"><div className="relative min-w-64 flex-1"><Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-light-brown"/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search name, slug or BUOD reference…', 'ابحث بالاسم أو الرابط أو مرجع BUOD…')} className="input-field bg-white ps-9"/></div><select value={publicationState} onChange={(event) => setPublicationState(event.target.value)} className="input-field w-auto min-w-36 bg-white"><option value="">{t('All states', 'كل الحالات')}</option><option value="draft">{t('Draft', 'مسودة')}</option><option value="published">{t('Published', 'منشور')}</option><option value="archived">{t('Archived', 'مؤرشف')}</option></select><select value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="input-field w-auto min-w-44 bg-white"><option value="">{t('All categories', 'كل الفئات')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</select><input value={supplierSearch} onChange={(event) => setSupplierSearch(event.target.value)} placeholder={t('Find supplier…', 'ابحث عن مورد…')} className="input-field w-40 bg-white"/><select value={supplierId} onChange={(event) => setSupplierId(event.target.value)} className="input-field w-auto max-w-56 bg-white"><option value="">{t('All suppliers', 'كل الموردين')}</option>{supplierOptions.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.company_name_en} · {supplier.company_name_ar}</option>)}</select><button type="button" onClick={load} className="admin-secondary-button"><RefreshCw size={14}/>{t('Refresh', 'تحديث')}</button><button type="button" onClick={() => openProduct(null)} className="admin-primary-button"><Plus size={15}/>{t('Create block', 'إنشاء بلوك')}</button></div>
     {error && <div className="mb-4"><AdminErrorState message={error} onRetry={load}/></div>}
-    {!error && !loading && items.length === 0 ? <AdminEmptyState icon={Box} message={t('No blocks match these filters.', 'لا توجد بلوكات تطابق هذه المرشحات.')}/> : <AdminTable loading={loading} headers={[t('Product', 'المنتج'), t('Supplier', 'المورد'), t('Category', 'الفئة'), t('State', 'الحالة'), t('Rights', 'الحقوق'), t('Updated', 'التحديث'), t('Action', 'الإجراء')]}>{items.map((item) => { const supplier = supplierLabels[item.supplier_id]; const category = categoryLabels[item.category_id]; return <tr key={item.id} className="hover:bg-warm-white"><td className="px-4 py-3"><p className="font-semibold text-dark-brown">{item.product_name_en}</p><p className="text-xs text-light-brown">{item.product_name_ar}</p>{item.buod_reference && <p className="mt-1 font-mono text-[10px] text-gold">{item.buod_reference}</p>}</td><td className="px-4 py-3 text-xs text-medium-brown">{supplier ? `${supplier.company_name_en} · ${supplier.company_name_ar}` : '—'}</td><td className="px-4 py-3 text-xs text-medium-brown">{category ? `${category.name_en} · ${category.name_ar}` : '—'}</td><td className="px-4 py-3"><StatusBadge status={item.publication_state}/></td><td className="px-4 py-3 text-xs">{item.rights_confirmed ? <span className="text-green-700">{t('Confirmed', 'مؤكدة')}</span> : <span className="text-amber-700">{t('Pending', 'غير مؤكدة')}</span>}</td><td className="px-4 py-3 text-xs text-light-brown">{item.updated_at ? new Date(item.updated_at).toLocaleDateString() : '—'}</td><td className="px-4 py-3"><button type="button" onClick={() => openProduct(item.id)} className="admin-secondary-button"><Pencil size={13}/>{t('Edit', 'تعديل')}</button></td></tr>; })}</AdminTable>}
+    {!error && !loading && items.length === 0 ? <AdminEmptyState icon={Box} message={t('No blocks match these filters.', 'لا توجد بلوكات تطابق هذه المرشحات.')}/> : <AdminTable loading={loading} headers={[t('Product', 'المنتج'), t('Supplier', 'المورد'), t('Category', 'الفئة'), t('State', 'الحالة'), t('Rights', 'الحقوق'), t('Updated', 'التحديث'), t('Action', 'الإجراء')]}>{items.map((item) => { const supplier = supplierLabels[item.supplier_id]; const category = categoryLabels[item.category_id]; return <tr key={item.id} className="hover:bg-warm-white"><td className="px-4 py-3"><p className="font-semibold text-dark-brown">{item.product_name_en}</p><p className="text-xs text-light-brown">{item.product_name_ar}</p>{item.buod_reference && <p className="mt-1 font-mono text-[10px] text-gold">{item.buod_reference}</p>}</td><td className="px-4 py-3 text-xs text-medium-brown">{supplier ? `${supplier.company_name_en} · ${supplier.company_name_ar}` : '—'}</td><td className="px-4 py-3 text-xs text-medium-brown">{category ? `${category.name_en} · ${category.name_ar}` : '—'}</td><td className="px-4 py-3"><StatusBadge status={item.publication_state}/></td><td className="px-4 py-3 text-xs">{item.rights_confirmed ? <span className="text-green-700">{t('Confirmed', 'مؤكدة')}</span> : <span className="text-amber-700">{t('Pending', 'غير مؤكدة')}</span>}</td><td className="px-4 py-3 text-xs text-light-brown">{item.updated_at ? <time dateTime={item.updated_at} dir="ltr">{formatAdminDate(item.updated_at)}</time> : '—'}</td><td className="px-4 py-3"><button type="button" onClick={() => openProduct(item.id)} className="admin-secondary-button"><Pencil size={13}/>{t('Edit', 'تعديل')}</button></td></tr>; })}</AdminTable>}
     <Pagination page={page} totalPages={Math.ceil(count / ADMIN_PAGE_SIZE)} onPage={setPage}/>
     {editorLoading && <div className="fixed inset-0 z-50 grid place-items-center bg-deep-brown/70"><Loader2 className="animate-spin text-gold" size={36}/></div>}{editor && <ProductEditor key={editor.id || 'new'} initial={editor} categories={categories} supplierOptions={supplierOptions} onClose={() => setEditor(null)} onSaved={() => load()} t={t}/>}
   </AdminLayout>;
