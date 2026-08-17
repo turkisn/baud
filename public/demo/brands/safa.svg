@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Safa Sanitary demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#ede9e2"/>
+  <path d="M60 25c16 23 24 35 24 48a24 24 0 01-48 0c0-13 8-25 24-48z" fill="#526d71"/>
+  <path d="M48 75c5 7 13 10 22 7" fill="none" stroke="#d8b64f" stroke-width="4" stroke-linecap="round"/>
+  <text x="107" y="65" fill="#2d3d3f" font-family="Arial,sans-serif" font-size="31" font-weight="700" letter-spacing="5">SAFA</text>
+  <text x="109" y="86" fill="#718486" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">SANITARY</text>
+</svg>

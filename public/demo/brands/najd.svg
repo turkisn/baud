@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Najd Furniture demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#2f2118"/>
+  <path d="M38 76V44l22-13 22 13v32L60 89z" fill="none" stroke="#d7b54a" stroke-width="5"/>
+  <path d="M49 57l11-7 11 7v13L60 77 49 70z" fill="#d7b54a"/>
+  <text x="102" y="65" fill="#fffaf2" font-family="Arial,sans-serif" font-size="30" font-weight="700" letter-spacing="4">NAJD</text>
+  <text x="104" y="86" fill="#c8b8a8" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">FURNITURE</text>
+</svg>

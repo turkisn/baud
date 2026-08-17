@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Takamul Electrical demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#332821"/>
+  <path d="M63 24L35 64h20l-6 33 35-49H63z" fill="#d9b643"/>
+  <text x="103" y="63" fill="#fffaf2" font-family="Arial,sans-serif" font-size="25" font-weight="700" letter-spacing="2">TAKAMUL</text>
+  <text x="105" y="85" fill="#c0b0a3" font-family="Arial,sans-serif" font-size="10" letter-spacing="1.6">ELECTRICAL</text>
+</svg>

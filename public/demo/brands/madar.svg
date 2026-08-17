@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Madar Building Systems demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#3c3029"/>
+  <circle cx="59" cy="60" r="27" fill="none" stroke="#c8a246" stroke-width="5"/>
+  <circle cx="59" cy="60" r="8" fill="#c8a246"/>
+  <path d="M59 23v15M96 60H81M59 97V82M22 60h15" stroke="#f5ede3" stroke-width="3"/>
+  <text x="105" y="65" fill="#fffaf2" font-family="Arial,sans-serif" font-size="30" font-weight="700" letter-spacing="4">MADAR</text>
+  <text x="107" y="86" fill="#c2b2a6" font-family="Arial,sans-serif" font-size="10" letter-spacing="1.5">BUILDING SYSTEMS</text>
+</svg>

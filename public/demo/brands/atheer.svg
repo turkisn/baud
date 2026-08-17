@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Atheer Kitchens demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#f4eee5"/>
+  <path d="M28 82L58 28l30 54H76L58 49 40 82z" fill="#8b6849"/>
+  <path d="M48 82l10-18 10 18z" fill="#d5ac42"/>
+  <text x="105" y="65" fill="#38261c" font-family="Arial,sans-serif" font-size="29" font-weight="700" letter-spacing="3">ATHEER</text>
+  <text x="107" y="86" fill="#8b6d58" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">KITCHENS</text>
+</svg>

@@ -7,6 +7,8 @@ const PRIVATE_BUCKETS = Object.freeze({
   SUPPLIER_ASSETS: 'supplier-assets',
 });
 
+const BUNDLED_ASSET_PREFIX = 'demo/';
+
 const PUBLIC_PRODUCT_IMAGE_FIELDS = [
   'id', 'product_id', 'image_path', 'image_type', 'alt_text_ar', 'alt_text_en',
   'sort_order', 'is_primary', 'created_at',
@@ -90,22 +92,28 @@ async function batchSignedUrls(bucket, requestedPaths) {
   const failedPaths = new Set();
   if (!paths.length) return { urls, failedPaths };
 
+  const bundledPaths = paths.filter((path) => path.startsWith(BUNDLED_ASSET_PREFIX));
+  const storagePaths = paths.filter((path) => !path.startsWith(BUNDLED_ASSET_PREFIX));
+  bundledPaths.forEach((path) => urls.set(path, `/${path}`));
+  if (!storagePaths.length) return { urls, failedPaths };
+
   try {
-    const { data, error } = await supabase.storage.from(bucket).createSignedUrls(paths, READ_TTL_SECONDS);
+    const { data, error } = await supabase.storage.from(bucket)
+      .createSignedUrls(storagePaths, READ_TTL_SECONDS);
     if (error || !Array.isArray(data)) {
-      paths.forEach((path) => failedPaths.add(path));
+      storagePaths.forEach((path) => failedPaths.add(path));
       return { urls, failedPaths };
     }
 
-    const requested = new Set(paths);
+    const requested = new Set(storagePaths);
     for (const result of data) {
       if (!result?.path || !requested.has(result.path)) continue;
       if (result.error || !result.signedUrl) failedPaths.add(result.path);
       else urls.set(result.path, result.signedUrl);
     }
-    paths.forEach((path) => { if (!urls.has(path)) failedPaths.add(path); });
+    storagePaths.forEach((path) => { if (!urls.has(path)) failedPaths.add(path); });
   } catch {
-    paths.forEach((path) => failedPaths.add(path));
+    storagePaths.forEach((path) => failedPaths.add(path));
   }
 
   return { urls, failedPaths };
