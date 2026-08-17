@@ -17,6 +17,18 @@ const PUBLIC_SPECIFICATION_FIELDS = [
   'specification_code', 'value', 'unit', 'data_type', 'sort_order',
 ].join(',');
 
+const PUBLIC_PRODUCT_ENRICHMENT_FIELDS = [
+  'id', 'product_type', 'manufacturer_id', 'verification_status', 'is_free',
+  'lead_time', 'min_order_qty', 'in_stock', 'license_type', 'license_commercial',
+  'license_download', 'license_modify', 'license_redistribute', 'rights_confirmed',
+  'version_number',
+].join(',');
+
+const PUBLIC_MATERIAL_FIELDS = [
+  'id', 'product_id', 'material_name_ar', 'material_name_en', 'material_code',
+  'material_type', 'finish', 'color', 'quantity_per_product', 'unit',
+].join(',');
+
 export const PUBLIC_PRODUCT_FILE_FIELDS = [
   'id', 'product_id', 'file_type', 'software_name', 'software_version',
   'file_format', 'original_file_name', 'file_size', 'mime_type', 'is_primary',
@@ -28,7 +40,7 @@ const READ_TTL_SECONDS = 60 * 5;
 const ANALYTICS_SESSION_KEY = 'buod_mvp_session_id';
 const ANALYTICS_DEDUP_WINDOW_MS = 5_000;
 const MAX_ANALYTICS_DEDUP_ENTRIES = 100;
-const SAFE_ANALYTICS_METADATA_KEYS = new Set(['page', 'category_id', 'file_id']);
+const SAFE_ANALYTICS_METADATA_KEYS = new Set(['page', 'category_id', 'supplier_id', 'file_id']);
 const STORAGE_PATH_FIELDS = [
   'featured_image_path', 'image_path', 'logo_path', 'logo', 'cover_image_path',
   'cover_path', 'cover', 'file_path', 'storage_bucket',
@@ -132,24 +144,47 @@ async function hydrateProductSummaries(rows) {
       imagePath: isValidStoragePath(rawImagePath) ? rawImagePath : null,
     };
   });
-  const signed = await batchSignedUrls(
-    PRIVATE_BUCKETS.PRODUCT_IMAGES,
-    summaries.map(({ imagePath }) => imagePath)
-  );
+  const productIds = summaries.map(({ row }) => row.id || row.product_id).filter(Boolean);
+  const [signed, filesResult] = await Promise.all([
+    batchSignedUrls(
+      PRIVATE_BUCKETS.PRODUCT_IMAGES,
+      summaries.map(({ imagePath }) => imagePath)
+    ),
+    productIds.length
+      ? settleQuery(supabase.from('product_files').select(PUBLIC_PRODUCT_FILE_FIELDS)
+        .in('product_id', productIds).eq('is_available', true))
+      : Promise.resolve({ data: [], error: null }),
+  ]);
 
-  return summaries.map(({ row, rawImagePath, imagePath }) => ({
-    ...withoutStoragePaths(row),
-    slug: slugFor(row),
-    signed_image_url: imagePath ? signed.urls.get(imagePath) || null : null,
-    image_error: Boolean(rawImagePath && (!imagePath || signed.failedPaths.has(imagePath))),
-  }));
+  const filesByProduct = new Map();
+  if (!filesResult.error && Array.isArray(filesResult.data)) {
+    for (const file of filesResult.data) {
+      const current = filesByProduct.get(file.product_id) || [];
+      current.push(file);
+      filesByProduct.set(file.product_id, current);
+    }
+  }
+
+  return summaries.map(({ row, rawImagePath, imagePath }) => {
+    const files = filesByProduct.get(row.id || row.product_id) || [];
+    return {
+      ...withoutStoragePaths(row),
+      slug: slugFor(row),
+      signed_image_url: imagePath ? signed.urls.get(imagePath) || null : null,
+      image_error: Boolean(rawImagePath && (!imagePath || signed.failedPaths.has(imagePath))),
+      available_formats: [...new Set(files.map((file) => file.file_format).filter(Boolean))],
+      available_software: [...new Set(files.map((file) => file.software_name).filter(Boolean))],
+      available_file_count: files.length,
+      file_metadata_error: Boolean(filesResult.error),
+    };
+  });
 }
 
 async function hydrateProductDetail(row) {
   const id = row?.id || row?.product_id;
   if (!id) throw new Error('Product detail response is incomplete.');
 
-  const [imagesResult, specificationsResult, filesResult] = await Promise.all([
+  const [imagesResult, specificationsResult, filesResult, enrichmentResult, materialsResult] = await Promise.all([
     settleQuery(supabase.from('product_images').select(PUBLIC_PRODUCT_IMAGE_FIELDS)
       .eq('product_id', id).order('sort_order')),
     settleQuery(supabase.from('product_specifications').select(PUBLIC_SPECIFICATION_FIELDS)
@@ -157,11 +192,17 @@ async function hydrateProductDetail(row) {
     settleQuery(supabase.from('product_files').select(PUBLIC_PRODUCT_FILE_FIELDS)
       .eq('product_id', id).eq('is_available', true)
       .order('is_primary', { ascending: false }).order('created_at', { ascending: false })),
+    settleQuery(supabase.from('products').select(PUBLIC_PRODUCT_ENRICHMENT_FIELDS)
+      .eq('id', id).maybeSingle()),
+    settleQuery(supabase.from('product_materials').select(PUBLIC_MATERIAL_FIELDS)
+      .eq('product_id', id).order('created_at')),
   ]);
 
   const imagesSucceeded = !imagesResult.error && Array.isArray(imagesResult.data);
   const specificationsSucceeded = !specificationsResult.error && Array.isArray(specificationsResult.data);
   const filesSucceeded = !filesResult.error && Array.isArray(filesResult.data);
+  const enrichmentSucceeded = !enrichmentResult.error && enrichmentResult.data;
+  const materialsSucceeded = !materialsResult.error && Array.isArray(materialsResult.data);
   const imageRows = imagesSucceeded ? imagesResult.data : [];
   const featuredPath = first(row, ['featured_image_path', 'image_path']);
   const validFeaturedPath = isValidStoragePath(featuredPath) ? featuredPath : null;
@@ -183,6 +224,7 @@ async function hydrateProductDetail(row) {
 
   return {
     ...withoutStoragePaths(row),
+    ...(enrichmentSucceeded ? withoutStoragePaths(enrichmentResult.data) : {}),
     slug: slugFor(row),
     signed_image_url: images.find((image) => image.is_primary)?.signed_url
       || images[0]?.signed_url
@@ -190,10 +232,13 @@ async function hydrateProductDetail(row) {
     product_images: images,
     product_specifications: specificationsSucceeded ? specificationsResult.data : [],
     product_files: filesSucceeded ? filesResult.data : [],
+    product_materials: materialsSucceeded ? materialsResult.data : [],
     detail_errors: {
       images: !imagesSucceeded || imagePathsInvalid || imageSigningFailed,
       specifications: !specificationsSucceeded,
       files: !filesSucceeded,
+      product_data: !enrichmentSucceeded,
+      materials: !materialsSucceeded,
     },
   };
 }
