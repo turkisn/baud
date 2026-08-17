@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 
 const AuthContext = createContext();
@@ -19,45 +19,84 @@ const SUPPLIER_ROLES = ['supplier', 'manufacturer', ...ADMIN_ROLES];
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null); // profile-shaped object
   const [loading, setLoading] = useState(true);
+  const authVersion = useRef(0);
+  const mounted = useRef(false);
+  const nextAuthVersion = useCallback(() => {
+    authVersion.current += 1;
+    return authVersion.current;
+  }, []);
 
   // ── Supabase mode: listen to auth state ──────────────────────
   useEffect(() => {
+    mounted.current = true;
     if (!SUPABASE_CONFIGURED) {
       setLoading(false);
-      return;
+      return () => { mounted.current = false; };
     }
 
-    // Single source of truth: onAuthStateChange fires INITIAL_SESSION immediately
-    // on subscription (reads from localStorage, no network), then SIGNED_IN / SIGNED_OUT
-    // as the session changes. No need for a separate getSession() call.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (import.meta.env.DEV) console.debug('[BUOD:auth]', event);
+    let currentSessionUserId = null;
+    const deferredHydrations = new Set();
 
-      if (session?.user) {
-        try {
-          const profile = await fetchProfile(session.user.id);
-          setUser(mergeProfile(session.user, profile));
-        } catch {
-          // Profile table not accessible — use auth data only; user is still authenticated
-          setUser(mergeProfile(session.user, null));
-        }
-      } else {
-        setUser(null);
+    const hydrateSession = async (authUser, version) => {
+      let profile = null;
+      try {
+        profile = await fetchProfile(authUser.id);
+      } catch {
+        // Authentication still succeeds, but authorization fails closed to role=user.
       }
+
+      if (!mounted.current || version !== authVersion.current) return;
+      setUser(mergeProfile(authUser, profile));
       setLoading(false);
+    };
+
+    // Keep this callback synchronous. Supabase API calls made while the auth callback
+    // lock is held can deadlock sign-in, sign-out, and initial-session restoration.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted.current) return;
+      const version = nextAuthVersion();
+
+      for (const timer of deferredHydrations) window.clearTimeout(timer);
+      deferredHydrations.clear();
+
+      if (!session?.user) {
+        currentSessionUserId = null;
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const nextUserId = session.user.id;
+      if (currentSessionUserId !== nextUserId) {
+        currentSessionUserId = nextUserId;
+        setUser(null);
+        setLoading(true);
+      }
+
+      const timer = window.setTimeout(() => {
+        deferredHydrations.delete(timer);
+        void hydrateSession(session.user, version);
+      }, 0);
+      deferredHydrations.add(timer);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted.current = false;
+      nextAuthVersion();
+      for (const timer of deferredHydrations) window.clearTimeout(timer);
+      deferredHydrations.clear();
+      subscription.unsubscribe();
+    };
+  }, [nextAuthVersion]);
 
   // ── Helpers ───────────────────────────────────────────────────
   async function fetchProfile(userId) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id,full_name,role,avatar_url,user_type,company_name')
       .eq('id', userId)
-      .single();
-    if (error && import.meta.env.DEV) console.debug('[BUOD:auth] Profile unavailable:', error.code);
+      .maybeSingle();
+    if (error) throw error;
     return data ?? null;
   }
 
@@ -82,11 +121,8 @@ export function AuthProvider({ children }) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error('Invalid login credentials');
-    // Do NOT call setUser here. onAuthStateChange SIGNED_IN fires next and calls
-    // fetchProfile, so user state is only committed once the real role is known.
-    // This prevents DashboardRouter from seeing a stale role='user' fallback and
-    // routing the user to /user/dashboard before the profile loads.
-    // Login.jsx navigates only after onAuthStateChange commits the server profile.
+    // The synchronous auth listener schedules profile hydration after its callback
+    // returns. Login navigation waits for that guarded server-profile result.
     return data;
   };
 
@@ -110,13 +146,14 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────
   const logout = async () => {
+    nextAuthVersion();
+    setUser(null);
+    setLoading(false);
     if (!SUPABASE_CONFIGURED) {
       localStorage.removeItem('buod_session');
-      setUser(null);
       return;
     }
     await supabase.auth.signOut();
-    setUser(null);
   };
 
   // ── Role helpers ──────────────────────────────────────────────

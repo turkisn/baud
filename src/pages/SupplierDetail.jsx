@@ -73,13 +73,13 @@ export default function SupplierDetail() {
         setProducts(uniqueProducts(rows));
         nextOffset.current = rows.length;
         setHasMore(rows.length === PAGE_SIZE);
-      } catch (requestError) {
-        if (version === requestVersion.current) setProductsError(requestError.message);
+      } catch {
+        if (version === requestVersion.current) setProductsError(true);
       } finally {
         if (version === requestVersion.current) setProductsLoading(false);
       }
-    }).catch((requestError) => {
-      if (version === requestVersion.current) setError(requestError.message);
+    }).catch(() => {
+      if (version === requestVersion.current) setError(true);
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
@@ -102,8 +102,8 @@ export default function SupplierDetail() {
       setProducts((current) => uniqueProducts([...current, ...rows]));
       nextOffset.current += rows.length;
       setHasMore(rows.length === PAGE_SIZE);
-    } catch (requestError) {
-      if (version === requestVersion.current) setProductsError(requestError.message);
+    } catch {
+      if (version === requestVersion.current) setProductsError(true);
     } finally {
       if (version === requestVersion.current) setLoadingMore(false);
       loadingMoreRef.current = false;
@@ -111,7 +111,8 @@ export default function SupplierDetail() {
   };
 
   if (loading) return <div className="min-h-screen bg-ivory pt-[76px]"><LoadingState/></div>;
-  if (error || !supplier) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState message={error || t('Supplier not found.', 'المورد غير موجود.')}/></div>;
+  if (error) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState/></div>;
+  if (!supplier) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState message={t('Supplier not found.', 'المورد غير موجود.')}/></div>;
 
   const name = lang === 'ar' ? pick(supplier, 'company_name_ar', 'name_ar', 'company_name_en') : pick(supplier, 'company_name_en', 'name_en', 'company_name_ar');
   const otherName = lang === 'ar' ? supplier.company_name_en : supplier.company_name_ar;
@@ -124,9 +125,9 @@ export default function SupplierDetail() {
       {productsLoading
         ? <LoadingState/>
         : products.length === 0 && productsError
-          ? <ErrorState message={productsError}/>
+          ? <ErrorState/>
           : products.length
-            ? <><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product}/>)}</div>{productsError && <div className="mt-6"><ErrorState message={productsError}/></div>}<div className="mt-10 flex flex-col items-center gap-3">{hasMore ? <button type="button" onClick={loadMore} disabled={loadingMore} className="btn-primary min-w-44 justify-center disabled:opacity-60">{loadingMore && <Loader2 className="animate-spin" size={17}/>} {loadingMore ? t('Loading more…', 'جارٍ تحميل المزيد…') : t('Load more blocks', 'تحميل المزيد من البلوكات')}</button> : <p className="text-sm text-light-brown">{t('All published blocks are shown.', 'تم عرض جميع البلوكات المنشورة.')}</p>}</div></>
+            ? <><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product}/>)}</div>{productsError && <div className="mt-6"><ErrorState/></div>}<div className="mt-10 flex flex-col items-center gap-3">{hasMore ? <button type="button" onClick={loadMore} disabled={loadingMore} className="btn-primary min-w-44 justify-center disabled:opacity-60">{loadingMore && <Loader2 className="animate-spin" size={17}/>} {loadingMore ? t('Loading more…', 'جارٍ تحميل المزيد…') : t('Load more blocks', 'تحميل المزيد من البلوكات')}</button> : <p className="text-sm text-light-brown">{t('All published blocks are shown.', 'تم عرض جميع البلوكات المنشورة.')}</p>}</div></>
             : <EmptyState title={t('No published blocks yet', 'لا توجد بلوكات منشورة حالياً')}/>}
     </section></main></div>;
 }

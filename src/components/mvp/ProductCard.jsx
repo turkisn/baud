@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
         {product.signed_image_url ? (
           <img src={product.signed_image_url} alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{t('Image unavailable', 'الصورة غير متاحة')}</span></div>
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{product.image_error ? t('Image temporarily unavailable', 'الصورة غير متاحة مؤقتاً') : t('Image unavailable', 'الصورة غير متاحة')}</span></div>
         )}
         {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg bg-deep-brown/90 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-warm-white">{product.buod_reference}</span>}
       </div>

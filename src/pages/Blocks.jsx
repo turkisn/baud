@@ -26,6 +26,7 @@ export default function Blocks() {
   const [query, setQuery] = useState(urlQuery);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [categoriesError, setCategoriesError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -53,8 +54,18 @@ export default function Blocks() {
   }, [query, setSearchParams, urlQuery]);
 
   useEffect(() => {
-    mvpService.getCategories().then(setCategories).catch(() => setCategories([]));
+    let active = true;
+    mvpService.getCategories()
+      .then((rows) => {
+        if (!active) return;
+        setCategories(rows);
+        setCategoriesError(false);
+      })
+      .catch(() => {
+        if (active) setCategoriesError(true);
+      });
     mvpService.recordEvent('page_view', { page: 'blocks' });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -82,8 +93,8 @@ export default function Blocks() {
       nextOffset.current = rows.length;
       setHasMore(rows.length === PAGE_SIZE);
       if (urlQuery.trim().length >= 2) mvpService.recordEvent('search', { query: urlQuery.trim(), page: 'blocks' });
-    }).catch((requestError) => {
-      if (version === requestVersion.current) setError(requestError.message);
+    }).catch(() => {
+      if (version === requestVersion.current) setError(true);
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
@@ -115,8 +126,8 @@ export default function Blocks() {
       setProducts((current) => uniqueProducts([...current, ...rows]));
       nextOffset.current += rows.length;
       setHasMore(rows.length === PAGE_SIZE);
-    } catch (requestError) {
-      if (version === requestVersion.current) setError(requestError.message);
+    } catch {
+      if (version === requestVersion.current) setError(true);
     } finally {
       if (version === requestVersion.current) setLoadingMore(false);
       loadingMoreRef.current = false;
@@ -128,12 +139,13 @@ export default function Blocks() {
     <main className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8 grid gap-3 rounded-2xl border border-sand bg-white p-4 shadow-card sm:grid-cols-[1fr_280px]">
         <label className="relative"><span className="sr-only">{t('Search blocks', 'البحث عن البلوكات')}</span><Search className="absolute start-4 top-1/2 -translate-y-1/2 text-light-brown" size={18}/><input className="input-field ps-11" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Name, reference or keyword…', 'الاسم أو المرجع أو كلمة مفتاحية…')}/></label>
-        <label className="relative"><span className="sr-only">{t('Category', 'الفئة')}</span><Filter className="absolute start-4 top-1/2 -translate-y-1/2 text-light-brown" size={17}/><select className="input-field appearance-none ps-11" value={categoryId} onChange={(event) => changeCategory(event.target.value)}><option value="">{t('All categories', 'جميع الفئات')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</select></label>
+        <label className="relative"><span className="sr-only">{t('Category', 'الفئة')}</span><Filter className="absolute start-4 top-1/2 -translate-y-1/2 text-light-brown" size={17}/><select className="input-field appearance-none ps-11" value={categoryId} onChange={(event) => changeCategory(event.target.value)} disabled={categoriesError}><option value="">{categoriesError ? t('Categories unavailable', 'الفئات غير متاحة') : t('All categories', 'جميع الفئات')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</select></label>
       </div>
+      {categoriesError && <div role="status" className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{t('Category filters could not be loaded. Product search is still available.', 'تعذّر تحميل فلاتر الفئات. لا يزال البحث في المنتجات متاحاً.')}</div>}
 
-      {loading ? <LoadingState/> : products.length === 0 && error ? <ErrorState message={error}/> : products.length === 0 ? <EmptyState title={t('No blocks found', 'لا توجد بلوكات')} description={t('Try a different search or category. New published blocks will appear here.', 'جرّب بحثاً أو فئة مختلفة. ستظهر البلوكات المنشورة الجديدة هنا.')}/> : <>
+      {loading ? <LoadingState/> : products.length === 0 && error ? <ErrorState/> : products.length === 0 ? <EmptyState title={t('No blocks found', 'لا توجد بلوكات')} description={t('Try a different search or category. New published blocks will appear here.', 'جرّب بحثاً أو فئة مختلفة. ستظهر البلوكات المنشورة الجديدة هنا.')}/> : <>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product}/>)}</div>
-        {error && <div className="mt-6"><ErrorState message={error}/></div>}
+        {error && <div className="mt-6"><ErrorState/></div>}
         <div className="mt-10 flex flex-col items-center gap-3">
           {hasMore ? <button type="button" onClick={loadMore} disabled={loadingMore} className="btn-primary min-w-44 justify-center disabled:cursor-not-allowed disabled:opacity-60">{loadingMore && <Loader2 className="animate-spin" size={17}/>} {loadingMore ? t('Loading more…', 'جارٍ تحميل المزيد…') : t('Load more blocks', 'تحميل المزيد من البلوكات')}</button> : <p className="text-sm text-light-brown">{t('You have reached the end of the published blocks.', 'وصلت إلى نهاية البلوكات المنشورة.')}</p>}
         </div>

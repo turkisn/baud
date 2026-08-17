@@ -26,13 +26,15 @@ export const PUBLIC_PRODUCT_FILE_FIELDS = [
 const PRIVATE_DOWNLOAD_FIELDS = 'id,product_id,file_type,file_path,storage_bucket,is_available';
 const READ_TTL_SECONDS = 60 * 5;
 const ANALYTICS_SESSION_KEY = 'buod_mvp_session_id';
-const RESERVED_ANALYTICS_KEYS = new Set([
-  'email', 'user_id', 'userid', 'user_type', 'usertype', 'role', 'token', 'tokens',
-  'access_token', 'refresh_token', 'authorization', 'file_path', 'filepath', 'filepaths',
-  'path', 'storage_bucket', 'storagebucket', 'signed_url', 'signedurl', 'signed_urls', 'signedurls',
-]);
+const ANALYTICS_DEDUP_WINDOW_MS = 5_000;
+const MAX_ANALYTICS_DEDUP_ENTRIES = 100;
+const SAFE_ANALYTICS_METADATA_KEYS = new Set(['page', 'category_id', 'file_id']);
+const STORAGE_PATH_FIELDS = [
+  'featured_image_path', 'image_path', 'logo_path', 'logo', 'cover_image_path',
+  'cover_path', 'cover', 'file_path', 'storage_bucket',
+];
 
-let lastAnalyticsEvent = '';
+const recentAnalyticsEvents = new Map();
 
 const first = (value, keys, fallback = null) => {
   for (const key of keys) {
@@ -42,6 +44,10 @@ const first = (value, keys, fallback = null) => {
 };
 
 const slugFor = (row) => first(row, ['slug', 'public_slug', 'id', 'buod_reference']);
+
+function assertConfigured() {
+  if (!SUPABASE_CONFIGURED) throw new Error('MVP data service is unavailable.');
+}
 
 function isValidStoragePath(path) {
   if (typeof path !== 'string' || !path || path !== path.trim() || path.length > 1024) return false;
@@ -53,6 +59,12 @@ function isValidStoragePath(path) {
   return !path.split('/').some((segment) => segment === '..' || segment === '.');
 }
 
+function withoutStoragePaths(row) {
+  const safeRow = { ...row };
+  for (const field of STORAGE_PATH_FIELDS) delete safeRow[field];
+  return safeRow;
+}
+
 async function signedPrivateUrl(bucket, path) {
   if (!Object.values(PRIVATE_BUCKETS).includes(bucket) || !isValidStoragePath(path)) return null;
   const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, READ_TTL_SECONDS);
@@ -60,41 +72,31 @@ async function signedPrivateUrl(bucket, path) {
   return data?.signedUrl || null;
 }
 
-async function hydrateProduct(row, includeFiles = false) {
-  if (!row) return null;
-  const id = row.id || row.product_id;
-  if (!id) {
-    return { ...row, slug: slugFor(row), product_images: [], product_specifications: [], product_files: [] };
+async function batchSignedUrls(bucket, requestedPaths) {
+  const paths = [...new Set((requestedPaths || []).filter(isValidStoragePath))];
+  const urls = new Map();
+  const failedPaths = new Set();
+  if (!paths.length) return { urls, failedPaths };
+
+  try {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrls(paths, READ_TTL_SECONDS);
+    if (error || !Array.isArray(data)) {
+      paths.forEach((path) => failedPaths.add(path));
+      return { urls, failedPaths };
+    }
+
+    const requested = new Set(paths);
+    for (const result of data) {
+      if (!result?.path || !requested.has(result.path)) continue;
+      if (result.error || !result.signedUrl) failedPaths.add(result.path);
+      else urls.set(result.path, result.signedUrl);
+    }
+    paths.forEach((path) => { if (!urls.has(path)) failedPaths.add(path); });
+  } catch {
+    paths.forEach((path) => failedPaths.add(path));
   }
 
-  const [imagesResult, specificationsResult, filesResult] = await Promise.all([
-    supabase.from('product_images').select(PUBLIC_PRODUCT_IMAGE_FIELDS).eq('product_id', id).order('sort_order'),
-    supabase.from('product_specifications').select(PUBLIC_SPECIFICATION_FIELDS).eq('product_id', id).order('sort_order'),
-    includeFiles
-      ? supabase.from('product_files').select(PUBLIC_PRODUCT_FILE_FIELDS).eq('product_id', id)
-        .eq('is_available', true).order('is_primary', { ascending: false }).order('created_at', { ascending: false })
-      : Promise.resolve({ data: [] }),
-  ]);
-
-  const imageRows = imagesResult.error ? [] : imagesResult.data || [];
-  const specificationRows = specificationsResult.error ? [] : specificationsResult.data || [];
-  const fileRows = filesResult.error ? [] : filesResult.data || [];
-  const images = (await Promise.all(imageRows.map(async (image) => ({
-    ...image,
-    signed_url: await signedPrivateUrl(PRIVATE_BUCKETS.PRODUCT_IMAGES, image.image_path),
-  })))).filter((image) => image.signed_url);
-  const featuredPath = first(row, ['featured_image_path', 'image_path']);
-
-  return {
-    ...row,
-    slug: slugFor(row),
-    signed_image_url: images.find((image) => image.is_primary)?.signed_url
-      || images[0]?.signed_url
-      || await signedPrivateUrl(PRIVATE_BUCKETS.PRODUCT_IMAGES, featuredPath),
-    product_images: images,
-    product_specifications: specificationRows,
-    product_files: fileRows,
-  };
+  return { urls, failedPaths };
 }
 
 function normalizeListResult(data) {
@@ -103,7 +105,7 @@ function normalizeListResult(data) {
   if (Array.isArray(data?.suppliers)) return data.suppliers;
   if (Array.isArray(data?.windows)) return data.windows;
   if (Array.isArray(data?.items)) return data.items;
-  return [];
+  throw new Error('Unexpected MVP list response.');
 }
 
 function normalizeSingleResult(data) {
@@ -113,14 +115,123 @@ function normalizeSingleResult(data) {
   return result && typeof result === 'object' && Object.keys(result).length > 0 ? result : null;
 }
 
+async function settleQuery(query) {
+  try {
+    return await query;
+  } catch {
+    return { data: null, error: true };
+  }
+}
+
+async function hydrateProductSummaries(rows) {
+  const summaries = rows.map((row) => {
+    const rawImagePath = first(row, ['featured_image_path', 'image_path']);
+    return {
+      row,
+      rawImagePath,
+      imagePath: isValidStoragePath(rawImagePath) ? rawImagePath : null,
+    };
+  });
+  const signed = await batchSignedUrls(
+    PRIVATE_BUCKETS.PRODUCT_IMAGES,
+    summaries.map(({ imagePath }) => imagePath)
+  );
+
+  return summaries.map(({ row, rawImagePath, imagePath }) => ({
+    ...withoutStoragePaths(row),
+    slug: slugFor(row),
+    signed_image_url: imagePath ? signed.urls.get(imagePath) || null : null,
+    image_error: Boolean(rawImagePath && (!imagePath || signed.failedPaths.has(imagePath))),
+  }));
+}
+
+async function hydrateProductDetail(row) {
+  const id = row?.id || row?.product_id;
+  if (!id) throw new Error('Product detail response is incomplete.');
+
+  const [imagesResult, specificationsResult, filesResult] = await Promise.all([
+    settleQuery(supabase.from('product_images').select(PUBLIC_PRODUCT_IMAGE_FIELDS)
+      .eq('product_id', id).order('sort_order')),
+    settleQuery(supabase.from('product_specifications').select(PUBLIC_SPECIFICATION_FIELDS)
+      .eq('product_id', id).order('sort_order')),
+    settleQuery(supabase.from('product_files').select(PUBLIC_PRODUCT_FILE_FIELDS)
+      .eq('product_id', id).eq('is_available', true)
+      .order('is_primary', { ascending: false }).order('created_at', { ascending: false })),
+  ]);
+
+  const imagesSucceeded = !imagesResult.error && Array.isArray(imagesResult.data);
+  const specificationsSucceeded = !specificationsResult.error && Array.isArray(specificationsResult.data);
+  const filesSucceeded = !filesResult.error && Array.isArray(filesResult.data);
+  const imageRows = imagesSucceeded ? imagesResult.data : [];
+  const featuredPath = first(row, ['featured_image_path', 'image_path']);
+  const validFeaturedPath = isValidStoragePath(featuredPath) ? featuredPath : null;
+  const rawImagePaths = imageRows.map((image) => image.image_path).filter(Boolean);
+  const validImagePaths = rawImagePaths.filter(isValidStoragePath);
+  const signed = await batchSignedUrls(
+    PRIVATE_BUCKETS.PRODUCT_IMAGES,
+    [...validImagePaths, validFeaturedPath]
+  );
+
+  const images = imageRows.map((image) => ({
+    ...withoutStoragePaths(image),
+    signed_url: signed.urls.get(image.image_path) || null,
+  })).filter((image) => image.signed_url);
+  const imagePathsInvalid = rawImagePaths.some((path) => !isValidStoragePath(path))
+    || Boolean(featuredPath && !validFeaturedPath);
+  const imageSigningFailed = [...validImagePaths, validFeaturedPath]
+    .filter(Boolean).some((path) => signed.failedPaths.has(path));
+
+  return {
+    ...withoutStoragePaths(row),
+    slug: slugFor(row),
+    signed_image_url: images.find((image) => image.is_primary)?.signed_url
+      || images[0]?.signed_url
+      || (validFeaturedPath ? signed.urls.get(validFeaturedPath) || null : null),
+    product_images: images,
+    product_specifications: specificationsSucceeded ? specificationsResult.data : [],
+    product_files: filesSucceeded ? filesResult.data : [],
+    detail_errors: {
+      images: !imagesSucceeded || imagePathsInvalid || imageSigningFailed,
+      specifications: !specificationsSucceeded,
+      files: !filesSucceeded,
+    },
+  };
+}
+
+function supplierAssetPaths(row) {
+  const rawLogoPath = first(row, ['logo_path', 'logo']);
+  const rawCoverPath = first(row, ['cover_image_path', 'cover_path', 'cover']);
+  return {
+    rawLogoPath,
+    rawCoverPath,
+    logoPath: isValidStoragePath(rawLogoPath) ? rawLogoPath : null,
+    coverPath: isValidStoragePath(rawCoverPath) ? rawCoverPath : null,
+  };
+}
+
+async function hydrateSupplierRows(rows) {
+  const suppliers = rows.map((row) => ({ row, ...supplierAssetPaths(row) }));
+  const signed = await batchSignedUrls(
+    PRIVATE_BUCKETS.SUPPLIER_ASSETS,
+    suppliers.flatMap(({ logoPath, coverPath }) => [logoPath, coverPath])
+  );
+
+  return suppliers.map(({ row, rawLogoPath, rawCoverPath, logoPath, coverPath }) => ({
+    ...withoutStoragePaths(row),
+    slug: slugFor(row),
+    signed_logo_url: logoPath ? signed.urls.get(logoPath) || null : null,
+    signed_cover_url: coverPath ? signed.urls.get(coverPath) || null : null,
+    asset_errors: {
+      logo: Boolean(rawLogoPath && (!logoPath || signed.failedPaths.has(logoPath))),
+      cover: Boolean(rawCoverPath && (!coverPath || signed.failedPaths.has(coverPath))),
+    },
+  }));
+}
+
 async function hydrateSupplier(row) {
   if (!row) return null;
-  return {
-    ...row,
-    slug: slugFor(row),
-    signed_logo_url: await signedPrivateUrl(PRIVATE_BUCKETS.SUPPLIER_ASSETS, first(row, ['logo_path', 'logo'])),
-    signed_cover_url: await signedPrivateUrl(PRIVATE_BUCKETS.SUPPLIER_ASSETS, first(row, ['cover_image_path', 'cover_path', 'cover'])),
-  };
+  const [supplier] = await hydrateSupplierRows([row]);
+  return supplier;
 }
 
 function getAnalyticsSessionId() {
@@ -137,28 +248,53 @@ function getAnalyticsSessionId() {
   }
 }
 
+function safeAnalyticsId(value) {
+  const candidate = String(value || '');
+  return /^[a-f\d-]{1,64}$/i.test(candidate) ? candidate : null;
+}
+
 function safeAnalyticsMetadata(metadata) {
-  return Object.fromEntries(Object.entries(metadata || {}).filter(([key, value]) => {
-    const normalizedKey = key.replace(/[^a-z\d_]/gi, '').toLowerCase();
-    return !RESERVED_ANALYTICS_KEYS.has(normalizedKey)
-      && key !== 'product_id'
-      && key !== 'supplier_id'
-      && value !== undefined;
-  }));
+  const safeMetadata = {};
+  for (const [key, value] of Object.entries(metadata || {})) {
+    if (!SAFE_ANALYTICS_METADATA_KEYS.has(key)) continue;
+    if (key === 'page' && typeof value === 'string' && /^[a-z\d_-]{1,64}$/i.test(value)) {
+      safeMetadata.page = value;
+    } else if (key !== 'page') {
+      const safeValue = safeAnalyticsId(value);
+      if (safeValue) safeMetadata[key] = safeValue;
+    }
+  }
+  return safeMetadata;
+}
+
+function shouldSuppressAnalytics(eventKey) {
+  const now = Date.now();
+  const cutoff = now - ANALYTICS_DEDUP_WINDOW_MS;
+  for (const [key, timestamp] of recentAnalyticsEvents) {
+    if (timestamp <= cutoff) recentAnalyticsEvents.delete(key);
+  }
+
+  const previous = recentAnalyticsEvents.get(eventKey);
+  if (previous && previous > cutoff) return true;
+  recentAnalyticsEvents.set(eventKey, now);
+  while (recentAnalyticsEvents.size > MAX_ANALYTICS_DEDUP_ENTRIES) {
+    recentAnalyticsEvents.delete(recentAnalyticsEvents.keys().next().value);
+  }
+  return false;
 }
 
 export const mvpService = {
   async getCategories() {
-    if (!SUPABASE_CONFIGURED) return [];
+    assertConfigured();
     const { data, error } = await supabase.from('categories')
       .select('id,code,name_ar,name_en,icon,sort_order,is_active')
       .eq('is_active', true).order('sort_order');
-    if (error) throw error;
-    return data || [];
+    if (error || !Array.isArray(data)) throw error || new Error('Unexpected category response.');
+    return data;
   },
 
   async searchProducts({ query = '', categoryId = null, supplierId = null, limit = 24, offset = 0 } = {}) {
-    if (!SUPABASE_CONFIGURED) return [];
+    assertConfigured();
     const { data, error } = await supabase.rpc('search_mvp_products', {
       p_query: query.trim() || null,
       p_category_id: categoryId || null,
@@ -167,7 +303,7 @@ export const mvpService = {
       p_offset: offset,
     });
     if (error) throw error;
-    return Promise.all(normalizeListResult(data).map((row) => hydrateProduct(row)));
+    return hydrateProductSummaries(normalizeListResult(data));
   },
 
   async getLatestProducts(limit = 8) {
@@ -175,25 +311,26 @@ export const mvpService = {
   },
 
   async getProduct(slug) {
-    if (!SUPABASE_CONFIGURED) return null;
+    assertConfigured();
     const { data, error } = await supabase.rpc('get_mvp_product', { p_lookup: slug });
     if (error) throw error;
-    return hydrateProduct(normalizeSingleResult(data), true);
+    const product = normalizeSingleResult(data);
+    return product ? hydrateProductDetail(product) : null;
   },
 
   async getSuppliers({ query = '', limit = 24, offset = 0 } = {}) {
-    if (!SUPABASE_CONFIGURED) return [];
+    assertConfigured();
     const { data, error } = await supabase.rpc('search_mvp_supplier_windows', {
       p_query: query.trim() || null,
       p_limit: limit,
       p_offset: offset,
     });
     if (error) throw error;
-    return Promise.all(normalizeListResult(data).map(hydrateSupplier));
+    return hydrateSupplierRows(normalizeListResult(data));
   },
 
   async getSupplier(slug) {
-    if (!SUPABASE_CONFIGURED) return null;
+    assertConfigured();
     const { data, error } = await supabase.rpc('get_mvp_supplier_window', { p_slug: slug });
     if (error) throw error;
     return hydrateSupplier(normalizeSingleResult(data));
@@ -201,6 +338,7 @@ export const mvpService = {
 
   async createDownloadUrl(file) {
     if (!SUPABASE_CONFIGURED || !file?.id || !file?.product_id || file.is_available === false) return null;
+    if (!['block', 'datasheet'].includes(file.file_type)) return null;
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return null;
 
@@ -208,6 +346,7 @@ export const mvpService = {
       .select(PRIVATE_DOWNLOAD_FIELDS).eq('id', file.id).maybeSingle();
     if (fileError || !privateFile || privateFile.is_available === false) return null;
     if (String(privateFile.product_id) !== String(file.product_id)) return null;
+    if (privateFile.file_type !== file.file_type) return null;
 
     const expectedBucket = privateFile.file_type === 'block'
       ? PRIVATE_BUCKETS.PRODUCT_FILES
@@ -219,20 +358,19 @@ export const mvpService = {
   },
 
   async recordEvent(eventName, metadata = {}) {
-    if (!SUPABASE_CONFIGURED || typeof eventName !== 'string' || !eventName.trim()) return;
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!SUPABASE_CONFIGURED || typeof eventName !== 'string') return;
+    const safeEventName = eventName.trim();
+    if (!/^[a-z\d_]{1,64}$/i.test(safeEventName)) return;
 
-      const productId = metadata?.product_id || null;
-      const supplierId = metadata?.supplier_id || null;
+    try {
+      const productId = safeAnalyticsId(metadata?.product_id);
+      const supplierId = safeAnalyticsId(metadata?.supplier_id);
       const safeMetadata = safeAnalyticsMetadata(metadata);
-      const eventKey = JSON.stringify([eventName, productId, supplierId, safeMetadata]);
-      if (eventKey === lastAnalyticsEvent) return;
-      lastAnalyticsEvent = eventKey;
+      const eventKey = JSON.stringify([safeEventName, productId, supplierId, safeMetadata]);
+      if (shouldSuppressAnalytics(eventKey)) return;
 
       await supabase.rpc('record_usage_event', {
-        p_event_name: eventName,
+        p_event_name: safeEventName,
         p_product_id: productId,
         p_supplier_id: supplierId,
         p_session_id: getAnalyticsSessionId(),

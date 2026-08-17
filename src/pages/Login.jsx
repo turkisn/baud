@@ -39,6 +39,22 @@ function mapError(err, lang) {
   return message('Authentication is temporarily unavailable. Please try again.', 'المصادقة غير متاحة مؤقتاً. يرجى المحاولة مجدداً.');
 }
 
+function safeInternalReturnPath(requestedFrom) {
+  const pathname = typeof requestedFrom === 'string' ? requestedFrom : requestedFrom?.pathname;
+  if (typeof pathname !== 'string' || !pathname.startsWith('/') || pathname.startsWith('//') || pathname.includes('\\')) return '/';
+
+  const search = typeof requestedFrom === 'object' && requestedFrom?.search?.startsWith('?') ? requestedFrom.search : '';
+  const hash = typeof requestedFrom === 'object' && requestedFrom?.hash?.startsWith('#') ? requestedFrom.hash : '';
+  try {
+    const target = new URL(`${pathname}${search}${hash}`, window.location.origin);
+    return target.origin === window.location.origin
+      ? `${target.pathname}${target.search}${target.hash}`
+      : '/';
+  } catch {
+    return '/';
+  }
+}
+
 export default function Login() {
   const { t, lang, toggleLang } = useLanguage();
   const { login, register, user } = useAuth();
@@ -47,12 +63,7 @@ export default function Login() {
   const [searchParams]            = useSearchParams();
 
   const requestedFrom = routerLocation.state?.from;
-  const requestedPath = typeof requestedFrom === 'string' ? requestedFrom : requestedFrom?.pathname;
-  const returnPath = typeof requestedPath === 'string'
-    && requestedPath.startsWith('/')
-    && !requestedPath.startsWith('//')
-    ? requestedPath
-    : '/';
+  const returnPath = safeInternalReturnPath(requestedFrom);
 
   // If user is already authenticated (e.g. arrived here after clicking the
   // email confirmation link — Supabase appends #access_token=… to the URL,
@@ -109,8 +120,8 @@ export default function Login() {
     setLoading(true);
     try {
       if (mode === 'login') {
-        // login() triggers onAuthStateChange SIGNED_IN → setUser() → useEffect navigates to '/'.
-        // Do NOT call navigate('/') here — it would race with setUser() in concurrent React 18,
+        // login() triggers guarded profile hydration, then the user effect navigates.
+        // Do NOT navigate here — it would race with the server-controlled role result,
         // causing Navbar to mount before user state is committed (shows "Sign in" flash).
         await login(form.email, form.password);
         // navigation is handled by the useEffect below that watches user
