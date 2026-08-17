@@ -2,8 +2,9 @@ import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 
 export const ADMIN_PAGE_SIZE = 20;
 export const PRODUCT_FILE_FORMATS = Object.freeze([
-  'RFA', 'RVT', 'MAX', 'FBX', 'OBJ', 'SKP', 'DWG', 'IFC', 'ZIP', '3DS', 'OTHER',
+  'RFA', 'RVT', 'MAX', 'FBX', 'OBJ', 'SKP', 'DWG', 'IFC', 'ZIP', '3DS',
 ]);
+export const SPECIFICATION_DATA_TYPES = Object.freeze(['text', 'number', 'boolean', 'date', 'url']);
 
 const PRODUCT_FIELDS = [
   'id', 'product_name_ar', 'product_name_en', 'slug', 'category_id', 'subcategory_id',
@@ -61,6 +62,7 @@ const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp']);
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_DATASHEET_BYTES = 20 * 1024 * 1024;
+const MAX_BLOCK_BYTES = 100 * 1024 * 1024;
 const SIGNED_ASSET_TTL = 60 * 5;
 
 function assertConfigured() {
@@ -68,7 +70,7 @@ function assertConfigured() {
 }
 
 function cleanSearch(value) {
-  return String(value || '').trim().replace(/[,%().:]/g, ' ').replace(/\s+/g, ' ').slice(0, 120);
+  return String(value || '').trim().replace(/[,%.()*:"'\\]/g, ' ').replace(/\s+/g, ' ').slice(0, 120);
 }
 
 function pickAllowed(payload, allowed) {
@@ -116,10 +118,10 @@ function validateImage(file) {
   if (file.size > MAX_IMAGE_BYTES) throw new Error('Images must be 20 MB or smaller.');
 }
 
-async function uploadObject(bucket, path, file) {
+async function uploadObject(bucket, path, file, contentType) {
   const { error } = await supabase.storage.from(bucket).upload(path, file, {
     cacheControl: '3600',
-    contentType: file.type || undefined,
+    contentType,
     upsert: false,
   });
   if (error) throw error;
@@ -190,15 +192,21 @@ export const mvpAdminService = {
   async replaceSpecifications(productId, items) {
     assertConfigured();
     if (!productId) throw new Error('Save the product draft before editing specifications.');
-    const cleanItems = (items || []).map((item, index) => ({
-      specification_name_ar: item.specification_name_ar || null,
-      specification_name_en: item.specification_name_en || null,
-      specification_code: item.specification_code || null,
-      value: item.value || null,
-      unit: item.unit || null,
-      data_type: item.data_type || 'text',
-      sort_order: index,
-    }));
+    const cleanItems = (items || []).map((item, index) => {
+      const dataType = String(item.data_type || 'text').trim().toLowerCase();
+      if (!SPECIFICATION_DATA_TYPES.includes(dataType)) {
+        throw new Error(`Specification ${index + 1} has an unsupported data type.`);
+      }
+      return {
+        specification_name_ar: item.specification_name_ar || null,
+        specification_name_en: item.specification_name_en || null,
+        specification_code: item.specification_code || null,
+        value: item.value || null,
+        unit: item.unit || null,
+        data_type: dataType,
+        sort_order: index,
+      };
+    });
     const { data, error } = await supabase.rpc('admin_replace_mvp_product_specifications', {
       p_product_id: productId,
       p_items: cleanItems,
@@ -211,7 +219,7 @@ export const mvpAdminService = {
     assertConfigured();
     validateImage(file);
     const { path } = objectPath(productId, file.name);
-    await uploadObject('product-images', path, file);
+    await uploadObject('product-images', path, file, file.type);
     try {
       const { data, error } = await supabase.rpc('admin_register_mvp_product_image', {
         p_product_id: productId,
@@ -235,18 +243,22 @@ export const mvpAdminService = {
   async uploadProductFile(productId, file, metadata = {}) {
     assertConfigured();
     if (!file || file.size <= 0) throw new Error('Choose a non-empty file.');
-    const fileType = metadata.file_type === 'datasheet' ? 'datasheet' : 'block';
+    if (!['block', 'datasheet'].includes(metadata.file_type)) throw new Error('File type must be block or datasheet.');
+    const fileType = metadata.file_type;
     const extension = extensionOf(file.name);
     let fileFormat;
     let bucket;
+    let storageContentType;
 
     if (fileType === 'datasheet') {
       if (extension !== 'pdf' || file.type !== 'application/pdf') throw new Error('Datasheets must be PDF files.');
       if (file.size > MAX_DATASHEET_BYTES) throw new Error('Datasheets must be 20 MB or smaller.');
       fileFormat = 'PDF';
       bucket = 'product-datasheets';
+      storageContentType = 'application/pdf';
     } else {
-      fileFormat = metadata.file_format === 'OTHER' ? 'OTHER' : extension.toUpperCase();
+      if (file.size > MAX_BLOCK_BYTES) throw new Error('BIM/3D files must be 100 MB or smaller.');
+      fileFormat = extension.toUpperCase();
       if (!PRODUCT_FILE_FORMATS.includes(fileFormat)) {
         throw new Error(`Unsupported BIM/3D format. Allowed: ${PRODUCT_FILE_FORMATS.join(', ')}.`);
       }
@@ -254,10 +266,11 @@ export const mvpAdminService = {
         throw new Error('The selected format does not match the file extension.');
       }
       bucket = 'product-files';
+      storageContentType = 'application/octet-stream';
     }
 
     const { path, storedFileName } = objectPath(productId, file.name);
-    await uploadObject(bucket, path, file);
+    await uploadObject(bucket, path, file, storageContentType);
     try {
       const { data, error } = await supabase.rpc('admin_register_mvp_product_file', {
         p_product_id: productId,
@@ -323,7 +336,7 @@ export const mvpAdminService = {
     assertConfigured();
     validateImage(file);
     const { path } = objectPath(supplierId, file.name);
-    await uploadObject('supplier-assets', path, file);
+    await uploadObject('supplier-assets', path, file, file.type);
     return { bucket: 'supplier-assets', path };
   },
 

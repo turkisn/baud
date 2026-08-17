@@ -1,19 +1,17 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-// requireAdmin       → reviewer + admin + super_admin
-// requireStrictAdmin → admin + super_admin only (no reviewer)
+// requireAdmin       → admin + super_admin
+// requireStrictAdmin → admin + super_admin
 // requireSuperAdmin  → super_admin only
-// requireSupplier    → supplier + manufacturer + all admin roles
 
 export default function ProtectedRoute({
   children,
   requireAdmin       = false,
   requireStrictAdmin = false,
   requireSuperAdmin  = false,
-  requireSupplier    = false,
 }) {
-  const { user, loading, isAdmin, isSupplier } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -37,10 +35,6 @@ export default function ProtectedRoute({
   }
 
   if (requireAdmin && !isAdmin()) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (requireSupplier && !isSupplier()) {
     return <Navigate to="/" replace />;
   }
 

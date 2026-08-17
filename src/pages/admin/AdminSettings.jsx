@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { SUPABASE_CONFIGURED } from '../../lib/supabase';
 import AdminLayout from '../../components/admin/AdminLayout';
 
-const ALLOWED_FORMATS = ['RFA', 'RVT', 'MAX', 'FBX', 'OBJ', 'SKP', 'DWG', 'IFC', 'ZIP', '3DS', 'OTHER'];
+const ALLOWED_FORMATS = ['RFA', 'RVT', 'MAX', 'FBX', 'OBJ', 'SKP', 'DWG', 'IFC', 'ZIP', '3DS'];
 const ALLOWED_IMAGE_FORMATS = ['JPG', 'JPEG', 'PNG', 'WEBP'];
 
 function InfoRow({ label, value }) {
@@ -49,6 +49,7 @@ export default function AdminSettings() {
         <section className="bg-white rounded-2xl border border-sand p-5">
           <h2 className="font-bold text-dark-brown mb-4">{t('File Upload Limits', 'حدود رفع الملفات')}</h2>
           <InfoRow label={t('3D File formats', 'صيغ الملفات ثلاثية الأبعاد')} value={ALLOWED_FORMATS.join(', ')} />
+          <InfoRow label={t('BIM / 3D file limit', 'حد ملفات BIM / 3D')} value="100 MB per file" />
           <InfoRow label={t('Image formats', 'صيغ الصور')}   value={ALLOWED_IMAGE_FORMATS.join(', ')} />
           <InfoRow label={t('Image / datasheet limit', 'حد الصور / أوراق البيانات')} value="20 MB per file" />
           <InfoRow label={t('Datasheets', 'أوراق البيانات')} value="PDF only" />
@@ -79,8 +80,7 @@ export default function AdminSettings() {
                 {[
                   ['super_admin', '✓', '✓', '✓ (all)', '✓', '✓'],
                   ['admin',       '✓', '✓', '✓ (limited)', '✓', '✓'],
-                  ['supplier',    '✗', '✗', '✗', '✗', '✗'],
-                  ['designer',    '✗', '✗', '✗', '✗', '✗'],
+                  ['reviewer',    '✗', '✗', '✗', '✗', '✗'],
                   ['user',        '✗', '✗', '✗', '✗', '✗'],
                 ].map(([role, ...perms]) => (
                   <tr key={role}>

@@ -2,7 +2,7 @@
 
 The remote **staging** database is the source of truth for the current BUOD MVP backend contract.
 
-- The staging database currently contains remote migrations through `038_public_views_read_only_grants`.
+- The staging database currently contains remote migrations through `043_mvp_data_quality_constraints`.
 - The repository's historical migration files currently stop at `012`.
 - This difference is a known migration-history reconciliation task.
 - Do not run a destructive reset or a database push in an attempt to repair this drift.

@@ -1,5 +1,8 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 
+const SELF_PROFILE_FIELDS = 'id,full_name,email,role,avatar_url,user_type,company_name,phone,created_at,updated_at';
+const SELF_PROFILE_UPDATE_FIELDS = new Set(['full_name', 'avatar_url', 'user_type', 'company_name', 'phone']);
+
 export const authService = {
   async signUp({ email, password, fullName, userType, companyName }) {
     if (!SUPABASE_CONFIGURED) throw new Error('Supabase not configured');
@@ -15,10 +18,9 @@ export const authService = {
       },
     });
     if (error) throw error;
-    // Profile is created automatically by the handle_new_user DB trigger,
-    // which reads role from raw_user_meta_data. No manual upsert needed —
-    // a direct upsert would bypass the trigger and fail RLS (no session
-    // while email confirmation is pending).
+    // Profile creation and the authorization role remain backend-controlled.
+    // Registration metadata contains profile classification only; no direct
+    // profile upsert is attempted while email confirmation is pending.
     return data;
   },
 
@@ -61,7 +63,7 @@ export const authService = {
     if (!user) return null;
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(SELF_PROFILE_FIELDS)
       .eq('id', user.id)
       .single();
     if (error) throw error;
@@ -72,11 +74,15 @@ export const authService = {
     if (!SUPABASE_CONFIGURED) throw new Error('Supabase not configured');
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+    const safeUpdates = Object.fromEntries(
+      Object.entries(updates || {}).filter(([field, value]) => SELF_PROFILE_UPDATE_FIELDS.has(field) && value !== undefined)
+    );
+    if (!Object.keys(safeUpdates).length) throw new Error('No supported profile fields were provided.');
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(safeUpdates)
       .eq('id', user.id)
-      .select()
+      .select(SELF_PROFILE_FIELDS)
       .single();
     if (error) throw error;
     return data;

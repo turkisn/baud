@@ -2,6 +2,18 @@ import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 
 // ── Constants ─────────────────────────────────────────────────
 const PAGE_SIZE = 25;
+const AUTHORIZATION_ROLES = new Set(['user', 'reviewer', 'admin', 'super_admin']);
+const PROFILE_FIELDS = 'id,full_name,email,role,user_type,company_name,avatar_url,created_at,updated_at';
+const CATEGORY_FIELDS = 'id,code,name_ar,name_en,description_ar,description_en,icon,sort_order,is_active,created_at';
+const SUBCATEGORY_FIELDS = 'id,category_id,code,name_ar,name_en,sort_order,is_active,created_at';
+
+function cleanSearch(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[,%.()*:"'\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, 120);
+}
 
 // ── Users ─────────────────────────────────────────────────────
 export const userAdminService = {
@@ -9,13 +21,15 @@ export const userAdminService = {
     if (!SUPABASE_CONFIGURED) return { data: [], count: 0 };
     let q = supabase
       .from('profiles')
-      .select('id, full_name, email, role, company_name, phone, created_at', { count: 'exact' })
+      .select('id,full_name,email,role,user_type,company_name,created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
+    if (role && !AUTHORIZATION_ROLES.has(role)) throw new Error('Unsupported authorization role filter.');
     if (role) q = q.eq('role', role);
-    if (search) {
-      q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`);
+    const safeSearch = cleanSearch(search);
+    if (safeSearch) {
+      q = q.or(`full_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%,company_name.ilike.%${safeSearch}%`);
     }
 
     const { data, error, count } = await q;
@@ -25,19 +39,19 @@ export const userAdminService = {
 
   async setRole(targetUserId, newRole) {
     if (!SUPABASE_CONFIGURED) throw new Error('Supabase not configured');
+    if (!AUTHORIZATION_ROLES.has(newRole)) throw new Error('Unsupported authorization role.');
     const { error } = await supabase.rpc('admin_set_user_role', {
       target_user_id: targetUserId,
       new_role: newRole,
     });
     if (error) throw error;
-    await logAction('user.role_change', 'user', targetUserId, { new_role: newRole });
   },
 
   async getById(userId) {
     if (!SUPABASE_CONFIGURED) return null;
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(PROFILE_FIELDS)
       .eq('id', userId)
       .single();
     if (error) throw error;
@@ -59,8 +73,9 @@ export const supplierAdminService = {
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (verificationStatus) q = q.eq('verification_status', verificationStatus);
-    if (search) {
-      q = q.or(`company_name_en.ilike.%${search}%,company_name_ar.ilike.%${search}%,email.ilike.%${search}%`);
+    const safeSearch = cleanSearch(search);
+    if (safeSearch) {
+      q = q.or(`company_name_en.ilike.%${safeSearch}%,company_name_ar.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
     }
 
     const { data, error, count } = await q;
@@ -83,7 +98,7 @@ export const supplierAdminService = {
     if (!SUPABASE_CONFIGURED) return 0;
     const { count, error } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('supplier_id', supplierId);
     if (error) return 0;
     return count ?? 0;
@@ -104,8 +119,9 @@ export const manufacturerAdminService = {
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (verificationStatus) q = q.eq('verification_status', verificationStatus);
-    if (search) {
-      q = q.or(`company_name_en.ilike.%${search}%,company_name_ar.ilike.%${search}%,email.ilike.%${search}%`);
+    const safeSearch = cleanSearch(search);
+    if (safeSearch) {
+      q = q.or(`company_name_en.ilike.%${safeSearch}%,company_name_ar.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
     }
 
     const { data, error, count } = await q;
@@ -128,7 +144,7 @@ export const manufacturerAdminService = {
     if (!SUPABASE_CONFIGURED) return 0;
     const { count, error } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('manufacturer_id', manufacturerId);
     if (error) return 0;
     return count ?? 0;
@@ -141,7 +157,7 @@ export const categoryAdminService = {
     if (!SUPABASE_CONFIGURED) return [];
     const { data, error } = await supabase
       .from('categories')
-      .select('*, subcategories(id, code, name_ar, name_en, sort_order, is_active)')
+      .select(`${CATEGORY_FIELDS},subcategories(${SUBCATEGORY_FIELDS})`)
       .order('sort_order');
     if (error) throw error;
     return data ?? [];
@@ -152,7 +168,7 @@ export const categoryAdminService = {
     const { data, error } = await supabase
       .from('categories')
       .insert({ code: code.toUpperCase(), name_ar, name_en, description_ar, description_en, icon, sort_order: sort_order ?? 0, is_active: true })
-      .select()
+      .select(CATEGORY_FIELDS)
       .single();
     if (error) throw error;
     await logAction('category.create', 'category', data.id, { code, name_en });
@@ -165,7 +181,7 @@ export const categoryAdminService = {
       .from('categories')
       .update(updates)
       .eq('id', categoryId)
-      .select()
+      .select(CATEGORY_FIELDS)
       .single();
     if (error) throw error;
     await logAction('category.update', 'category', categoryId, updates);
@@ -178,7 +194,7 @@ export const categoryAdminService = {
       .from('categories')
       .update({ is_active: isActive })
       .eq('id', categoryId)
-      .select()
+      .select(CATEGORY_FIELDS)
       .single();
     if (error) throw error;
     await logAction(isActive ? 'category.enable' : 'category.disable', 'category', categoryId);
@@ -190,7 +206,7 @@ export const categoryAdminService = {
     const { data, error } = await supabase
       .from('subcategories')
       .insert({ category_id, code: code.toUpperCase(), name_ar, name_en, sort_order: sort_order ?? 0, is_active: true })
-      .select()
+      .select(SUBCATEGORY_FIELDS)
       .single();
     if (error) throw error;
     await logAction('subcategory.create', 'subcategory', data.id, { code, name_en, category_id });
@@ -203,7 +219,7 @@ export const categoryAdminService = {
       .from('subcategories')
       .update(updates)
       .eq('id', subcategoryId)
-      .select()
+      .select(SUBCATEGORY_FIELDS)
       .single();
     if (error) throw error;
     await logAction('subcategory.update', 'subcategory', subcategoryId, updates);
@@ -216,7 +232,7 @@ export const categoryAdminService = {
       .from('subcategories')
       .update({ is_active: isActive })
       .eq('id', subcategoryId)
-      .select()
+      .select(SUBCATEGORY_FIELDS)
       .single();
     if (error) throw error;
     await logAction(isActive ? 'subcategory.enable' : 'subcategory.disable', 'subcategory', subcategoryId);
@@ -232,13 +248,13 @@ export const adminStatsService = {
     }
 
     const [users, products, drafts, published, archived, suppliers, categories] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('products').select('*', { count: 'exact', head: true }),
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('publication_state', 'draft'),
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('publication_state', 'published'),
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('publication_state', 'archived'),
-      supabase.from('suppliers').select('*', { count: 'exact', head: true }),
-      supabase.from('categories').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('products').select('id', { count: 'exact', head: true }),
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('publication_state', 'draft'),
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('publication_state', 'published'),
+      supabase.from('products').select('id', { count: 'exact', head: true }).eq('publication_state', 'archived'),
+      supabase.from('suppliers').select('id', { count: 'exact', head: true }),
+      supabase.from('categories').select('id', { count: 'exact', head: true }),
     ]);
 
     const failed = [users, products, drafts, published, archived, suppliers, categories].find((result) => result.error);
@@ -262,7 +278,7 @@ export const auditLogService = {
     if (!SUPABASE_CONFIGURED) return { data: [], count: 0 };
     const { data, error, count } = await supabase
       .from('admin_audit_log')
-      .select('*, actor:profiles!actor_user_id(full_name, email)', { count: 'exact' })
+      .select('id,actor_user_id,action,target_type,target_id,metadata,created_at,actor:profiles!actor_user_id(full_name,email)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     if (error) throw error;

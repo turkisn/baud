@@ -106,31 +106,37 @@ export default function AdminLayout({ children, title, subtitle }) {
       {/* ── Main ─────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="bg-white border-b border-sand px-6 py-4 sticky top-0 z-20">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="sticky top-0 z-20 border-b border-sand bg-white px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               {title && <h1 className="text-lg font-bold text-dark-brown">{title}</h1>}
               {subtitle && <p className="text-xs text-light-brown mt-0.5">{subtitle}</p>}
             </div>
             {/* Mobile nav */}
-            <div className="lg:hidden flex flex-wrap gap-1">
-              {visible.slice(0, 4).map(item => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    location.pathname === item.path ? 'bg-dark-brown text-white' : 'bg-sand text-medium-brown'
-                  }`}
-                >
-                  {lang === 'ar' ? item.ar : item.en}
-                </Link>
-              ))}
-            </div>
+            <nav aria-label={t('Admin navigation', 'تنقل لوحة الإدارة')} dir={lang === 'ar' ? 'rtl' : 'ltr'} className="w-full min-w-0 max-w-full overflow-x-auto pb-1 sm:w-auto sm:max-w-[70%] lg:hidden">
+              <div className="flex min-w-max gap-2">
+                {visible.map(item => {
+                  const active = location.pathname === item.path ||
+                    (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
+                  return <Link
+                    key={item.path}
+                    to={item.path}
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
+                      active ? 'bg-dark-brown text-white' : 'bg-sand text-medium-brown hover:bg-beige/60'
+                    }`}
+                  >
+                    <item.icon size={13}/>
+                    {lang === 'ar' ? item.ar : item.en}
+                  </Link>;
+                })}
+              </div>
+            </nav>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 sm:p-6">
           {children}
         </div>
       </div>

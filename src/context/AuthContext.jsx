@@ -4,17 +4,13 @@ import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 const AuthContext = createContext();
 
 export const ROLES = {
-  USER:         'user',
-  DESIGNER:     'designer',
-  SUPPLIER:     'supplier',
-  MANUFACTURER: 'manufacturer',
-  REVIEWER:     'reviewer',
-  ADMIN:        'admin',
-  SUPER_ADMIN:  'super_admin',
+  USER:        'user',
+  REVIEWER:    'reviewer',
+  ADMIN:       'admin',
+  SUPER_ADMIN: 'super_admin',
 };
 
-const ADMIN_ROLES    = ['admin', 'super_admin', 'reviewer'];
-const SUPPLIER_ROLES = ['supplier', 'manufacturer', ...ADMIN_ROLES];
+const ADMIN_ROLES = [ROLES.ADMIN, ROLES.SUPER_ADMIN];
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null); // profile-shaped object
@@ -157,15 +153,14 @@ export function AuthProvider({ children }) {
   };
 
   // ── Role helpers ──────────────────────────────────────────────
-  const isAdmin    = () => ADMIN_ROLES.includes(user?.role);
-  const isSupplier = () => SUPPLIER_ROLES.includes(user?.role);
-  const canEdit    = (product) => isAdmin() || product?.created_by === user?.id;
+  const isAdmin = () => ADMIN_ROLES.includes(user?.role);
+  const canEdit = (product) => isAdmin() || product?.created_by === user?.id;
 
   return (
     <AuthContext.Provider value={{
       user, loading,
       login, logout, register,
-      isAdmin, isSupplier, canEdit,
+      isAdmin, canEdit,
       SUPABASE_CONFIGURED,
     }}>
       {!loading && children}
