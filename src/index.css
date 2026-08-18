@@ -290,12 +290,11 @@ body {
 
 .constellation-stage {
   position: relative;
-  min-height: 480px;
+  min-height: 580px;
+  overflow: visible;
   background:
     repeating-conic-gradient(from 0deg at 50% 52%, rgba(207, 157, 61, 0.16) 0 0.15deg, transparent 0.15deg 9deg),
     radial-gradient(circle at 50% 52%, rgba(255, 213, 126, 0.24), transparent 7%, rgba(177, 107, 17, 0.08) 19%, transparent 42%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 25%, rgba(0,0,0,.84) 62%, transparent 90%);
-  mask-image: radial-gradient(ellipse at center, black 25%, rgba(0,0,0,.84) 62%, transparent 90%);
 }
 
 .constellation-flow {
@@ -312,6 +311,55 @@ body {
   will-change: transform, opacity;
   animation: networkFlow 34s linear infinite;
 }
+
+.constellation-connections {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.connection-node {
+  opacity: .62;
+  transition: opacity .35s ease, filter .35s ease;
+}
+.connection-line-base,
+.connection-line-pulse {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+.connection-line-base {
+  stroke: rgba(201, 168, 76, .2);
+  stroke-width: 1;
+}
+.connection-line-pulse {
+  stroke: rgba(244, 204, 112, .82);
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-dasharray: 3 17;
+  animation: dataStream 4.4s linear infinite;
+}
+.connection-endpoint {
+  fill: #f0c665;
+  stroke: rgba(244, 213, 138, .35);
+  stroke-width: 7;
+  paint-order: stroke;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: endpointPulse 3s ease-in-out infinite;
+}
+.connection-node:nth-child(2n) .connection-line-pulse { animation-duration: 5.2s; animation-direction: reverse; }
+.connection-node.is-active {
+  opacity: 1;
+  filter: drop-shadow(0 0 7px rgba(244, 195, 91, .85));
+}
+.connection-node.is-active .connection-line-base { stroke: rgba(244, 213, 138, .72); stroke-width: 1.8; }
+.connection-node.is-active .connection-line-pulse { stroke: #ffe2a0; stroke-width: 2.5; stroke-dasharray: 5 11; }
+.connection-node.is-active .connection-endpoint { animation: activeEndpointPulse 1.15s ease-in-out infinite; }
+.connection-node.is-muted { opacity: .1; }
 
 .constellation-stage::before,
 .constellation-stage::after {
@@ -331,9 +379,9 @@ body {
 
 .constellation-core {
   position: absolute;
-  top: 52%;
+  top: 54%;
   left: 50%;
-  z-index: 4;
+  z-index: 6;
   display: grid;
   width: 126px;
   height: 140px;
@@ -355,39 +403,94 @@ body {
 
 .constellation-item {
   position: absolute;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 190px;
-  padding: 9px;
-  border: 1px solid rgba(201, 168, 76, 0.2);
-  border-radius: 14px;
-  background: rgba(6, 5, 4, 0.86);
+  z-index: 4;
+  display: block;
+  width: 220px;
+  min-height: 150px;
   color: #f3e8d5;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.44), 0 0 20px rgba(201, 168, 76, 0.04);
-  backdrop-filter: blur(12px);
-  transition: border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+  transition: opacity .35s ease, filter .35s ease;
 }
 .constellation-item:hover {
-  z-index: 5;
-  border-color: rgba(244, 213, 138, 0.62);
-  transform: translateY(-4px);
-  box-shadow: 0 14px 46px rgba(0, 0, 0, 0.55), 0 0 30px rgba(201, 168, 76, 0.14);
+  z-index: 7;
 }
-.constellation-item img {
-  width: 58px;
-  height: 58px;
-  flex: none;
-  border-radius: 10px;
-  object-fit: cover;
+.constellation-product-visual {
+  position: relative;
+  display: grid;
+  height: 108px;
+  place-items: center;
+  transition: transform .35s cubic-bezier(.2, .8, .2, 1), filter .35s ease;
 }
-.constellation-item:nth-of-type(1) { top: 11%; left: 7%; }
-.constellation-item:nth-of-type(2) { top: 8%; right: 8%; }
-.constellation-item:nth-of-type(3) { top: 46%; left: 1%; }
-.constellation-item:nth-of-type(4) { top: 43%; right: 1%; }
-.constellation-item:nth-of-type(5) { bottom: 5%; left: 13%; }
-.constellation-item:nth-of-type(6) { right: 13%; bottom: 3%; }
+.constellation-product-visual::after {
+  position: absolute;
+  inset: 35% 16% 2%;
+  z-index: -1;
+  border-radius: 50%;
+  content: '';
+  background: rgba(215, 159, 57, .26);
+  filter: blur(22px);
+  opacity: .45;
+  transition: opacity .35s ease, transform .35s ease;
+}
+.constellation-product-visual img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: contain;
+  filter: saturate(.9) contrast(1.04) drop-shadow(0 14px 18px rgba(0, 0, 0, .7));
+  -webkit-mask-image: radial-gradient(ellipse at center, black 36%, rgba(0, 0, 0, .92) 56%, transparent 82%);
+  mask-image: radial-gradient(ellipse at center, black 36%, rgba(0, 0, 0, .92) 56%, transparent 82%);
+}
+.constellation-product-fallback {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  place-items: center;
+  border: 1px solid rgba(201, 168, 76, .25);
+  border-radius: 24px;
+  color: #d7ad53;
+  background: rgba(15, 12, 7, .82);
+}
+.constellation-product-label {
+  position: relative;
+  display: block;
+  width: 170px;
+  margin: -5px auto 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(201, 168, 76, .24);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(12, 10, 7, .95), rgba(3, 3, 2, .92));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .5), inset 0 1px rgba(255, 255, 255, .025);
+  backdrop-filter: blur(12px);
+  transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+}
+.constellation-product-label strong,
+.constellation-product-meta,
+.constellation-product-ref {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.constellation-product-label strong { font-size: 11px; }
+.constellation-product-meta { margin-top: 3px; color: rgba(215, 173, 83, .8); font-size: 9px; }
+.constellation-product-ref { margin-top: 3px; color: rgba(214, 197, 170, .34); font-family: monospace; font-size: 8px; }
+.constellation-item.is-active .constellation-product-visual {
+  transform: translateY(-7px) scale(1.14);
+  filter: drop-shadow(0 0 17px rgba(225, 167, 64, .35));
+}
+.constellation-item.is-active .constellation-product-visual::after { opacity: .95; transform: scale(1.2); }
+.constellation-item.is-active .constellation-product-label {
+  border-color: rgba(244, 213, 138, .66);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .66), 0 0 28px rgba(201, 151, 52, .17);
+  transform: translateY(3px);
+}
+.constellation-item.is-muted { opacity: .32; filter: saturate(.45); }
+.constellation-item:nth-of-type(1) { top: 5%; left: 3%; }
+.constellation-item:nth-of-type(2) { top: 4%; right: 3%; }
+.constellation-item:nth-of-type(3) { top: 38%; left: -2%; }
+.constellation-item:nth-of-type(4) { top: 37%; right: -2%; }
+.constellation-item:nth-of-type(5) { bottom: -1%; left: 9%; }
+.constellation-item:nth-of-type(6) { right: 9%; bottom: -1%; }
 
 .network-glyphs {
   position: absolute;
@@ -481,6 +584,15 @@ body {
   0%, 100% { transform: translate3d(0, 0, 0) scale(.94); opacity: .34; }
   50% { transform: translate3d(0, -8px, 0) scale(1.04); opacity: .92; }
 }
+@keyframes dataStream { to { stroke-dashoffset: -80; } }
+@keyframes endpointPulse {
+  0%, 100% { opacity: .45; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+@keyframes activeEndpointPulse {
+  0%, 100% { opacity: .78; transform: scale(1.2); }
+  50% { opacity: 1; transform: scale(1.85); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .public-shell::before,
@@ -488,6 +600,9 @@ body {
   .digital-hero::before,
   .digital-hero::after,
   .constellation-flow,
+  .connection-line-pulse,
+  .connection-endpoint,
+  .connection-node.is-active .connection-endpoint,
   .network-glyph,
   .constellation-stage::before,
   .constellation-stage::after,
@@ -495,18 +610,29 @@ body {
 }
 
 @media (max-width: 1023px) {
-  .constellation-stage { min-height: 370px; }
-  .constellation-item { width: 156px; }
+  .constellation-stage { min-height: 460px; }
+  .constellation-item { width: 174px; min-height: 126px; }
+  .constellation-product-visual { height: 86px; }
+  .constellation-product-label { width: 150px; }
   .constellation-item:nth-of-type(n+5) { display: none; }
+  .connection-node:nth-child(n+5) { display: none; }
   .network-glyph:nth-child(n+14) { display: none; }
 }
 
 @media (max-width: 639px) {
-  .constellation-stage { min-height: 320px; }
+  .constellation-stage { min-height: 390px; }
   .constellation-core { width: 96px; height: 108px; }
-  .constellation-item { width: 112px; padding: 6px; }
-  .constellation-item img { width: 42px; height: 42px; }
-  .constellation-item p { display: none; }
+  .constellation-connections { display: none; }
+  .constellation-item { width: 128px; min-height: 108px; }
+  .constellation-product-visual { height: 72px; }
+  .constellation-product-label { width: 120px; padding: 7px 8px; }
+  .constellation-product-label strong { font-size: 9px; }
+  .constellation-product-meta { font-size: 8px; }
+  .constellation-product-ref { display: none; }
+  .constellation-item:nth-of-type(1) { top: 3%; left: -2%; }
+  .constellation-item:nth-of-type(2) { top: 3%; right: -2%; }
+  .constellation-item:nth-of-type(3) { top: auto; bottom: 2%; left: -2%; }
+  .constellation-item:nth-of-type(4) { top: auto; right: -2%; bottom: 2%; }
   .network-glyph { width: 25px; height: 25px; }
   .network-glyph svg { width: 11px; height: 11px; }
   .network-glyph:nth-child(n+10) { display: none; }

@@ -17,6 +17,14 @@ const NETWORK_GLYPHS = [
   GitBranch, PackageCheck, Boxes, ShieldCheck, FileBox, Database,
   Box, Layers3, Building2, PackageCheck, FileText, GitBranch,
 ];
+const CONSTELLATION_CONNECTIONS = [
+  { d: 'M500 312 C410 268 300 132 155 82', x: 155, y: 82 },
+  { d: 'M500 312 C590 262 700 126 845 76', x: 845, y: 76 },
+  { d: 'M500 312 C370 300 232 286 96 286', x: 96, y: 286 },
+  { d: 'M500 312 C630 300 768 280 904 280', x: 904, y: 280 },
+  { d: 'M500 312 C420 376 328 454 205 506', x: 205, y: 506 },
+  { d: 'M500 312 C580 376 672 454 795 506', x: 795, y: 506 },
+];
 
 export default function Home() {
   const { lang, t } = useLanguage();
@@ -147,19 +155,45 @@ export default function Home() {
 }
 
 function ProductConstellation({ products, lang, t }) {
+  const [activeNode, setActiveNode] = useState(null);
+  const visibleProducts = products.slice(0, CONSTELLATION_CONNECTIONS.length);
+
   return (
     <div className="constellation-stage mx-auto mt-2 max-w-6xl" aria-label={t('Connected product data network', 'شبكة بيانات المنتجات المترابطة')}>
       <div className="constellation-flow" aria-hidden="true" />
+      <svg className="constellation-connections" viewBox="0 0 1000 580" preserveAspectRatio="none" aria-hidden="true">
+        {CONSTELLATION_CONNECTIONS.slice(0, visibleProducts.length).map((connection, index) => (
+          <g key={connection.d} className={`connection-node ${activeNode === index ? 'is-active' : ''} ${activeNode !== null && activeNode !== index ? 'is-muted' : ''}`}>
+            <path className="connection-line-base" d={connection.d} />
+            <path className="connection-line-pulse" d={connection.d} />
+            <circle className="connection-endpoint" cx={connection.x} cy={connection.y} r="4" />
+          </g>
+        ))}
+      </svg>
       <div className="network-glyphs" aria-hidden="true">
         {NETWORK_GLYPHS.map((Icon, index) => <span key={index} className={`network-glyph network-glyph-${index + 1}`}><Icon /></span>)}
       </div>
-      {products.map((product) => {
+      {visibleProducts.map((product, index) => {
         const name = lang === 'ar' ? pick(product, 'product_name_ar', 'product_name_en') : pick(product, 'product_name_en', 'product_name_ar');
         const category = lang === 'ar' ? pick(product, 'category_name_ar', 'category_name_en') : pick(product, 'category_name_en', 'category_name_ar');
         return (
-          <Link key={product.id || product.slug} to={`/blocks/${product.slug}`} className="constellation-item">
-            {product.signed_image_url ? <img src={product.signed_image_url} alt="" /> : <span className="grid h-[58px] w-[58px] flex-none place-items-center rounded-lg bg-gold/10 text-gold"><Box /></span>}
-            <span className="min-w-0"><strong className="block truncate text-xs">{name}</strong><span className="mt-1 block truncate text-[9px] text-gold/75">{category || t('Product data', 'بيانات منتج')}</span><span className="mt-1 block truncate font-mono text-[8px] text-sand/35">{product.buod_reference}</span></span>
+          <Link
+            key={product.id || product.slug}
+            to={`/blocks/${product.slug}`}
+            className={`constellation-item ${activeNode === index ? 'is-active' : ''} ${activeNode !== null && activeNode !== index ? 'is-muted' : ''}`}
+            onMouseEnter={() => setActiveNode(index)}
+            onMouseLeave={() => setActiveNode(null)}
+            onFocus={() => setActiveNode(index)}
+            onBlur={() => setActiveNode(null)}
+          >
+            <span className="constellation-product-visual">
+              {product.signed_image_url ? <img src={product.signed_image_url} alt="" loading={index < 2 ? 'eager' : 'lazy'} /> : <span className="constellation-product-fallback"><Box /></span>}
+            </span>
+            <span className="constellation-product-label">
+              <strong>{name}</strong>
+              <span className="constellation-product-meta">{category || t('Product data', 'بيانات منتج')}</span>
+              <span className="constellation-product-ref">{product.buod_reference}</span>
+            </span>
           </Link>
         );
       })}
