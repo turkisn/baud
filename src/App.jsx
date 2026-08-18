@@ -32,7 +32,7 @@ function Layout() {
   const location = useLocation();
   const authPages = ['/login', '/forgot-password', '/reset-password'];
   const bare = authPages.includes(location.pathname) || location.pathname.startsWith('/admin');
-  return <div className="flex min-h-screen flex-col">{!bare && <Navbar/>}<main className="flex-1"><Suspense fallback={<RouteLoading/>}><Routes>
+  return <div className={`flex min-h-screen flex-col ${bare ? '' : 'public-shell'}`}>{!bare && <Navbar/>}<main className="flex-1"><Suspense fallback={<RouteLoading/>}><Routes>
     <Route path="/" element={<Home/>}/><Route path="/blocks" element={<Blocks/>}/><Route path="/blocks/:slug" element={<BlockDetail/>}/><Route path="/suppliers" element={<Suppliers/>}/><Route path="/suppliers/:slug" element={<SupplierDetail/>}/><Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/terms" element={<Terms/>}/><Route path="/privacy" element={<Privacy/>}/>
     <Route path="/admin/dashboard" element={<ProtectedRoute requireStrictAdmin><AdminDashboard/></ProtectedRoute>}/><Route path="/admin/products" element={<ProtectedRoute requireStrictAdmin><AdminBlocks/></ProtectedRoute>}/><Route path="/admin/users" element={<ProtectedRoute requireStrictAdmin><AdminUsers/></ProtectedRoute>}/><Route path="/admin/suppliers" element={<ProtectedRoute requireStrictAdmin><AdminSuppliers/></ProtectedRoute>}/><Route path="/admin/categories" element={<ProtectedRoute requireStrictAdmin><AdminCategories/></ProtectedRoute>}/><Route path="/admin/settings" element={<ProtectedRoute requireStrictAdmin><AdminSettings/></ProtectedRoute>}/>
     <Route path="*" element={<NotFound/>}/>

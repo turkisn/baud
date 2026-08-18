@@ -154,3 +154,245 @@ body {
 .hero-gradient {
   background: linear-gradient(135deg, #4A392D 0%, #2E1F13 55%, #4A392D 100%);
 }
+
+/* ─── Public digital theme ───────────────────────────── */
+.public-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: #040403;
+  color: #f5ecdc;
+}
+
+.public-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: '';
+  background:
+    radial-gradient(circle at 50% 12%, rgba(201, 168, 76, 0.11), transparent 28%),
+    radial-gradient(circle at 15% 46%, rgba(153, 101, 27, 0.08), transparent 22%),
+    radial-gradient(circle at 88% 72%, rgba(201, 168, 76, 0.07), transparent 24%),
+    linear-gradient(#050504, #020202);
+}
+
+.public-shell::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: '';
+  opacity: 0.26;
+  background-image:
+    linear-gradient(rgba(201, 168, 76, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 168, 76, 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(to bottom, black, transparent 82%);
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.public-shell .bg-ivory { background-color: #050504 !important; }
+.public-shell .bg-white { background-color: #0c0b09 !important; }
+.public-shell .bg-dark-brown,
+.public-shell .bg-deep-brown { background-color: #050403 !important; }
+.public-shell .text-dark-brown { color: #f5ecdc !important; }
+.public-shell .text-medium-brown { color: #c8bba7 !important; }
+.public-shell .text-light-brown { color: #968a78 !important; }
+.public-shell .border-sand { border-color: rgba(201, 168, 76, 0.2) !important; }
+.public-shell .border-beige { border-color: rgba(201, 168, 76, 0.28) !important; }
+.public-shell .shadow-card,
+.public-shell .shadow-card-hover,
+.public-shell .shadow-brand,
+.public-shell .shadow-brand-lg {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.34), inset 0 1px rgba(255, 255, 255, 0.02) !important;
+}
+.public-shell .input-field {
+  border-color: rgba(201, 168, 76, 0.22);
+  background: rgba(9, 8, 6, 0.9);
+  color: #f5ecdc;
+}
+.public-shell .input-field::placeholder { color: #746a5d; }
+.public-shell .input-field:focus {
+  border-color: rgba(244, 213, 138, 0.68);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1), 0 0 30px rgba(201, 168, 76, 0.08);
+}
+.public-shell select option { background: #0b0a08; color: #f5ecdc; }
+.public-shell .btn-primary {
+  border: 1px solid rgba(244, 213, 138, 0.2);
+  background: linear-gradient(135deg, #d8b75f, #9b6c27);
+  color: #080705;
+  box-shadow: 0 8px 28px rgba(201, 168, 76, 0.16);
+}
+.public-shell .btn-primary:hover { background: linear-gradient(135deg, #efd384, #b98532); }
+.public-shell .badge-brown {
+  border-color: rgba(201, 168, 76, 0.2);
+  background: rgba(201, 168, 76, 0.08);
+  color: #d9cab1;
+}
+.public-shell .badge-green {
+  border: 1px solid rgba(90, 157, 112, 0.24);
+  background: rgba(74, 124, 89, 0.12);
+  color: #8fcaa0;
+}
+
+.digital-panel {
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  background: linear-gradient(145deg, rgba(19, 16, 11, 0.9), rgba(7, 6, 5, 0.94));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(18px);
+}
+
+.digital-hero {
+  background:
+    radial-gradient(circle at 50% 52%, rgba(215, 167, 72, 0.16), transparent 21%),
+    radial-gradient(circle at 50% 60%, rgba(103, 63, 13, 0.1), transparent 42%),
+    #030302;
+}
+
+.digital-hero::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  opacity: 0.6;
+  background-image:
+    radial-gradient(circle, rgba(242, 197, 107, 0.74) 0 1px, transparent 1.7px),
+    radial-gradient(circle, rgba(201, 139, 49, 0.34) 0 1px, transparent 1.5px);
+  background-position: 0 0, 13px 17px;
+  background-size: 52px 52px, 73px 73px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 78%);
+  mask-image: radial-gradient(ellipse at center, black, transparent 78%);
+}
+
+.constellation-stage {
+  position: relative;
+  min-height: 480px;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 52%, rgba(207, 157, 61, 0.16) 0 0.15deg, transparent 0.15deg 9deg),
+    radial-gradient(circle at 50% 52%, rgba(255, 213, 126, 0.24), transparent 7%, rgba(177, 107, 17, 0.08) 19%, transparent 42%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 25%, rgba(0,0,0,.84) 62%, transparent 90%);
+  mask-image: radial-gradient(ellipse at center, black 25%, rgba(0,0,0,.84) 62%, transparent 90%);
+}
+
+.constellation-stage::before,
+.constellation-stage::after {
+  position: absolute;
+  inset: 8% 15%;
+  border: 1px solid rgba(201, 168, 76, 0.16);
+  border-radius: 50%;
+  content: '';
+  animation: digitalOrbit 22s linear infinite;
+}
+.constellation-stage::after {
+  inset: 18% 27%;
+  border-style: dashed;
+  animation-direction: reverse;
+  animation-duration: 17s;
+}
+
+.constellation-core {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  width: 126px;
+  height: 140px;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 18px rgba(244, 201, 111, 0.75)) drop-shadow(0 0 56px rgba(201, 132, 34, 0.35));
+}
+
+.constellation-core::before {
+  position: absolute;
+  inset: -34px;
+  z-index: -1;
+  border: 1px solid rgba(244, 213, 138, 0.25);
+  border-radius: 50%;
+  content: '';
+  box-shadow: 0 0 58px rgba(201, 168, 76, 0.22);
+  animation: digitalPulse 3.8s ease-in-out infinite;
+}
+
+.constellation-item {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 190px;
+  padding: 9px;
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 14px;
+  background: rgba(6, 5, 4, 0.86);
+  color: #f3e8d5;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.44), 0 0 20px rgba(201, 168, 76, 0.04);
+  backdrop-filter: blur(12px);
+  transition: border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+.constellation-item:hover {
+  z-index: 5;
+  border-color: rgba(244, 213, 138, 0.62);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 46px rgba(0, 0, 0, 0.55), 0 0 30px rgba(201, 168, 76, 0.14);
+}
+.constellation-item img {
+  width: 58px;
+  height: 58px;
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.constellation-item:nth-of-type(1) { top: 11%; left: 7%; }
+.constellation-item:nth-of-type(2) { top: 8%; right: 8%; }
+.constellation-item:nth-of-type(3) { top: 46%; left: 1%; }
+.constellation-item:nth-of-type(4) { top: 43%; right: 1%; }
+.constellation-item:nth-of-type(5) { bottom: 5%; left: 13%; }
+.constellation-item:nth-of-type(6) { right: 13%; bottom: 3%; }
+
+.digital-metric {
+  position: relative;
+  overflow: hidden;
+  border-inline-end: 1px solid rgba(201, 168, 76, 0.16);
+}
+.digital-metric:last-child { border-inline-end: 0; }
+.digital-metric::after {
+  position: absolute;
+  inset-inline: 16%;
+  bottom: 0;
+  height: 1px;
+  content: '';
+  background: linear-gradient(90deg, transparent, rgba(244, 213, 138, 0.65), transparent);
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.digital-metric:hover::after { opacity: 1; }
+
+@keyframes digitalPulse {
+  0%, 100% { transform: scale(.95); opacity: .55; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+@keyframes digitalOrbit { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .constellation-stage::before,
+  .constellation-stage::after,
+  .constellation-core::before { animation: none; }
+}
+
+@media (max-width: 1023px) {
+  .constellation-stage { min-height: 370px; }
+  .constellation-item { width: 156px; }
+  .constellation-item:nth-of-type(n+5) { display: none; }
+}
+
+@media (max-width: 639px) {
+  .constellation-stage { min-height: 320px; }
+  .constellation-core { width: 96px; height: 108px; }
+  .constellation-item { width: 112px; padding: 6px; }
+  .constellation-item img { width: 42px; height: 42px; }
+  .constellation-item p { display: none; }
+  .digital-metric { border-inline-end: 0; border-bottom: 1px solid rgba(201, 168, 76, 0.12); }
+  .digital-metric:last-child { border-bottom: 0; }
+}

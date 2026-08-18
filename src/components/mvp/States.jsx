@@ -7,7 +7,7 @@ export function LoadingState() {
 }
 
 export function EmptyState({ title, description }) {
-  return <div className="rounded-2xl border border-dashed border-beige bg-white/60 px-6 py-16 text-center"><Box className="mx-auto mb-4 text-gold" size={34} /><h2 className="font-bold text-dark-brown">{title}</h2>{description && <p className="mx-auto mt-2 max-w-lg text-sm text-light-brown">{description}</p>}</div>;
+  return <div className="digital-panel rounded-2xl border-dashed px-6 py-16 text-center"><Box className="mx-auto mb-4 text-gold" size={34} /><h2 className="font-bold text-dark-brown">{title}</h2>{description && <p className="mx-auto mt-2 max-w-lg text-sm text-light-brown">{description}</p>}</div>;
 }
 
 export function ErrorState({ message }) {
