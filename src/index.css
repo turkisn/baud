@@ -175,6 +175,9 @@ body {
     radial-gradient(circle at 15% 46%, rgba(153, 101, 27, 0.08), transparent 22%),
     radial-gradient(circle at 88% 72%, rgba(201, 168, 76, 0.07), transparent 24%),
     linear-gradient(#050504, #020202);
+  transform: scale(1.15);
+  will-change: transform, filter;
+  animation: ambientGlow 18s ease-in-out infinite alternate;
 }
 
 .public-shell::after {
@@ -190,6 +193,8 @@ body {
   background-size: 64px 64px;
   -webkit-mask-image: linear-gradient(to bottom, black, transparent 82%);
   mask-image: linear-gradient(to bottom, black, transparent 82%);
+  will-change: background-position, opacity;
+  animation: gridDrift 26s linear infinite;
 }
 
 .public-shell .bg-ivory { background-color: #050504 !important; }
@@ -244,6 +249,7 @@ body {
 }
 
 .digital-hero {
+  isolation: isolate;
   background:
     radial-gradient(circle at 50% 52%, rgba(215, 167, 72, 0.16), transparent 21%),
     radial-gradient(circle at 50% 60%, rgba(103, 63, 13, 0.1), transparent 42%),
@@ -263,6 +269,23 @@ body {
   background-size: 52px 52px, 73px 73px;
   -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 78%);
   mask-image: radial-gradient(ellipse at center, black, transparent 78%);
+  will-change: background-position, opacity;
+  animation: starDrift 24s linear infinite;
+}
+
+.digital-hero::after {
+  position: absolute;
+  inset: -28%;
+  z-index: 0;
+  content: '';
+  pointer-events: none;
+  background:
+    conic-gradient(from 20deg at 50% 52%, transparent 0 16%, rgba(215, 167, 72, 0.055) 19%, transparent 23% 52%, rgba(201, 126, 30, 0.045) 56%, transparent 61%),
+    radial-gradient(ellipse at 35% 42%, rgba(196, 128, 33, 0.08), transparent 25%),
+    radial-gradient(ellipse at 68% 64%, rgba(244, 213, 138, 0.065), transparent 24%);
+  filter: blur(10px);
+  will-change: transform;
+  animation: heroSweep 28s linear infinite;
 }
 
 .constellation-stage {
@@ -273,6 +296,21 @@ body {
     radial-gradient(circle at 50% 52%, rgba(255, 213, 126, 0.24), transparent 7%, rgba(177, 107, 17, 0.08) 19%, transparent 42%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 25%, rgba(0,0,0,.84) 62%, transparent 90%);
   mask-image: radial-gradient(ellipse at center, black 25%, rgba(0,0,0,.84) 62%, transparent 90%);
+}
+
+.constellation-flow {
+  position: absolute;
+  inset: -15%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 56%, rgba(244, 207, 127, 0.2) 0 0.12deg, transparent 0.12deg 7deg),
+    radial-gradient(circle at 50% 56%, transparent 0 17%, rgba(201, 168, 76, 0.13) 17.2% 17.5%, transparent 17.8% 29%, rgba(201, 168, 76, 0.09) 29.2% 29.45%, transparent 29.7%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 18%, rgba(0, 0, 0, .8) 60%, transparent 78%);
+  mask-image: radial-gradient(ellipse at center, black 18%, rgba(0, 0, 0, .8) 60%, transparent 78%);
+  will-change: transform, opacity;
+  animation: networkFlow 34s linear infinite;
 }
 
 .constellation-stage::before,
@@ -351,6 +389,50 @@ body {
 .constellation-item:nth-of-type(5) { bottom: 5%; left: 13%; }
 .constellation-item:nth-of-type(6) { right: 13%; bottom: 3%; }
 
+.network-glyphs {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.network-glyph {
+  position: absolute;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(224, 176, 77, 0.28);
+  border-radius: 8px;
+  background: rgba(7, 6, 4, 0.78);
+  color: rgba(238, 194, 99, 0.82);
+  box-shadow: 0 0 20px rgba(201, 144, 43, 0.1), inset 0 0 10px rgba(201, 168, 76, 0.04);
+  backdrop-filter: blur(6px);
+  will-change: transform, opacity;
+  animation: glyphFloat 6.2s ease-in-out infinite;
+}
+.network-glyph svg { width: 13px; height: 13px; }
+.network-glyph:nth-child(3n+2) { animation-delay: -2.1s; animation-duration: 7.4s; }
+.network-glyph:nth-child(3n) { animation-delay: -4.3s; animation-duration: 8.1s; }
+.network-glyph-1 { top: 7%; left: 25%; }
+.network-glyph-2 { top: 8%; right: 27%; }
+.network-glyph-3 { top: 23%; left: 45%; }
+.network-glyph-4 { top: 25%; left: 16%; }
+.network-glyph-5 { top: 24%; right: 16%; }
+.network-glyph-6 { top: 40%; left: 30%; }
+.network-glyph-7 { top: 38%; right: 29%; }
+.network-glyph-8 { top: 52%; left: 17%; }
+.network-glyph-9 { top: 51%; right: 17%; }
+.network-glyph-10 { bottom: 28%; left: 30%; }
+.network-glyph-11 { right: 30%; bottom: 27%; }
+.network-glyph-12 { bottom: 10%; left: 25%; }
+.network-glyph-13 { right: 25%; bottom: 10%; }
+.network-glyph-14 { top: 18%; left: 59%; }
+.network-glyph-15 { top: 60%; left: 42%; }
+.network-glyph-16 { top: 59%; right: 41%; }
+.network-glyph-17 { bottom: 5%; left: 49%; }
+.network-glyph-18 { top: 46%; right: 8%; }
+
 .digital-metric {
   position: relative;
   overflow: hidden;
@@ -374,8 +456,39 @@ body {
   50% { transform: scale(1.05); opacity: 1; }
 }
 @keyframes digitalOrbit { to { transform: rotate(360deg); } }
+@keyframes ambientGlow {
+  0% { transform: scale(1.15) translate3d(-2%, -1%, 0); filter: saturate(.9); }
+  50% { transform: scale(1.2) translate3d(2%, 1.5%, 0); filter: saturate(1.12); }
+  100% { transform: scale(1.17) translate3d(-1%, 2%, 0); filter: saturate(1); }
+}
+@keyframes gridDrift {
+  0% { background-position: 0 0, 0 0; opacity: .2; }
+  50% { opacity: .31; }
+  100% { background-position: 64px 64px, 64px 64px; opacity: .2; }
+}
+@keyframes starDrift {
+  0% { background-position: 0 0, 13px 17px; opacity: .42; }
+  50% { opacity: .7; }
+  100% { background-position: 104px 52px, -60px 90px; opacity: .42; }
+}
+@keyframes heroSweep { to { transform: rotate(360deg) scale(1.04); } }
+@keyframes networkFlow {
+  0% { transform: rotate(0deg) scale(.98); opacity: .3; }
+  50% { opacity: .53; }
+  100% { transform: rotate(360deg) scale(1.03); opacity: .3; }
+}
+@keyframes glyphFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(.94); opacity: .34; }
+  50% { transform: translate3d(0, -8px, 0) scale(1.04); opacity: .92; }
+}
 
 @media (prefers-reduced-motion: reduce) {
+  .public-shell::before,
+  .public-shell::after,
+  .digital-hero::before,
+  .digital-hero::after,
+  .constellation-flow,
+  .network-glyph,
   .constellation-stage::before,
   .constellation-stage::after,
   .constellation-core::before { animation: none; }
@@ -385,6 +498,7 @@ body {
   .constellation-stage { min-height: 370px; }
   .constellation-item { width: 156px; }
   .constellation-item:nth-of-type(n+5) { display: none; }
+  .network-glyph:nth-child(n+14) { display: none; }
 }
 
 @media (max-width: 639px) {
@@ -393,6 +507,9 @@ body {
   .constellation-item { width: 112px; padding: 6px; }
   .constellation-item img { width: 42px; height: 42px; }
   .constellation-item p { display: none; }
+  .network-glyph { width: 25px; height: 25px; }
+  .network-glyph svg { width: 11px; height: 11px; }
+  .network-glyph:nth-child(n+10) { display: none; }
   .digital-metric { border-inline-end: 0; border-bottom: 1px solid rgba(201, 168, 76, 0.12); }
   .digital-metric:last-child { border-bottom: 0; }
 }

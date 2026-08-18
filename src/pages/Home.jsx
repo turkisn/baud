@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowRight, BadgeCheck, Box, Boxes, Building2, Database, GitBranch,
-  Search, ShieldCheck, Sparkles,
+  FileBox, FileText, Layers3, PackageCheck, Search, ShieldCheck, Sparkles,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import BrandMark from '../components/layout/BrandMark';
@@ -12,6 +12,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { mvpService } from '../services/mvpService';
 
 const pick = (row, ...keys) => keys.map((key) => row?.[key]).find(Boolean);
+const NETWORK_GLYPHS = [
+  Box, FileBox, Database, Layers3, Building2, FileText,
+  GitBranch, PackageCheck, Boxes, ShieldCheck, FileBox, Database,
+  Box, Layers3, Building2, PackageCheck, FileText, GitBranch,
+];
 
 export default function Home() {
   const { lang, t } = useLanguage();
@@ -55,7 +60,7 @@ export default function Home() {
   return (
     <div className="bg-ivory">
       <section className="digital-hero relative overflow-hidden px-5 pb-10 pt-28 text-warm-white sm:px-6 sm:pb-14 sm:pt-36">
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative z-10 mx-auto max-w-7xl">
           <div className="relative z-10 mx-auto max-w-4xl text-center">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/[.06] px-4 py-2 text-[10px] font-bold uppercase tracking-[.25em] text-light-gold sm:text-xs">
               <Sparkles size={14} />
@@ -144,6 +149,10 @@ export default function Home() {
 function ProductConstellation({ products, lang, t }) {
   return (
     <div className="constellation-stage mx-auto mt-2 max-w-6xl" aria-label={t('Connected product data network', 'شبكة بيانات المنتجات المترابطة')}>
+      <div className="constellation-flow" aria-hidden="true" />
+      <div className="network-glyphs" aria-hidden="true">
+        {NETWORK_GLYPHS.map((Icon, index) => <span key={index} className={`network-glyph network-glyph-${index + 1}`}><Icon /></span>)}
+      </div>
       {products.map((product) => {
         const name = lang === 'ar' ? pick(product, 'product_name_ar', 'product_name_en') : pick(product, 'product_name_en', 'product_name_ar');
         const category = lang === 'ar' ? pick(product, 'category_name_ar', 'category_name_en') : pick(product, 'category_name_en', 'category_name_ar');
