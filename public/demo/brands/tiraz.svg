@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">TIRAZ acoustic demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#241a24"/>
+  <path d="M33 41v38M45 33v54M57 43v34M69 29v62M81 39v42" fill="none" stroke="#dbb8a3" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="105" y="64" fill="#fbf5ea" font-family="Arial,sans-serif" font-size="29" font-weight="700" letter-spacing="3">TIRAZ</text>
+  <text x="107" y="86" fill="#c9bcaa" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">ACOUSTIC</text>
+</svg>

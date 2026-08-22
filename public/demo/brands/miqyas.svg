@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">MIQYAS workplace demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#1c1c26"/>
+  <path d="M31 77V47h54v30M26 81h64M44 47V34h28v13M58 50v25" fill="none" stroke="#d2ae70" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="105" y="64" fill="#fbf5ea" font-family="Arial,sans-serif" font-size="25" font-weight="700" letter-spacing="3">MIQYAS</text>
+  <text x="107" y="86" fill="#c9bcaa" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">WORKPLACE</text>
+</svg>

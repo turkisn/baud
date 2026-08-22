@@ -45,7 +45,7 @@ export default function Home() {
     let active = true;
     mvpService.recordEvent('page_view', { page: 'home' });
 
-    mvpService.getLatestProducts(40)
+    mvpService.getLatestProducts(80)
       .then((rows) => { if (active) setProducts(rows); })
       .catch(() => { if (active) setProductState({ loading: false, error: true }); })
       .finally(() => { if (active) setProductState((state) => ({ ...state, loading: false })); });

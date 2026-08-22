@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">JIDAR surfaces demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#e9e1d4"/>
+  <path d="M30 38h58v14H30zM30 56h27v15H30zM61 56h27v15H61zM30 75h58v9H30z" fill="none" stroke="#715a3c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="105" y="64" fill="#30241d" font-family="Arial,sans-serif" font-size="29" font-weight="700" letter-spacing="3">JIDAR</text>
+  <text x="107" y="86" fill="#7d7062" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">SURFACES</text>
+</svg>

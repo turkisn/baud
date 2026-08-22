@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">LAMHA kitchens demo brand</title>
+  <rect width="320" height="120" rx="22" fill="#f1e9da"/>
+  <path d="M33 34h54v52H33zM33 51h54M52 51v35M64 66h10" fill="none" stroke="#986946" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="105" y="64" fill="#30241d" font-family="Arial,sans-serif" font-size="29" font-weight="700" letter-spacing="3">LAMHA</text>
+  <text x="107" y="86" fill="#7d7062" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">KITCHENS</text>
+</svg>
