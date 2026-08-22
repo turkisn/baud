@@ -25,7 +25,7 @@ export default function ProductCard({ product }) {
     : null;
 
   return (
-    <Link to={`/blocks/${product.slug}`} className="digital-panel group overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:border-gold/55">
+    <Link to={`/blocks/${product.slug}`} className="digital-panel product-card group overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:border-gold/55">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#100e0b]">
         {product.signed_image_url ? (
           <img src={product.signed_image_url} alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />

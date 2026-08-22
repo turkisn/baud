@@ -197,6 +197,125 @@ body {
   animation: gridDrift 26s linear infinite;
 }
 
+.public-shell > main,
+.public-shell > footer {
+  position: relative;
+  z-index: 1;
+}
+.public-shell > main > .bg-ivory { background-color: transparent !important; }
+
+.public-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.public-atmosphere-stars,
+.public-atmosphere-mesh,
+.public-atmosphere-scan,
+.public-atmosphere-icons,
+.public-atmosphere-trails {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.public-atmosphere-stars {
+  opacity: .65;
+  background-image:
+    radial-gradient(circle, rgba(253, 216, 139, .92) 0 1.1px, transparent 1.8px),
+    radial-gradient(circle, rgba(215, 152, 61, .65) 0 .8px, transparent 1.6px);
+  background-position: 0 0, 29px 37px;
+  background-size: 86px 86px, 121px 121px;
+  animation: wholeSiteStars 17s linear infinite;
+}
+.public-atmosphere-mesh {
+  opacity: .35;
+  background-image:
+    linear-gradient(rgba(232, 186, 94, .12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 186, 94, .12) 1px, transparent 1px);
+  background-size: 98px 98px;
+  -webkit-mask-image: linear-gradient(90deg, black, rgba(0, 0, 0, .32) 30%, rgba(0, 0, 0, .32) 70%, black);
+  mask-image: linear-gradient(90deg, black, rgba(0, 0, 0, .32) 30%, rgba(0, 0, 0, .32) 70%, black);
+  animation: wholeSiteMesh 20s linear infinite;
+}
+.public-atmosphere-scan {
+  inset: -35% -15%;
+  background:
+    radial-gradient(ellipse at 18% 34%, rgba(215, 153, 53, .14), transparent 18%),
+    radial-gradient(ellipse at 81% 71%, rgba(244, 203, 118, .12), transparent 19%),
+    linear-gradient(114deg, transparent 42%, rgba(243, 190, 88, .08) 48%, transparent 53%);
+  filter: blur(8px);
+  animation: wholeSiteAurora 12s ease-in-out infinite alternate;
+}
+.atmosphere-icon {
+  position: absolute;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(239, 188, 88, .37);
+  border-radius: 10px;
+  background: rgba(8, 7, 5, .72);
+  color: rgba(247, 209, 128, .92);
+  box-shadow: 0 0 19px rgba(215, 152, 49, .23);
+  animation: atmosphereIconFloat 4.6s ease-in-out infinite;
+}
+.atmosphere-icon svg { width: 15px; height: 15px; }
+.atmosphere-icon::after {
+  position: absolute;
+  inset: -5px;
+  border: 1px solid rgba(251, 215, 140, .38);
+  border-radius: 13px;
+  content: '';
+  animation: atmosphereIconRing 3.4s ease-out infinite;
+}
+.atmosphere-icon:nth-child(2n) { animation-delay: -1.4s; animation-duration: 5.4s; }
+.atmosphere-icon:nth-child(3n) { animation-delay: -2.7s; animation-duration: 6.1s; }
+.atmosphere-icon:nth-child(2n)::after { animation-delay: -1.8s; }
+.atmosphere-icon-1 { top: 12%; left: 3%; }
+.atmosphere-icon-2 { top: 16%; right: 4%; }
+.atmosphere-icon-3 { top: 27%; left: 8%; }
+.atmosphere-icon-4 { top: 31%; right: 7%; }
+.atmosphere-icon-5 { top: 43%; left: 3%; }
+.atmosphere-icon-6 { top: 47%; right: 3%; }
+.atmosphere-icon-7 { top: 61%; left: 8%; }
+.atmosphere-icon-8 { top: 65%; right: 8%; }
+.atmosphere-icon-9 { top: 78%; left: 4%; }
+.atmosphere-icon-10 { top: 83%; right: 4%; }
+.atmosphere-icon-11 { top: 20%; left: 18%; }
+.atmosphere-icon-12 { top: 25%; right: 18%; }
+.atmosphere-icon-13 { top: 52%; left: 17%; }
+.atmosphere-icon-14 { top: 56%; right: 17%; }
+.atmosphere-icon-15 { top: 72%; left: 23%; }
+.atmosphere-icon-16 { top: 76%; right: 22%; }
+.atmosphere-icon-17 { top: 91%; left: 13%; }
+.atmosphere-icon-18 { top: 9%; right: 24%; }
+.atmosphere-trail {
+  position: absolute;
+  width: 135px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(245, 202, 112, .22), #ffe0a0);
+  box-shadow: 0 0 12px rgba(240, 181, 72, .72);
+  opacity: 0;
+  animation: wholeSiteComet 6s ease-in-out infinite;
+}
+.atmosphere-trail-1 { top: 13%; left: 6%; }
+.atmosphere-trail-2 { top: 23%; right: 11%; animation-delay: -1.3s; }
+.atmosphere-trail-3 { top: 39%; left: 14%; animation-delay: -3.6s; }
+.atmosphere-trail-4 { top: 48%; right: 6%; animation-delay: -2.1s; }
+.atmosphere-trail-5 { top: 61%; left: 5%; animation-delay: -4.4s; }
+.atmosphere-trail-6 { top: 72%; right: 16%; animation-delay: -.7s; }
+.atmosphere-trail-7 { top: 84%; left: 18%; animation-delay: -2.9s; }
+.atmosphere-trail-8 { top: 91%; right: 7%; animation-delay: -5.1s; }
+
+.public-shell :is(nav, main, footer) svg.lucide:not(.animate-spin) {
+  animation: siteIconMotion 3.3s ease-in-out infinite;
+}
+.public-shell :is(nav, main, footer) :nth-child(2n) > svg.lucide:not(.animate-spin) { animation-delay: -.85s; }
+.public-shell :is(nav, main, footer) :nth-child(3n) > svg.lucide:not(.animate-spin) { animation-delay: -1.7s; }
+
 .public-shell .bg-ivory { background-color: #050504 !important; }
 .public-shell .bg-white { background-color: #0c0b09 !important; }
 .public-shell .bg-dark-brown,
@@ -246,6 +365,31 @@ body {
   background: linear-gradient(145deg, rgba(19, 16, 11, 0.9), rgba(7, 6, 5, 0.94));
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.025);
   backdrop-filter: blur(18px);
+}
+.public-shell .digital-panel {
+  animation: panelAura 5.2s ease-in-out infinite;
+}
+.public-shell .digital-panel:nth-child(2n) { animation-delay: -1.7s; }
+.public-shell .digital-panel:nth-child(3n) { animation-delay: -3.1s; }
+.public-shell .digital-panel img { animation: siteMediaFloat 6.2s ease-in-out infinite; }
+.public-shell .product-card {
+  position: relative;
+  isolation: isolate;
+}
+.public-shell .product-card::after {
+  position: absolute;
+  inset: -35% -90%;
+  z-index: 2;
+  pointer-events: none;
+  content: '';
+  background: linear-gradient(110deg, transparent 41%, rgba(255, 222, 151, .16) 49%, transparent 57%);
+  animation: productCardShine 6.2s ease-in-out infinite;
+}
+.public-shell .product-card:nth-child(2n)::after { animation-delay: -2.4s; }
+.public-shell .product-card:nth-child(3n)::after { animation-delay: -4.1s; }
+.public-shell .btn-gold,
+.public-shell .btn-primary {
+  animation: siteButtonGlow 2.9s ease-in-out infinite;
 }
 
 .digital-hero {
@@ -775,6 +919,56 @@ body {
   50% { transform: scale(1.2) translate3d(2%, 1.5%, 0); filter: saturate(1.12); }
   100% { transform: scale(1.17) translate3d(-1%, 2%, 0); filter: saturate(1); }
 }
+@keyframes wholeSiteStars {
+  0% { background-position: 0 0, 29px 37px; opacity: .38; }
+  50% { opacity: .78; }
+  100% { background-position: 86px 172px, -92px 158px; opacity: .38; }
+}
+@keyframes wholeSiteMesh {
+  0% { background-position: 0 0, 0 0; opacity: .19; }
+  50% { opacity: .46; }
+  100% { background-position: 98px 98px, 98px 98px; opacity: .19; }
+}
+@keyframes wholeSiteAurora {
+  0% { transform: translate3d(-5%, -3%, 0) rotate(-8deg); opacity: .5; }
+  50% { opacity: .95; }
+  100% { transform: translate3d(8%, 7%, 0) rotate(9deg); opacity: .66; }
+}
+@keyframes atmosphereIconFloat {
+  0%, 100% { transform: translate3d(-5px, 5px, 0) rotate(-7deg) scale(.9); opacity: .5; }
+  50% { transform: translate3d(8px, -13px, 0) rotate(8deg) scale(1.13); opacity: 1; }
+}
+@keyframes atmosphereIconRing {
+  0%, 54% { transform: scale(.72); opacity: 0; }
+  74% { opacity: .76; }
+  100% { transform: scale(1.48); opacity: 0; }
+}
+@keyframes wholeSiteComet {
+  0%, 14% { transform: translate3d(-60px, -19px, 0) rotate(-18deg) scaleX(.6); opacity: 0; }
+  33% { opacity: .95; }
+  64%, 100% { transform: translate3d(190px, 58px, 0) rotate(-18deg) scaleX(1.18); opacity: 0; }
+}
+@keyframes siteIconMotion {
+  0%, 100% { translate: 0 1px; filter: drop-shadow(0 0 2px rgba(218, 165, 68, .15)); }
+  50% { translate: 0 -4px; filter: drop-shadow(0 0 10px rgba(246, 203, 113, .78)); }
+}
+@keyframes panelAura {
+  0%, 100% { border-color: rgba(201, 168, 76, .19); box-shadow: 0 24px 70px rgba(0, 0, 0, .4), inset 0 1px rgba(255, 255, 255, .025); }
+  50% { border-color: rgba(235, 192, 99, .4); box-shadow: 0 24px 72px rgba(0, 0, 0, .44), 0 0 25px rgba(195, 140, 45, .12), inset 0 1px rgba(255, 255, 255, .045); }
+}
+@keyframes siteMediaFloat {
+  0%, 100% { translate: 0 0; filter: brightness(.93); }
+  50% { translate: 0 -4px; filter: brightness(1.08); }
+}
+@keyframes productCardShine {
+  0%, 17% { transform: translateX(-42%); opacity: 0; }
+  34% { opacity: .8; }
+  68%, 100% { transform: translateX(43%); opacity: 0; }
+}
+@keyframes siteButtonGlow {
+  0%, 100% { box-shadow: 0 8px 24px rgba(215, 166, 68, .2); }
+  50% { box-shadow: 0 10px 38px rgba(232, 182, 81, .48), 0 0 18px rgba(240, 201, 117, .27); }
+}
 @keyframes gridDrift {
   0% { background-position: 0 0, 0 0; opacity: .2; }
   50% { opacity: .31; }
@@ -878,6 +1072,18 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .public-shell::before,
   .public-shell::after,
+  .public-atmosphere-stars,
+  .public-atmosphere-mesh,
+  .public-atmosphere-scan,
+  .atmosphere-icon,
+  .atmosphere-icon::after,
+  .atmosphere-trail,
+  .public-shell :is(nav, main, footer) svg.lucide:not(.animate-spin),
+  .public-shell .digital-panel,
+  .public-shell .digital-panel img,
+  .public-shell .product-card::after,
+  .public-shell .btn-gold,
+  .public-shell .btn-primary,
   .digital-hero::before,
   .digital-hero::after,
   .constellation-cursor-glow,
@@ -919,6 +1125,11 @@ body {
 }
 
 @media (max-width: 639px) {
+  .public-atmosphere-stars { opacity: .38; animation-duration: 25s; }
+  .atmosphere-icon { width: 27px; height: 27px; }
+  .atmosphere-icon svg { width: 12px; height: 12px; }
+  .atmosphere-icon:nth-child(n+9),
+  .atmosphere-trail:nth-child(n+4) { display: none; }
   .constellation-stage { min-height: 390px; }
   .constellation-core { width: 96px; height: 108px; }
   .constellation-connections { display: none; }
