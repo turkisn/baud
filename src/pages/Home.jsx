@@ -16,7 +16,10 @@ const NETWORK_GLYPHS = [
   Box, FileBox, Database, Layers3, Building2, FileText,
   GitBranch, PackageCheck, Boxes, ShieldCheck, FileBox, Database,
   Box, Layers3, Building2, PackageCheck, FileText, GitBranch,
+  Sparkles, BadgeCheck, Boxes, FileBox, Database, ShieldCheck,
+  Building2, Layers3, PackageCheck, GitBranch, Sparkles, Box,
 ];
+const LIGHT_TRAILS = Array.from({ length: 10 }, (_, index) => index + 1);
 const CONSTELLATION_CONNECTIONS = [
   { d: 'M500 312 C410 268 300 132 155 82', x: 155, y: 82 },
   { d: 'M500 312 C590 262 700 126 845 76', x: 845, y: 76 },
@@ -203,11 +206,17 @@ function ProductConstellation({ products, lang, t }) {
       <div className="constellation-data-rain" aria-hidden="true" />
       <div className="constellation-flow" aria-hidden="true" />
       <div className="constellation-energy-orbits" aria-hidden="true"><i /><i /><i /></div>
+      <div className="constellation-light-trails" aria-hidden="true">
+        {LIGHT_TRAILS.map((trail) => <span key={trail} className={`light-trail light-trail-${trail}`} />)}
+      </div>
       <svg className="constellation-connections" viewBox="0 0 1000 580" preserveAspectRatio="none" aria-hidden="true">
         {CONSTELLATION_CONNECTIONS.slice(0, visibleProducts.length).map((connection, index) => (
           <g key={connection.d} className={`connection-node ${activeNode === index ? 'is-active' : ''} ${activeNode !== null && activeNode !== index ? 'is-muted' : ''}`}>
             <path className="connection-line-base" d={connection.d} />
             <path className="connection-line-pulse" d={connection.d} />
+            <circle className="connection-traveller" r="4">
+              <animateMotion dur={`${2.6 + index * .28}s`} repeatCount="indefinite" path={connection.d} />
+            </circle>
             <circle className="connection-endpoint" cx={connection.x} cy={connection.y} r="4" />
           </g>
         ))}
