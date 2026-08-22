@@ -289,6 +289,10 @@ body {
 }
 
 .constellation-stage {
+  --pointer-x: 50%;
+  --pointer-y: 52%;
+  --parallax-x: 0px;
+  --parallax-y: 0px;
   position: relative;
   min-height: 580px;
   overflow: visible;
@@ -296,6 +300,114 @@ body {
     repeating-conic-gradient(from 0deg at 50% 52%, rgba(207, 157, 61, 0.16) 0 0.15deg, transparent 0.15deg 9deg),
     radial-gradient(circle at 50% 52%, rgba(255, 213, 126, 0.24), transparent 7%, rgba(177, 107, 17, 0.08) 19%, transparent 42%);
 }
+
+.constellation-cursor-glow,
+.constellation-aurora,
+.constellation-data-rain,
+.constellation-energy-orbits {
+  position: absolute;
+  pointer-events: none;
+}
+
+.constellation-cursor-glow {
+  inset: -12%;
+  z-index: 1;
+  opacity: .72;
+  background: radial-gradient(circle 210px at var(--pointer-x) var(--pointer-y), rgba(255, 211, 112, .24), rgba(184, 111, 22, .075) 42%, transparent 72%);
+  mix-blend-mode: screen;
+  transform: translate3d(calc(var(--parallax-x) * .35), calc(var(--parallax-y) * .35), 0);
+  transition: transform .22s ease-out, background-position .22s ease-out;
+  will-change: transform;
+}
+
+.constellation-aurora {
+  inset: -8%;
+  z-index: 0;
+  overflow: hidden;
+  filter: blur(18px);
+  opacity: .72;
+}
+.constellation-aurora::before,
+.constellation-aurora::after {
+  position: absolute;
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  content: '';
+  will-change: transform, opacity;
+}
+.constellation-aurora::before {
+  top: 2%;
+  left: 4%;
+  background: radial-gradient(ellipse, rgba(180, 111, 25, .18), rgba(89, 46, 8, .04) 48%, transparent 72%);
+  animation: auroraDrift 13s ease-in-out infinite alternate;
+}
+.constellation-aurora::after {
+  right: 1%;
+  bottom: -3%;
+  background: radial-gradient(ellipse, rgba(246, 203, 105, .14), rgba(137, 78, 12, .035) 48%, transparent 72%);
+  animation: auroraDrift 16s ease-in-out -7s infinite alternate-reverse;
+}
+
+.constellation-data-rain {
+  inset: -4% 0;
+  z-index: 1;
+  opacity: .24;
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 54px, rgba(230, 183, 87, .16) 55px, transparent 56px 112px),
+    repeating-linear-gradient(180deg, transparent 0 92px, rgba(244, 209, 133, .28) 93px, transparent 95px 188px);
+  background-size: 224px 188px, 112px 376px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 12%, transparent 76%);
+  mask-image: radial-gradient(ellipse at center, black 12%, transparent 76%);
+  animation: dataRain 10s linear infinite;
+}
+
+.constellation-energy-orbits {
+  inset: 0;
+  z-index: 2;
+  transform: translate3d(calc(var(--parallax-x) * -.28), calc(var(--parallax-y) * -.28), 0);
+  transition: transform .28s ease-out;
+  will-change: transform;
+}
+.constellation-energy-orbits i {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  width: 40%;
+  height: 43%;
+  border: 1px solid rgba(226, 178, 78, .12);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  animation: orbitBreath 5.4s ease-in-out infinite;
+}
+.constellation-energy-orbits i::after {
+  position: absolute;
+  top: 11%;
+  left: 17%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  content: '';
+  background: #f7d784;
+  box-shadow: 0 0 8px #f5c45c, 0 0 22px rgba(230, 157, 48, .9), -16px 5px 16px rgba(230, 157, 48, .35);
+}
+.constellation-energy-orbits i:nth-child(2) {
+  width: 57%;
+  height: 61%;
+  transform: translate(-50%, -50%) rotate(24deg);
+  animation-delay: -2.1s;
+  animation-duration: 7.2s;
+}
+.constellation-energy-orbits i:nth-child(2)::after { top: 70%; left: 89%; }
+.constellation-energy-orbits i:nth-child(3) {
+  width: 75%;
+  height: 79%;
+  border-style: dashed;
+  transform: translate(-50%, -50%) rotate(-34deg);
+  animation-delay: -4.4s;
+  animation-duration: 9.4s;
+}
+.constellation-energy-orbits i:nth-child(3)::after { top: 86%; left: 28%; width: 4px; height: 4px; }
 
 .constellation-flow {
   position: absolute;
@@ -334,6 +446,7 @@ body {
 .connection-line-base {
   stroke: rgba(201, 168, 76, .2);
   stroke-width: 1;
+  animation: connectionBreath 4.8s ease-in-out infinite;
 }
 .connection-line-pulse {
   stroke: rgba(244, 204, 112, .82);
@@ -409,9 +522,14 @@ body {
   min-height: 150px;
   color: #f3e8d5;
   transition: opacity .35s ease, filter .35s ease;
+  will-change: transform, opacity;
+  animation: productDrift 6.8s ease-in-out infinite;
 }
+.constellation-item:nth-of-type(2n) { animation-delay: -2.3s; animation-duration: 7.6s; }
+.constellation-item:nth-of-type(3n) { animation-delay: -4.7s; animation-duration: 8.4s; }
 .constellation-item:hover {
   z-index: 7;
+  animation-play-state: paused;
 }
 .constellation-product-visual {
   position: relative;
@@ -514,6 +632,15 @@ body {
   will-change: transform, opacity;
   animation: glyphFloat 6.2s ease-in-out infinite;
 }
+.network-glyph::after {
+  position: absolute;
+  inset: -5px;
+  border: 1px solid rgba(244, 205, 112, .18);
+  border-radius: 11px;
+  content: '';
+  opacity: 0;
+  animation: glyphSignal 5.2s ease-out infinite;
+}
 .network-glyph svg { width: 13px; height: 13px; }
 .network-glyph:nth-child(3n+2) { animation-delay: -2.1s; animation-duration: 7.4s; }
 .network-glyph:nth-child(3n) { animation-delay: -4.3s; animation-duration: 8.1s; }
@@ -580,9 +707,36 @@ body {
   50% { opacity: .53; }
   100% { transform: rotate(360deg) scale(1.03); opacity: .3; }
 }
+@keyframes auroraDrift {
+  0% { transform: translate3d(-8%, -3%, 0) scale(.9) rotate(-8deg); opacity: .42; }
+  55% { opacity: .95; }
+  100% { transform: translate3d(30%, 20%, 0) scale(1.2) rotate(13deg); opacity: .62; }
+}
+@keyframes dataRain {
+  0% { background-position: 0 -188px, 0 -376px; opacity: .12; }
+  50% { opacity: .3; }
+  100% { background-position: 112px 188px, -112px 376px; opacity: .12; }
+}
+@keyframes orbitBreath {
+  0%, 100% { opacity: .25; filter: drop-shadow(0 0 2px rgba(218, 156, 48, .1)); }
+  50% { opacity: .8; filter: drop-shadow(0 0 8px rgba(218, 156, 48, .32)); }
+}
+@keyframes connectionBreath {
+  0%, 100% { stroke-opacity: .4; }
+  50% { stroke-opacity: 1; }
+}
+@keyframes productDrift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -9px, 0); }
+}
 @keyframes glyphFloat {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(.94); opacity: .34; }
-  50% { transform: translate3d(0, -8px, 0) scale(1.04); opacity: .92; }
+  0%, 100% { transform: translate3d(-3px, 2px, 0) scale(.94) rotate(-2deg); opacity: .34; }
+  50% { transform: translate3d(5px, -10px, 0) scale(1.06) rotate(3deg); opacity: .96; }
+}
+@keyframes glyphSignal {
+  0%, 64% { opacity: 0; transform: scale(.72); }
+  78% { opacity: .75; }
+  100% { opacity: 0; transform: scale(1.52); }
 }
 @keyframes dataStream { to { stroke-dashoffset: -80; } }
 @keyframes endpointPulse {
@@ -599,11 +753,19 @@ body {
   .public-shell::after,
   .digital-hero::before,
   .digital-hero::after,
+  .constellation-cursor-glow,
+  .constellation-aurora::before,
+  .constellation-aurora::after,
+  .constellation-data-rain,
+  .constellation-energy-orbits i,
   .constellation-flow,
+  .connection-line-base,
   .connection-line-pulse,
   .connection-endpoint,
   .connection-node.is-active .connection-endpoint,
   .network-glyph,
+  .network-glyph::after,
+  .constellation-item,
   .constellation-stage::before,
   .constellation-stage::after,
   .constellation-core::before { animation: none; }
@@ -623,6 +785,8 @@ body {
   .constellation-stage { min-height: 390px; }
   .constellation-core { width: 96px; height: 108px; }
   .constellation-connections { display: none; }
+  .constellation-data-rain { opacity: .12; animation-duration: 16s; }
+  .constellation-energy-orbits i:nth-child(3) { display: none; }
   .constellation-item { width: 128px; min-height: 108px; }
   .constellation-product-visual { height: 72px; }
   .constellation-product-label { width: 120px; padding: 7px 8px; }

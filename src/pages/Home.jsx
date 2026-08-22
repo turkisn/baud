@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight, BadgeCheck, Box, Boxes, Building2, Database, GitBranch,
   FileBox, FileText, Layers3, PackageCheck, Search, ShieldCheck, Sparkles,
@@ -156,11 +156,53 @@ export default function Home() {
 
 function ProductConstellation({ products, lang, t }) {
   const [activeNode, setActiveNode] = useState(null);
+  const stageRef = useRef(null);
+  const pointerFrameRef = useRef(null);
   const visibleProducts = products.slice(0, CONSTELLATION_CONNECTIONS.length);
 
+  useEffect(() => () => {
+    if (pointerFrameRef.current) cancelAnimationFrame(pointerFrameRef.current);
+  }, []);
+
+  const moveLight = (event) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    if (pointerFrameRef.current) cancelAnimationFrame(pointerFrameRef.current);
+    const { clientX, clientY } = event;
+    pointerFrameRef.current = requestAnimationFrame(() => {
+      const rect = stage.getBoundingClientRect();
+      const x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      const y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+      stage.style.setProperty('--pointer-x', `${(x * 100).toFixed(1)}%`);
+      stage.style.setProperty('--pointer-y', `${(y * 100).toFixed(1)}%`);
+      stage.style.setProperty('--parallax-x', `${((x - 0.5) * 18).toFixed(1)}px`);
+      stage.style.setProperty('--parallax-y', `${((y - 0.5) * 14).toFixed(1)}px`);
+    });
+  };
+
+  const resetLight = () => {
+    if (pointerFrameRef.current) cancelAnimationFrame(pointerFrameRef.current);
+    const stage = stageRef.current;
+    if (!stage) return;
+    stage.style.setProperty('--pointer-x', '50%');
+    stage.style.setProperty('--pointer-y', '52%');
+    stage.style.setProperty('--parallax-x', '0px');
+    stage.style.setProperty('--parallax-y', '0px');
+  };
+
   return (
-    <div className="constellation-stage mx-auto mt-2 max-w-6xl" aria-label={t('Connected product data network', 'شبكة بيانات المنتجات المترابطة')}>
+    <div
+      ref={stageRef}
+      className="constellation-stage mx-auto mt-2 max-w-6xl"
+      aria-label={t('Connected product data network', 'شبكة بيانات المنتجات المترابطة')}
+      onPointerMove={moveLight}
+      onPointerLeave={resetLight}
+    >
+      <div className="constellation-cursor-glow" aria-hidden="true" />
+      <div className="constellation-aurora" aria-hidden="true" />
+      <div className="constellation-data-rain" aria-hidden="true" />
       <div className="constellation-flow" aria-hidden="true" />
+      <div className="constellation-energy-orbits" aria-hidden="true"><i /><i /><i /></div>
       <svg className="constellation-connections" viewBox="0 0 1000 580" preserveAspectRatio="none" aria-hidden="true">
         {CONSTELLATION_CONNECTIONS.slice(0, visibleProducts.length).map((connection, index) => (
           <g key={connection.d} className={`connection-node ${activeNode === index ? 'is-active' : ''} ${activeNode !== null && activeNode !== index ? 'is-muted' : ''}`}>
