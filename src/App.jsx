@@ -30,6 +30,10 @@ const ATMOSPHERE_ICONS = [
   Building2, FileBox, Sparkles, Box, Layers3, GitBranch,
 ];
 const ATMOSPHERE_TRAILS = Array.from({ length: 8 }, (_, index) => index + 1);
+const ATMOSPHERE_DATA_LABELS = [
+  'BIM', 'IFC', 'RVT', '3D', 'PDF', 'BOQ',
+  'BUOD.ID', 'DATA', 'SUPPLIER', 'CATALOG', 'SPECS', 'FILE',
+];
 
 function RouteLoading() {
   return <div className="grid min-h-[50vh] place-items-center" role="status"><div className="h-8 w-8 animate-spin rounded-full border-4 border-gold border-t-transparent"/><span className="sr-only">Loading</span></div>;
@@ -46,6 +50,9 @@ function PublicAtmosphere() {
       </div>
       <div className="public-atmosphere-trails">
         {ATMOSPHERE_TRAILS.map((trail) => <span key={trail} className={`atmosphere-trail atmosphere-trail-${trail}`} />)}
+      </div>
+      <div className="public-atmosphere-data">
+        {ATMOSPHERE_DATA_LABELS.map((label, index) => <span key={label} className={`atmosphere-data-tag atmosphere-data-tag-${index + 1}`}>{label}</span>)}
       </div>
     </div>
   );

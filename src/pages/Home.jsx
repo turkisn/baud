@@ -45,7 +45,7 @@ export default function Home() {
     let active = true;
     mvpService.recordEvent('page_view', { page: 'home' });
 
-    mvpService.getLatestProducts(8)
+    mvpService.getLatestProducts(40)
       .then((rows) => { if (active) setProducts(rows); })
       .catch(() => { if (active) setProductState({ loading: false, error: true }); })
       .finally(() => { if (active) setProductState((state) => ({ ...state, loading: false })); });
@@ -55,7 +55,7 @@ export default function Home() {
       .catch(() => { if (active) setCategoryState({ loading: false, error: true }); })
       .finally(() => { if (active) setCategoryState((state) => ({ ...state, loading: false })); });
 
-    mvpService.getSuppliers({ limit: 4 })
+    mvpService.getSuppliers({ limit: 24 })
       .then((rows) => { if (active) setSuppliers(rows); })
       .catch(() => { if (active) setSupplierState({ loading: false, error: true }); })
       .finally(() => { if (active) setSupplierState((state) => ({ ...state, loading: false })); });
@@ -105,6 +105,16 @@ export default function Home() {
             </form>
           </div>
 
+          <LiveDataRibbon
+            products={products}
+            categories={categories}
+            suppliers={suppliers}
+            loading={productState.loading || categoryState.loading || supplierState.loading}
+            hasError={productState.error || categoryState.error || supplierState.error}
+            lang={lang}
+            t={t}
+          />
+
           <ProductConstellation products={products.slice(0, 6)} lang={lang} t={t} />
 
           <div className="digital-panel relative z-10 grid overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-5">
@@ -114,6 +124,7 @@ export default function Home() {
             <DigitalMetric icon={<Database />} title={t('Precise data', 'بيانات دقيقة')} text={t('Structured and continuously updated', 'تحديث مستمر وآلي')} />
             <DigitalMetric icon={<ShieldCheck />} title={t('Project ready', 'جاهز للمشاريع')} text={t('From design to delivery', 'من التصميم إلى التنفيذ')} />
           </div>
+          <DataSignalTicker products={products} lang={lang} t={t} />
         </div>
       </section>
 
@@ -129,7 +140,7 @@ export default function Home() {
       <section className="border-y border-gold/10 bg-black/35 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading eyebrow={t('Connected product records', 'سجلات المنتجات المترابطة')} title={t('Featured / latest products', 'المنتجات المميزة / الأحدث')} link="/blocks" t={t} lang={lang} />
-          {productState.loading ? <LoadingState /> : productState.error ? <ErrorState /> : products.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product} />)}</div> : <EmptyState title={t('No published products yet', 'لا توجد منتجات منشورة حالياً')} description={t('Published database records will appear here when available.', 'ستظهر سجلات قاعدة البيانات المنشورة هنا عند توفرها.')} />}
+          {productState.loading ? <LoadingState /> : productState.error ? <ErrorState /> : products.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.slice(0, 8).map((product) => <ProductCard key={product.id || product.slug} product={product} />)}</div> : <EmptyState title={t('No published products yet', 'لا توجد منتجات منشورة حالياً')} description={t('Published database records will appear here when available.', 'ستظهر سجلات قاعدة البيانات المنشورة هنا عند توفرها.')} />}
         </div>
       </section>
 
@@ -138,7 +149,7 @@ export default function Home() {
           <SectionHeading eyebrow={t('Connected to the source', 'مرتبط بالمصدر')} title={t('Supplier network', 'شبكة الموردين')} link="/suppliers" t={t} lang={lang} />
           {supplierState.loading ? <LoadingState /> : supplierState.error ? <ErrorState /> : suppliers.length ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {suppliers.map((supplier) => {
+              {suppliers.slice(0, 4).map((supplier) => {
                 const name = lang === 'ar' ? pick(supplier, 'company_name_ar', 'name_ar', 'company_name_en') : pick(supplier, 'company_name_en', 'name_en', 'company_name_ar');
                 return <Link key={supplier.id || supplier.slug} to={`/suppliers/${supplier.slug}`} className="digital-panel group rounded-2xl p-5 transition hover:-translate-y-1 hover:border-gold/55"><div className="mb-5 flex h-20 items-center justify-center overflow-hidden rounded-xl border border-gold/15 bg-[#11100d] p-2">{supplier.signed_logo_url ? <img src={supplier.signed_logo_url} alt={`${name || t('Supplier', 'المورد')} logo`} className="h-full w-full object-contain" /> : <Building2 className="text-gold/40" />}</div><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-gold"><BadgeCheck size={13} />{t('Verified supplier node', 'مورد مرتبط بالمنصة')}</p><h3 className="mt-2 font-bold text-warm-white transition group-hover:text-light-gold">{name || t('Supplier name unavailable', 'اسم المورد غير متاح')}</h3></Link>;
               })}
@@ -153,6 +164,61 @@ export default function Home() {
           <Link to={user ? (isAdmin() ? '/admin/dashboard' : '/blocks') : '/login?mode=signup'} className="btn-gold justify-center px-8 py-4">{user ? (isAdmin() ? t('Go to dashboard', 'الذهاب للوحة التحكم') : t('Browse library', 'تصفح المكتبة')) : t('Create account', 'إنشاء حساب')}<ArrowRight className={lang === 'ar' ? 'rotate-180' : ''} size={17} /></Link>
         </div>
       </section>
+    </div>
+  );
+}
+
+function LiveDataRibbon({ products, categories, suppliers, loading, hasError, lang, t }) {
+  const formats = new Set(products.flatMap((product) => product.available_formats || []));
+  const formatNumber = (number) => number.toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { minimumIntegerDigits: 2 });
+  const status = loading ? t('SYNCING', 'جارِ المزامنة') : hasError ? t('PARTIAL DATA', 'بيانات جزئية') : t('CONNECTED', 'متصل');
+  const metrics = [
+    { label: t('Product records', 'سجلات المنتجات'), value: products.length, icon: Box },
+    { label: t('Supplier nodes', 'عُقد الموردين'), value: suppliers.length, icon: Building2 },
+    { label: t('Classifications', 'التصنيفات'), value: categories.length, icon: Layers3 },
+    { label: t('File formats', 'صيغ الملفات'), value: formats.size, icon: FileBox },
+  ];
+
+  return (
+    <div className="data-ribbon mx-auto mt-7 max-w-4xl" aria-label={t('Connected library data', 'بيانات المكتبة المترابطة')}>
+      <div className={`data-ribbon-status ${loading ? 'is-syncing' : ''} ${hasError ? 'is-partial' : ''}`}>
+        <span className="data-ribbon-status-dot" />
+        <span>{status}</span>
+        <span className="data-ribbon-status-code">BUOD.NET</span>
+      </div>
+      {metrics.map(({ label, value, icon: Icon }) => (
+        <div key={label} className="data-ribbon-metric">
+          <Icon size={15} />
+          <span className="data-ribbon-value">{loading ? '··' : formatNumber(value)}</span>
+          <span className="data-ribbon-label">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DataSignalTicker({ products, lang, t }) {
+  const records = products.slice(0, 6).map((product) => ({
+    id: product.id || product.slug,
+    reference: product.buod_reference || 'BUOD.NODE',
+    category: lang === 'ar' ? pick(product, 'category_name_ar', 'category_name_en') : pick(product, 'category_name_en', 'category_name_ar'),
+  }));
+  const entries = records.length ? records : [{ id: 'sync', reference: 'BUOD.DATA', category: t('Synchronising product records', 'مزامنة سجلات المنتجات') }];
+
+  return (
+    <div className="data-signal-ticker" aria-label={t('Product data feed', 'تدفق بيانات المنتجات')}>
+      <span className="data-signal-title"><Database size={13} />{t('DATA FLOW', 'تدفق البيانات')}</span>
+      <div className="data-signal-window">
+        <div className="data-signal-track">
+          {[...entries, ...entries].map((entry, index) => (
+            <span key={`${entry.id}-${index}`} className="data-signal-entry">
+              <i />
+              <strong>{entry.reference}</strong>
+              <span>{entry.category || t('Product data', 'بيانات المنتج')}</span>
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -244,6 +310,7 @@ function ProductConstellation({ products, lang, t }) {
               <strong>{name}</strong>
               <span className="constellation-product-meta">{category || t('Product data', 'بيانات منتج')}</span>
               <span className="constellation-product-ref">{product.buod_reference}</span>
+              <span className="constellation-product-data"><i />{(product.available_formats || []).slice(0, 2).join(' · ') || t('DATA NODE', 'عقدة بيانات')}</span>
             </span>
           </Link>
         );

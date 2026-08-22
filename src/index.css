@@ -215,7 +215,8 @@ body {
 .public-atmosphere-mesh,
 .public-atmosphere-scan,
 .public-atmosphere-icons,
-.public-atmosphere-trails {
+.public-atmosphere-trails,
+.public-atmosphere-data {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -309,6 +310,43 @@ body {
 .atmosphere-trail-6 { top: 72%; right: 16%; animation-delay: -.7s; }
 .atmosphere-trail-7 { top: 84%; left: 18%; animation-delay: -2.9s; }
 .atmosphere-trail-8 { top: 91%; right: 7%; animation-delay: -5.1s; }
+.atmosphere-data-tag {
+  position: absolute;
+  padding: 4px 7px;
+  border: 1px solid rgba(226, 183, 91, .28);
+  border-radius: 5px;
+  background: rgba(8, 7, 5, .68);
+  color: rgba(246, 207, 122, .79);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  animation: dataTagFloat 5s ease-in-out infinite;
+}
+.atmosphere-data-tag::before {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-inline-end: 5px;
+  border-radius: 50%;
+  content: '';
+  background: #eac26e;
+  box-shadow: 0 0 8px rgba(234, 194, 110, .8);
+  animation: dataDotPulse 1.8s ease-in-out infinite;
+}
+.atmosphere-data-tag:nth-child(2n) { animation-delay: -1.6s; }
+.atmosphere-data-tag:nth-child(3n) { animation-delay: -3.2s; }
+.atmosphere-data-tag-1 { top: 12%; left: 11%; }
+.atmosphere-data-tag-2 { top: 19%; right: 12%; }
+.atmosphere-data-tag-3 { top: 32%; left: 4%; }
+.atmosphere-data-tag-4 { top: 37%; right: 3%; }
+.atmosphere-data-tag-5 { top: 49%; left: 11%; }
+.atmosphere-data-tag-6 { top: 54%; right: 10%; }
+.atmosphere-data-tag-7 { top: 68%; left: 3%; }
+.atmosphere-data-tag-8 { top: 72%; right: 4%; }
+.atmosphere-data-tag-9 { top: 84%; left: 11%; }
+.atmosphere-data-tag-10 { top: 88%; right: 12%; }
+.atmosphere-data-tag-11 { top: 42%; left: 23%; }
+.atmosphere-data-tag-12 { top: 77%; right: 23%; }
 
 .public-shell :is(nav, main, footer) svg.lucide:not(.animate-spin) {
   animation: siteIconMotion 3.3s ease-in-out infinite;
@@ -399,6 +437,102 @@ body {
     radial-gradient(circle at 50% 60%, rgba(103, 63, 13, 0.1), transparent 42%),
     #030302;
 }
+
+.data-ribbon {
+  position: relative;
+  z-index: 8;
+  display: grid;
+  grid-template-columns: 1.05fr repeat(4, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(213, 173, 81, .32);
+  border-radius: 15px;
+  background: rgba(8, 7, 5, .82);
+  box-shadow: 0 0 31px rgba(207, 152, 50, .11), inset 0 1px rgba(255, 255, 255, .035);
+  backdrop-filter: blur(14px);
+}
+.data-ribbon-status,
+.data-ribbon-metric {
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-inline-end: 1px solid rgba(216, 173, 81, .14);
+}
+.data-ribbon-metric:last-child { border-inline-end: 0; }
+.data-ribbon-status {
+  flex-wrap: wrap;
+  gap: 3px 6px;
+  color: #efcb81;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.data-ribbon-status-dot,
+.data-signal-entry i,
+.constellation-product-data i {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: #9fd788;
+  box-shadow: 0 0 10px rgba(139, 204, 114, .78);
+  animation: dataDotPulse 1.65s ease-in-out infinite;
+}
+.data-ribbon-status.is-syncing .data-ribbon-status-dot { background: #f0c16d; box-shadow: 0 0 10px rgba(240, 193, 109, .78); }
+.data-ribbon-status.is-partial .data-ribbon-status-dot { background: #ee9b74; box-shadow: 0 0 10px rgba(238, 155, 116, .78); }
+.data-ribbon-status-code {
+  width: 100%;
+  padding-inline-start: 13px;
+  color: rgba(226, 196, 145, .44);
+  font-size: 8px;
+}
+.data-ribbon-metric { flex-wrap: wrap; gap: 2px 6px; color: #d9ac57; }
+.data-ribbon-value {
+  color: #f7ead0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 16px;
+  font-weight: 700;
+}
+.data-ribbon-label { width: 100%; color: rgba(216, 198, 165, .63); font-size: 9px; }
+
+.data-signal-ticker {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  min-height: 47px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 0 13px;
+  overflow: hidden;
+  border: 1px solid rgba(215, 174, 82, .2);
+  border-radius: 12px;
+  background: rgba(8, 7, 5, .73);
+}
+.data-signal-title {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: #e0b45d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.data-signal-window {
+  overflow: hidden;
+  direction: ltr;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent);
+}
+.data-signal-track { display: flex; width: max-content; align-items: center; gap: 25px; animation: dataTicker 34s linear infinite; }
+.data-signal-entry { display: inline-flex; flex: none; align-items: center; gap: 7px; white-space: nowrap; }
+.data-signal-entry i { width: 5px; height: 5px; }
+.data-signal-entry strong { color: #e1bd76; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9px; }
+.data-signal-entry > span { color: rgba(211, 192, 157, .55); font-size: 9px; }
 
 .digital-hero::before {
   position: absolute;
@@ -783,6 +917,8 @@ body {
 .constellation-product-label strong { font-size: 11px; }
 .constellation-product-meta { margin-top: 3px; color: rgba(215, 173, 83, .8); font-size: 9px; }
 .constellation-product-ref { margin-top: 3px; color: rgba(214, 197, 170, .34); font-family: monospace; font-size: 8px; }
+.constellation-product-data { display: flex; align-items: center; gap: 5px; margin-top: 5px; color: rgba(211, 192, 157, .64); font-family: monospace; font-size: 8px; }
+.constellation-product-data i { width: 5px; height: 5px; }
 .constellation-item.is-active .constellation-product-visual {
   transform: translateY(-7px) scale(1.14);
   filter: drop-shadow(0 0 17px rgba(225, 167, 64, .35));
@@ -969,6 +1105,15 @@ body {
   0%, 100% { box-shadow: 0 8px 24px rgba(215, 166, 68, .2); }
   50% { box-shadow: 0 10px 38px rgba(232, 182, 81, .48), 0 0 18px rgba(240, 201, 117, .27); }
 }
+@keyframes dataTagFloat {
+  0%, 100% { transform: translate3d(0, 4px, 0); opacity: .4; }
+  50% { transform: translate3d(4px, -7px, 0); opacity: .94; }
+}
+@keyframes dataDotPulse {
+  0%, 100% { transform: scale(.8); opacity: .58; }
+  50% { transform: scale(1.24); opacity: 1; }
+}
+@keyframes dataTicker { to { transform: translateX(-50%); } }
 @keyframes gridDrift {
   0% { background-position: 0 0, 0 0; opacity: .2; }
   50% { opacity: .31; }
@@ -1078,6 +1223,12 @@ body {
   .atmosphere-icon,
   .atmosphere-icon::after,
   .atmosphere-trail,
+  .atmosphere-data-tag,
+  .atmosphere-data-tag::before,
+  .data-ribbon-status-dot,
+  .data-signal-entry i,
+  .constellation-product-data i,
+  .data-signal-track,
   .public-shell :is(nav, main, footer) svg.lucide:not(.animate-spin),
   .public-shell .digital-panel,
   .public-shell .digital-panel img,
@@ -1115,6 +1266,9 @@ body {
 }
 
 @media (max-width: 1023px) {
+  .data-ribbon { grid-template-columns: repeat(4, 1fr); }
+  .data-ribbon-status { grid-column: 1 / -1; min-height: 38px; border-inline-end: 0; border-bottom: 1px solid rgba(216, 173, 81, .14); }
+  .data-ribbon-status-code { width: auto; padding-inline-start: 3px; }
   .constellation-stage { min-height: 460px; }
   .constellation-item { width: 174px; min-height: 126px; }
   .constellation-product-visual { height: 86px; }
@@ -1129,7 +1283,14 @@ body {
   .atmosphere-icon { width: 27px; height: 27px; }
   .atmosphere-icon svg { width: 12px; height: 12px; }
   .atmosphere-icon:nth-child(n+9),
-  .atmosphere-trail:nth-child(n+4) { display: none; }
+  .atmosphere-trail:nth-child(n+4),
+  .atmosphere-data-tag:nth-child(n+7) { display: none; }
+  .data-ribbon { grid-template-columns: repeat(2, 1fr); }
+  .data-ribbon-metric { min-height: 58px; }
+  .data-ribbon-metric:nth-of-type(2n+1) { border-inline-end: 0; }
+  .data-ribbon-metric:nth-of-type(n+4) { border-top: 1px solid rgba(216, 173, 81, .14); }
+  .data-signal-ticker { gap: 8px; padding-inline: 9px; }
+  .data-signal-title { font-size: 8px; }
   .constellation-stage { min-height: 390px; }
   .constellation-core { width: 96px; height: 108px; }
   .constellation-connections { display: none; }
