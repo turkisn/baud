@@ -173,26 +173,37 @@ function LiveDataRibbon({ products, categories, suppliers, loading, hasError, la
   const formatNumber = (number) => number.toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { minimumIntegerDigits: 2 });
   const status = loading ? t('SYNCING', 'جارِ المزامنة') : hasError ? t('PARTIAL DATA', 'بيانات جزئية') : t('CONNECTED', 'متصل');
   const metrics = [
-    { label: t('Product records', 'سجلات المنتجات'), value: products.length, icon: Box },
-    { label: t('Supplier nodes', 'عُقد الموردين'), value: suppliers.length, icon: Building2 },
-    { label: t('Classifications', 'التصنيفات'), value: categories.length, icon: Layers3 },
-    { label: t('File formats', 'صيغ الملفات'), value: formats.size, icon: FileBox },
+    { label: t('Product records', 'سجلات المنتجات'), value: products.length, icon: Box, code: 'PRODUCT.DB' },
+    { label: t('Supplier nodes', 'عُقد الموردين'), value: suppliers.length, icon: Building2, code: 'SUPPLIER.ID' },
+    { label: t('Classifications', 'التصنيفات'), value: categories.length, icon: Layers3, code: 'CATEGORY.AI' },
+    { label: t('File formats', 'صيغ الملفات'), value: formats.size, icon: FileBox, code: 'BIM.FORMAT' },
   ];
+  const highestValue = Math.max(...metrics.map(({ value }) => value), 1);
 
   return (
-    <div className="data-ribbon mx-auto mt-7 max-w-4xl" aria-label={t('Connected library data', 'بيانات المكتبة المترابطة')}>
-      <div className={`data-ribbon-status ${loading ? 'is-syncing' : ''} ${hasError ? 'is-partial' : ''}`}>
-        <span className="data-ribbon-status-dot" />
-        <span>{status}</span>
-        <span className="data-ribbon-status-code">BUOD.NET</span>
+    <div className="data-console mx-auto mt-8 max-w-5xl" aria-label={t('Connected library data', 'بيانات المكتبة المترابطة')}>
+      <div className="data-console-header">
+        <span className="data-console-heading"><Database size={17} /><span>{t('LIVE PRODUCT INTELLIGENCE', 'مركز بيانات المنتجات المباشر')}</span></span>
+        <span className="data-console-protocols" aria-hidden="true"><i>BIM</i><i>IFC</i><i>RVT</i><i>3D</i></span>
+        <span className={`data-ribbon-status ${loading ? 'is-syncing' : ''} ${hasError ? 'is-partial' : ''}`}>
+          <span className="data-ribbon-status-dot" />
+          <span>{status}</span>
+          <span className="data-ribbon-status-code">BUOD.NET</span>
+        </span>
       </div>
-      {metrics.map(({ label, value, icon: Icon }) => (
-        <div key={label} className="data-ribbon-metric">
-          <Icon size={15} />
-          <span className="data-ribbon-value">{loading ? '··' : formatNumber(value)}</span>
-          <span className="data-ribbon-label">{label}</span>
-        </div>
-      ))}
+      <div className="data-ribbon">
+        {metrics.map(({ label, value, icon: Icon, code }) => (
+          <div key={label} className="data-ribbon-metric">
+            <span className="data-ribbon-icon"><Icon size={19} /></span>
+            <span className="data-ribbon-content">
+              <span className="data-ribbon-value">{loading ? '··' : formatNumber(value)}</span>
+              <span className="data-ribbon-label">{label}</span>
+              <span className="data-ribbon-code">{code}</span>
+            </span>
+            <span className="data-ribbon-meter" aria-hidden="true"><i style={{ width: `${Math.max(14, Math.round(value / highestValue * 100))}%` }} /></span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -281,7 +292,7 @@ function ProductConstellation({ products, lang, t }) {
             <path className="connection-line-base" d={connection.d} />
             <path className="connection-line-pulse" d={connection.d} />
             <circle className="connection-traveller" r="4">
-              <animateMotion dur={`${2.6 + index * .28}s`} repeatCount="indefinite" path={connection.d} />
+              <animateMotion dur={`${4 + index * .4}s`} repeatCount="indefinite" path={connection.d} />
             </circle>
             <circle className="connection-endpoint" cx={connection.x} cy={connection.y} r="4" />
           </g>
@@ -289,6 +300,12 @@ function ProductConstellation({ products, lang, t }) {
       </svg>
       <div className="network-glyphs" aria-hidden="true">
         {NETWORK_GLYPHS.map((Icon, index) => <span key={index} className={`network-glyph network-glyph-${index + 1}`}><Icon /></span>)}
+      </div>
+      <div className="constellation-readouts" aria-hidden="true">
+        <span className="constellation-readout constellation-readout-1"><i />PRODUCT.ID<strong>{visibleProducts[0]?.buod_reference || 'BUOD.REGISTRY'}</strong></span>
+        <span className="constellation-readout constellation-readout-2"><i />BIM.FORMAT<strong>{(visibleProducts[0]?.available_formats || []).slice(0, 2).join(' + ') || 'IFC + RVT'}</strong></span>
+        <span className="constellation-readout constellation-readout-3"><i />DATA.SOURCE<strong>{t('VERIFIED NODE', 'مصدر موثق')}</strong></span>
+        <span className="constellation-readout constellation-readout-4"><i />NETWORK<strong>{t('LIVE SYNC', 'مزامنة مباشرة')}</strong></span>
       </div>
       {visibleProducts.map((product, index) => {
         const name = lang === 'ar' ? pick(product, 'product_name_ar', 'product_name_en') : pick(product, 'product_name_en', 'product_name_ar');
@@ -316,6 +333,7 @@ function ProductConstellation({ products, lang, t }) {
         );
       })}
       <div className="constellation-core"><BrandMark className="h-full w-full" title={t('BUOD digital network', 'شبكة بُعد الرقمية')} /></div>
+      <span className="constellation-core-caption" aria-hidden="true">BUOD DATA CORE</span>
     </div>
   );
 }
