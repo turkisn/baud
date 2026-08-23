@@ -1,12 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 112">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
   <defs>
-    <linearGradient id="g" x1="16" y1="18" x2="79" y2="99" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF0B8"/><stop offset=".38" stop-color="#E8C473"/><stop offset=".74" stop-color="#BE8B36"/><stop offset="1" stop-color="#F1D28F"/></linearGradient>
-    <radialGradient id="b"><stop stop-color="#23190C"/><stop offset="1" stop-color="#060504"/></radialGradient>
+    <linearGradient id="gold" x1="14" y1="15" x2="103" y2="102" gradientUnits="userSpaceOnUse"><stop stop-color="#F1D493"/><stop offset=".42" stop-color="#D8AF69"/><stop offset=".78" stop-color="#A47735"/><stop offset="1" stop-color="#E6C67F"/></linearGradient>
+    <linearGradient id="top" x1="34" y1="34" x2="80" y2="66" gradientUnits="userSpaceOnUse"><stop stop-color="#F0D39B"/><stop offset="1" stop-color="#B38746"/></linearGradient>
+    <linearGradient id="left" x1="35" y1="52" x2="60" y2="91" gradientUnits="userSpaceOnUse"><stop stop-color="#77562F"/><stop offset="1" stop-color="#3E2B18"/></linearGradient>
   </defs>
-  <path d="M50 3.5 95 29v54L50 108.5 5 83V29z" fill="url(#b)" stroke="url(#g)" stroke-width="2.5"/>
-  <path d="M50 9.5 89.5 32v48L50 102.5 10.5 80V32z" fill="none" stroke="#C69A50" stroke-opacity=".3"/>
-  <path d="M14 42h10l5 5m57-5H76l-5 5M14 70h8l5-5m59 5h-8l-5-5" fill="none" stroke="#D9AF62" stroke-opacity=".65"/>
-  <path d="M25 77V40l25-14.5L75 40v37" fill="none" stroke="url(#g)" stroke-width="6.5"/>
-  <path d="M38 83V49.5L50 42l12 7.5V83" fill="none" stroke="#F3D494" stroke-width="6"/>
-  <path d="M50 61v32" stroke="url(#g)" stroke-width="6"/>
+  <g fill="none" stroke="#D5A758" stroke-width="1"><path d="M42 42 36 34H24m27 5V28l-8-4m20 15 8-9h12M34 58H23l-6-5m17 18H24l-7 7m31 7v9l-9 7m28-16 7 8h11m-7-39h13l7-4m-20 13h13l7-2m-20 11h13l7 2"/></g>
+  <path d="M96 37v-5L57 10 15 34v50l42 25 39-22v-6" fill="none" stroke="#59401E" stroke-width="10" transform="translate(1.5 2)"/>
+  <path d="M96 37v-5L57 10 15 34v50l42 25 39-22v-6" fill="none" stroke="url(#gold)" stroke-width="7"/>
+  <path d="M57 36 80 49.5 57 63 34 49.5z" fill="url(#top)" stroke="#F1D69C" stroke-width="1.15"/>
+  <path d="M34 49.5 57 63v27L34 76.5z" fill="url(#left)" stroke="#D0A460" stroke-width="1.1"/>
+  <path d="M80 49.5 57 63v27l23-13.5z" fill="#14110C" stroke="#DCB677" stroke-width="1.1"/>
+  <g fill="none" stroke="#F0CF87" stroke-width=".65"><path d="M44 44v6l6 4m12-12v5l-6 5m-15 5v10l5 3v9m15-13h8l5-3m-13 10h8l5-3m-13 11h7l5-4"/></g>
+  <g fill="url(#gold)" stroke="#F1D599" stroke-width=".65"><path d="M99 44h9v9h-9z"/><path d="M99 57h9v9h-9z"/><path d="M99 70h9v9h-9z"/></g>
 </svg>

@@ -79,11 +79,28 @@ body {
 .buod-wordmark-compact .buod-wordmark-name { font-size: 22px; }
 .buod-wordmark-compact .buod-wordmark-baseline { font-size: 6px; }
 [dir="rtl"] .buod-wordmark-compact .buod-wordmark-baseline { font-size: 7px; }
-.buod-mark-nodes circle { animation: buodMarkNode 3.4s ease-in-out infinite; }
-.buod-mark-nodes circle:nth-child(2n) { animation-delay: 1.1s; }
-.buod-mark-nodes circle:nth-child(3n) { animation-delay: 2.2s; }
-@keyframes buodMarkNode { 0%, 100% { opacity: .46; } 48% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .buod-mark-nodes circle { animation: none; } }
+.buod-brand-mark { overflow: visible; }
+.buod-mark-network { stroke-width: .85; }
+.buod-mark-trace { opacity: .78; stroke-dasharray: 12 6; animation: buodDataFlow 5.8s linear infinite; }
+.buod-mark-trace-delayed { animation-delay: -2.2s; }
+.buod-mark-trace-output { stroke: #f1d08d; animation-duration: 4.5s; }
+.buod-mark-circuitry { opacity: .72; animation: buodCircuitPulse 4.6s ease-in-out infinite; }
+.buod-mark-junctions circle { animation: buodMarkNode 3.8s ease-in-out infinite; }
+.buod-mark-junctions circle:nth-child(2n) { animation-delay: 1.3s; }
+.buod-mark-junctions circle:nth-child(3n) { animation-delay: 2.1s; }
+.buod-mark-nodes > path:nth-child(-n+3) { animation: buodPixelPulse 3.6s ease-in-out infinite; }
+.buod-mark-nodes > path:nth-child(2) { animation-delay: .7s; }
+.buod-mark-nodes > path:nth-child(3) { animation-delay: 1.4s; }
+@keyframes buodDataFlow { to { stroke-dashoffset: -36; } }
+@keyframes buodCircuitPulse { 0%, 100% { opacity: .48; } 52% { opacity: .96; } }
+@keyframes buodPixelPulse { 0%, 100% { opacity: .72; } 45% { opacity: 1; } }
+@keyframes buodMarkNode { 0%, 100% { opacity: .38; } 48% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .buod-mark-trace,
+  .buod-mark-circuitry,
+  .buod-mark-junctions circle,
+  .buod-mark-nodes > path { animation: none; }
+}
 
 @layer components {
   /* ─── Buttons ──────────────────────────────────────────── */
