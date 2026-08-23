@@ -1,6 +1,7 @@
 import { Box, Download, Eye, FileBox, ImageOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import WorkspaceActions from './WorkspaceActions';
 
 const value = (row, keys) => keys.map((key) => row?.[key]).find((item) => item !== null && item !== undefined && item !== '');
 
@@ -35,6 +36,7 @@ export default function ProductCard({ product }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
         {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg border border-gold/20 bg-black/80 px-2.5 py-1 font-mono text-[9px] font-semibold tracking-wider text-light-gold backdrop-blur">{product.buod_reference}</span>}
         {formats.length > 0 && <div className="absolute end-3 top-3 flex max-w-[55%] flex-wrap justify-end gap-1">{formats.map((format) => <span key={format} className="rounded-md border border-gold/25 bg-black/80 px-2 py-1 font-mono text-[9px] font-bold text-light-gold backdrop-blur">{format}</span>)}</div>}
+        <div className="absolute bottom-3 end-3"><WorkspaceActions product={product} compact/></div>
       </div>
       <div className="p-5">
         <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-gold"><Box size={12} />{category || t('Uncategorised', 'غير مصنف')}</div>

@@ -153,7 +153,7 @@ async function hydrateProductSummaries(rows) {
     };
   });
   const productIds = summaries.map(({ row }) => row.id || row.product_id).filter(Boolean);
-  const [signed, filesResult] = await Promise.all([
+  const [signed, filesResult, specificationsResult, materialsResult] = await Promise.all([
     batchSignedUrls(
       PRIVATE_BUCKETS.PRODUCT_IMAGES,
       summaries.map(({ imagePath }) => imagePath)
@@ -161,6 +161,12 @@ async function hydrateProductSummaries(rows) {
     productIds.length
       ? settleQuery(supabase.from('product_files').select(PUBLIC_PRODUCT_FILE_FIELDS)
         .in('product_id', productIds).eq('is_available', true))
+      : Promise.resolve({ data: [], error: null }),
+    productIds.length
+      ? settleQuery(supabase.from('product_specifications').select(PUBLIC_SPECIFICATION_FIELDS).in('product_id', productIds))
+      : Promise.resolve({ data: [], error: null }),
+    productIds.length
+      ? settleQuery(supabase.from('product_materials').select(PUBLIC_MATERIAL_FIELDS).in('product_id', productIds))
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -171,6 +177,19 @@ async function hydrateProductSummaries(rows) {
       current.push(file);
       filesByProduct.set(file.product_id, current);
     }
+  }
+
+  const specificationsByProduct = new Map();
+  for (const spec of specificationsResult.error ? [] : specificationsResult.data || []) {
+    const current = specificationsByProduct.get(spec.product_id) || [];
+    current.push(spec);
+    specificationsByProduct.set(spec.product_id, current);
+  }
+  const materialsByProduct = new Map();
+  for (const material of materialsResult.error ? [] : materialsResult.data || []) {
+    const current = materialsByProduct.get(material.product_id) || [];
+    current.push(material);
+    materialsByProduct.set(material.product_id, current);
   }
 
   return summaries.map(({ row, rawImagePath, imagePath }) => {
@@ -184,6 +203,8 @@ async function hydrateProductSummaries(rows) {
       available_software: [...new Set(files.map((file) => file.software_name).filter(Boolean))],
       available_file_count: files.length,
       file_metadata_error: Boolean(filesResult.error),
+      product_specifications: specificationsByProduct.get(row.id || row.product_id) || [],
+      product_materials: materialsByProduct.get(row.id || row.product_id) || [],
     };
   });
 }
@@ -348,15 +369,35 @@ export const mvpService = {
 
   async searchProducts({ query = '', categoryId = null, supplierId = null, limit = 24, offset = 0 } = {}) {
     assertConfigured();
+    const normalizedQuery = query.trim();
+    const intelligentSearch = normalizedQuery.length > 0;
     const { data, error } = await supabase.rpc('search_mvp_products', {
-      p_query: query.trim() || null,
+      p_query: intelligentSearch ? null : normalizedQuery || null,
       p_category_id: categoryId || null,
       p_supplier_id: supplierId || null,
-      p_limit: limit,
-      p_offset: offset,
+      p_limit: intelligentSearch ? 200 : limit,
+      p_offset: intelligentSearch ? 0 : offset,
     });
     if (error) throw error;
-    return hydrateProductSummaries(normalizeListResult(data));
+    const products = await hydrateProductSummaries(normalizeListResult(data));
+    if (!intelligentSearch) return products;
+    const normalize = (value) => String(value || '').toLowerCase()
+      .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    const tokens = normalize(normalizedQuery).split(/\s+/).filter(Boolean);
+    return products.map((product) => {
+      const primary = normalize([product.product_name_ar, product.product_name_en, product.buod_reference, product.brand_name].join(' '));
+      const secondary = normalize([
+        product.short_description_ar, product.short_description_en, product.full_description_ar, product.full_description_en,
+        product.category_name_ar, product.category_name_en, product.supplier_name_ar, product.supplier_name_en,
+        ...product.product_specifications.flatMap((spec) => [spec.specification_name_ar, spec.specification_name_en, spec.value, spec.unit]),
+        ...product.product_materials.flatMap((material) => [material.material_name_ar, material.material_name_en, material.finish, material.color]),
+      ].join(' '));
+      const score = tokens.reduce((total, token) => total + (primary.includes(token) ? 3 : secondary.includes(token) ? 1 : 0), 0);
+      const matches = tokens.filter((token) => primary.includes(token) || secondary.includes(token)).length;
+      return { product, score: score + (matches === tokens.length ? 5 : 0), matches };
+    }).filter((item) => item.matches > 0).sort((a, b) => b.score - a.score)
+      .slice(offset, offset + limit).map((item) => item.product);
   },
 
   async getLatestProducts(limit = 8) {

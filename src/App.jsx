@@ -6,6 +6,7 @@ import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { WorkspaceProvider } from './context/WorkspaceContext';
 import BlockDetail from './pages/BlockDetail';
 import Blocks from './pages/Blocks';
 import ForgotPassword from './pages/ForgotPassword';
@@ -13,6 +14,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import Privacy from './pages/Privacy';
+import Projects from './pages/Projects';
+import Compare from './pages/Compare';
 import ResetPassword from './pages/ResetPassword';
 import SupplierDetail from './pages/SupplierDetail';
 import Suppliers from './pages/Suppliers';
@@ -63,9 +66,9 @@ function Layout() {
   const authPages = ['/login', '/forgot-password', '/reset-password'];
   const bare = authPages.includes(location.pathname) || location.pathname.startsWith('/admin');
   return <div className={`flex min-h-screen flex-col ${bare ? '' : 'public-shell'}`}>{!bare && <PublicAtmosphere/>}{!bare && <Navbar/>}<main className="flex-1"><Suspense fallback={<RouteLoading/>}><Routes>
-    <Route path="/" element={<Home/>}/><Route path="/blocks" element={<Blocks/>}/><Route path="/blocks/:slug" element={<BlockDetail/>}/><Route path="/suppliers" element={<Suppliers/>}/><Route path="/suppliers/:slug" element={<SupplierDetail/>}/><Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/terms" element={<Terms/>}/><Route path="/privacy" element={<Privacy/>}/>
+    <Route path="/" element={<Home/>}/><Route path="/blocks" element={<Blocks/>}/><Route path="/blocks/:slug" element={<BlockDetail/>}/><Route path="/suppliers" element={<Suppliers/>}/><Route path="/suppliers/:slug" element={<SupplierDetail/>}/><Route path="/projects" element={<Projects/>}/><Route path="/compare" element={<Compare/>}/><Route path="/login" element={<Login/>}/><Route path="/forgot-password" element={<ForgotPassword/>}/><Route path="/reset-password" element={<ResetPassword/>}/><Route path="/terms" element={<Terms/>}/><Route path="/privacy" element={<Privacy/>}/>
     <Route path="/admin/dashboard" element={<ProtectedRoute requireStrictAdmin><AdminDashboard/></ProtectedRoute>}/><Route path="/admin/products" element={<ProtectedRoute requireStrictAdmin><AdminBlocks/></ProtectedRoute>}/><Route path="/admin/users" element={<ProtectedRoute requireStrictAdmin><AdminUsers/></ProtectedRoute>}/><Route path="/admin/suppliers" element={<ProtectedRoute requireStrictAdmin><AdminSuppliers/></ProtectedRoute>}/><Route path="/admin/categories" element={<ProtectedRoute requireStrictAdmin><AdminCategories/></ProtectedRoute>}/><Route path="/admin/settings" element={<ProtectedRoute requireStrictAdmin><AdminSettings/></ProtectedRoute>}/>
     <Route path="*" element={<NotFound/>}/>
   </Routes></Suspense></main>{!bare && <Footer/>}</div>;
 }
-export default function App() { return <BrowserRouter><LanguageProvider><AuthProvider><Layout/></AuthProvider></LanguageProvider></BrowserRouter>; }
+export default function App() { return <BrowserRouter><LanguageProvider><AuthProvider><WorkspaceProvider><Layout/></WorkspaceProvider></AuthProvider></LanguageProvider></BrowserRouter>; }

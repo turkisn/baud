@@ -3,16 +3,20 @@ import { Globe, LogOut, Menu, UserRound, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
 import BrandWordmark from './BrandWordmark';
 
 const links = [
   { to: '/blocks', en: 'Blocks', ar: 'البلوكات' },
   { to: '/suppliers', en: 'Suppliers', ar: 'الموردون' },
+  { to: '/projects', en: 'My projects', ar: 'مشاريعي' },
+  { to: '/compare', en: 'Compare', ar: 'المقارنة' },
 ];
 
 export default function Navbar() {
   const { lang, t, toggleLang } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
+  const { comparison } = useWorkspace();
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -24,11 +28,11 @@ export default function Navbar() {
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
         <Link to="/" aria-label={t('BUOD home', 'الصفحة الرئيسية لمنصة BUOD')}><BrandWordmark inverse compact /></Link>
 
-        <div className="hidden items-center gap-1 md:flex">
-          {links.map((link) => <Link key={link.to} to={link.to} className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${location.pathname.startsWith(link.to) ? 'bg-gold/15 text-light-gold' : 'text-sand/70 hover:bg-white/5 hover:text-white'}`}>{lang === 'ar' ? link.ar : link.en}</Link>)}
+        <div className="hidden items-center gap-1 lg:flex">
+          {links.map((link) => <Link key={link.to} to={link.to} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${location.pathname.startsWith(link.to) ? 'bg-gold/15 text-light-gold' : 'text-sand/70 hover:bg-white/5 hover:text-white'}`}>{lang === 'ar' ? link.ar : link.en}{link.to === '/compare' && comparison.length > 0 && <span className="ms-1.5 rounded-full bg-gold px-1.5 py-0.5 text-[10px] text-black">{comparison.length}</span>}</Link>)}
         </div>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <button onClick={toggleLang} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sand/75 hover:bg-white/5 hover:text-white" aria-label={t('Switch language', 'تغيير اللغة')}><Globe size={16} />{lang === 'ar' ? 'EN' : 'عربي'}</button>
           {user ? <>
             <Link to={isAdmin() ? '/admin/dashboard' : '/'} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-white/5"><UserRound size={16} />{user.name?.split(' ')[0] || t('Account', 'الحساب')}</Link>
@@ -39,13 +43,13 @@ export default function Navbar() {
           </>}
         </div>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <button onClick={toggleLang} className="p-2 text-white" aria-label={t('Switch language', 'تغيير اللغة')}><Globe size={19} /></button>
           <button onClick={() => setOpen(!open)} className="p-2 text-white" aria-label={t('Open menu', 'فتح القائمة')}>{open ? <X /> : <Menu />}</button>
         </div>
       </div>
 
-      {open && <div className="border-t border-gold/15 bg-[#080705]/95 p-5 shadow-2xl backdrop-blur-xl md:hidden">
+      {open && <div className="border-t border-gold/15 bg-[#080705]/95 p-5 shadow-2xl backdrop-blur-xl lg:hidden">
         {links.map((link) => <Link key={link.to} to={link.to} className="block rounded-lg px-4 py-3 font-semibold text-sand hover:bg-white/5 hover:text-gold">{lang === 'ar' ? link.ar : link.en}</Link>)}
         <div className="mt-3 grid gap-2 border-t border-gold/15 pt-4">
           {user ? <button onClick={signOut} className="flex items-center justify-center gap-2 rounded-xl border border-gold/20 px-4 py-3 font-semibold text-sand"><LogOut size={16} />{t('Sign out', 'تسجيل الخروج')}</button> : <><Link to="/login" className="rounded-xl border border-gold/25 px-4 py-3 text-center font-semibold text-sand">{t('Sign In', 'تسجيل الدخول')}</Link><Link to="/login?mode=signup" className="btn-gold justify-center">{t('Create account', 'إنشاء حساب')}</Link></>}
