@@ -1,4 +1,5 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
+import { BUNDLED_CATALOG_PRODUCTS, getBundledCatalogProduct } from '../data/bundledCatalog';
 
 const PRIVATE_BUCKETS = Object.freeze({
   PRODUCT_IMAGES: 'product-images',
@@ -133,6 +134,59 @@ function normalizeSingleResult(data) {
     ? data[0]
     : data?.product || data?.supplier || data?.window || data;
   return result && typeof result === 'object' && Object.keys(result).length > 0 ? result : null;
+}
+
+function uniqueCatalogProducts(rows) {
+  const seen = new Set();
+  return rows.filter((row) => {
+    const key = row?.id || row?.product_id || row?.slug;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function sortCatalogProducts(left, right) {
+  const featured = Number(Boolean(right.is_featured)) - Number(Boolean(left.is_featured));
+  if (featured) return featured;
+  const created = String(right.created_at || '').localeCompare(String(left.created_at || ''));
+  if (created) return created;
+  return Number(left.sort_order || 0) - Number(right.sort_order || 0);
+}
+
+function normalizeSearchValue(value) {
+  return String(value || '').toLowerCase()
+    .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+function rankCatalogProducts(products, query) {
+  const tokens = normalizeSearchValue(query).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return products;
+  return products.map((product) => {
+    const primary = normalizeSearchValue([
+      product.product_name_ar, product.product_name_en, product.buod_reference,
+      product.brand_name, product.model_number,
+    ].join(' '));
+    const secondary = normalizeSearchValue([
+      product.short_description_ar, product.short_description_en,
+      product.full_description_ar, product.full_description_en,
+      product.category_name_ar, product.category_name_en,
+      product.supplier_name_ar, product.supplier_name_en,
+      ...(product.product_specifications || []).flatMap((spec) => [
+        spec.specification_name_ar, spec.specification_name_en, spec.value, spec.unit,
+      ]),
+      ...(product.product_materials || []).flatMap((material) => [
+        material.material_name_ar, material.material_name_en, material.finish, material.color,
+      ]),
+    ].join(' '));
+    const score = tokens.reduce((total, token) => total
+      + (primary.includes(token) ? 3 : secondary.includes(token) ? 1 : 0), 0);
+    const matches = tokens.filter((token) => primary.includes(token) || secondary.includes(token)).length;
+    return { product, score: score + (matches === tokens.length ? 5 : 0), matches };
+  }).filter((item) => item.matches > 0)
+    .sort((left, right) => right.score - left.score || sortCatalogProducts(left.product, right.product))
+    .map((item) => item.product);
 }
 
 async function settleQuery(query) {
@@ -293,6 +347,8 @@ async function hydrateSupplierRows(rows) {
   return suppliers.map(({ row, rawLogoPath, rawCoverPath, logoPath, coverPath }) => ({
     ...withoutStoragePaths(row),
     slug: slugFor(row),
+    product_count: Number(row.product_count || 0)
+      + BUNDLED_CATALOG_PRODUCTS.filter((product) => product.supplier_id === row.id).length,
     signed_logo_url: logoPath ? signed.urls.get(logoPath) || null : null,
     signed_cover_url: coverPath ? signed.urls.get(coverPath) || null : null,
     asset_errors: {
@@ -370,34 +426,25 @@ export const mvpService = {
   async searchProducts({ query = '', categoryId = null, supplierId = null, limit = 24, offset = 0 } = {}) {
     assertConfigured();
     const normalizedQuery = query.trim();
-    const intelligentSearch = normalizedQuery.length > 0;
     const { data, error } = await supabase.rpc('search_mvp_products', {
-      p_query: intelligentSearch ? null : normalizedQuery || null,
+      p_query: null,
       p_category_id: categoryId || null,
       p_supplier_id: supplierId || null,
-      p_limit: intelligentSearch ? 200 : limit,
-      p_offset: intelligentSearch ? 0 : offset,
+      p_limit: 100,
+      p_offset: 0,
     });
     if (error) throw error;
-    const products = await hydrateProductSummaries(normalizeListResult(data));
-    if (!intelligentSearch) return products;
-    const normalize = (value) => String(value || '').toLowerCase()
-      .replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
-      .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
-    const tokens = normalize(normalizedQuery).split(/\s+/).filter(Boolean);
-    return products.map((product) => {
-      const primary = normalize([product.product_name_ar, product.product_name_en, product.buod_reference, product.brand_name].join(' '));
-      const secondary = normalize([
-        product.short_description_ar, product.short_description_en, product.full_description_ar, product.full_description_en,
-        product.category_name_ar, product.category_name_en, product.supplier_name_ar, product.supplier_name_en,
-        ...product.product_specifications.flatMap((spec) => [spec.specification_name_ar, spec.specification_name_en, spec.value, spec.unit]),
-        ...product.product_materials.flatMap((material) => [material.material_name_ar, material.material_name_en, material.finish, material.color]),
-      ].join(' '));
-      const score = tokens.reduce((total, token) => total + (primary.includes(token) ? 3 : secondary.includes(token) ? 1 : 0), 0);
-      const matches = tokens.filter((token) => primary.includes(token) || secondary.includes(token)).length;
-      return { product, score: score + (matches === tokens.length ? 5 : 0), matches };
-    }).filter((item) => item.matches > 0).sort((a, b) => b.score - a.score)
-      .slice(offset, offset + limit).map((item) => item.product);
+    const remoteProducts = await hydrateProductSummaries(normalizeListResult(data));
+    const bundledProducts = BUNDLED_CATALOG_PRODUCTS.filter((product) =>
+      (!categoryId || product.category_id === categoryId)
+      && (!supplierId || product.supplier_id === supplierId)
+    );
+    const mergedProducts = uniqueCatalogProducts([...bundledProducts, ...remoteProducts])
+      .sort(sortCatalogProducts);
+    const filteredProducts = normalizedQuery
+      ? rankCatalogProducts(mergedProducts, normalizedQuery)
+      : mergedProducts;
+    return filteredProducts.slice(offset, offset + limit);
   },
 
   async getLatestProducts(limit = 8) {
@@ -405,6 +452,8 @@ export const mvpService = {
   },
 
   async getProduct(slug) {
+    const bundledProduct = getBundledCatalogProduct(slug);
+    if (bundledProduct) return bundledProduct;
     assertConfigured();
     const { data, error } = await supabase.rpc('get_mvp_product', { p_lookup: slug });
     if (error) throw error;
