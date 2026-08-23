@@ -1,13 +1,14 @@
 import BrandMark from './BrandMark';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function BrandWordmark({ inverse = false, compact = false }) {
-  const ink = inverse ? '#F8F5EF' : '#2E1F13';
+  const { t } = useLanguage();
   return (
-    <span className="inline-flex items-center gap-2.5" aria-label="BUOD">
-      <BrandMark className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
-      <span className="leading-none">
-        <span className={`${compact ? 'text-xl' : 'text-2xl'} block font-black tracking-[0.2em]`} style={{ color: ink }}>BUOD</span>
-        {!compact && <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.2em] text-gold">Product data library</span>}
+    <span className={`buod-wordmark ${inverse ? 'buod-wordmark-inverse' : ''} ${compact ? 'buod-wordmark-compact' : ''}`} aria-label="BUOD">
+      <span className="buod-wordmark-symbol"><BrandMark className={compact ? 'h-10 w-9' : 'h-12 w-11'} /></span>
+      <span className="buod-wordmark-copy">
+        <span className="buod-wordmark-name">BUOD<span className="buod-wordmark-point" aria-hidden="true"/></span>
+        <span className="buod-wordmark-baseline" aria-hidden="true"><span/>{t('PRODUCT DATA NETWORK', 'هوية المنتجات الرقمية')}</span>
       </span>
     </span>
   );

@@ -20,6 +20,71 @@ body {
 [dir="rtl"]    { font-family: 'Cairo', 'Tajawal', sans-serif; }
 .font-arabic   { font-family: 'Cairo', 'Tajawal', sans-serif; }
 
+.buod-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  direction: ltr;
+}
+.buod-wordmark-symbol {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  filter: drop-shadow(0 0 9px rgba(217, 170, 83, .24));
+}
+.buod-wordmark-copy { display: grid; gap: 5px; }
+.buod-wordmark-name {
+  display: flex;
+  align-items: baseline;
+  color: #2e1f13;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: .2em;
+  line-height: .95;
+}
+.buod-wordmark-inverse .buod-wordmark-name {
+  background: linear-gradient(116deg, #fffaf0 9%, #f2e5cd 48%, #dfc18b 98%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.buod-wordmark-point {
+  width: 5px;
+  height: 5px;
+  margin-inline-start: -1px;
+  border-radius: 50%;
+  background: #e6be6a;
+  box-shadow: 0 0 11px rgba(241, 191, 91, .72);
+}
+.buod-wordmark-baseline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #d6b46e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+.buod-wordmark-baseline > span {
+  width: 11px;
+  height: 1px;
+  background: linear-gradient(90deg, #edce8e, transparent);
+}
+[dir="rtl"] .buod-wordmark-baseline { font-family: 'Cairo', sans-serif; font-size: 8px; letter-spacing: 0; }
+.buod-wordmark-compact { gap: 9px; }
+.buod-wordmark-compact .buod-wordmark-name { font-size: 22px; }
+.buod-wordmark-compact .buod-wordmark-baseline { font-size: 6px; }
+[dir="rtl"] .buod-wordmark-compact .buod-wordmark-baseline { font-size: 7px; }
+.buod-mark-nodes circle { animation: buodMarkNode 3.4s ease-in-out infinite; }
+.buod-mark-nodes circle:nth-child(2n) { animation-delay: 1.1s; }
+.buod-mark-nodes circle:nth-child(3n) { animation-delay: 2.2s; }
+@keyframes buodMarkNode { 0%, 100% { opacity: .46; } 48% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .buod-mark-nodes circle { animation: none; } }
+
 @layer components {
   /* ─── Buttons ──────────────────────────────────────────── */
   .btn-primary {
