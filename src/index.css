@@ -124,7 +124,7 @@ body {
   inset: 0;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  transform: rotateX(-26deg) rotateY(38deg);
+  transform: rotateX(-35.264deg) rotateY(45deg);
   will-change: transform;
   animation: buodDimensionalTurn 19.2s cubic-bezier(.37, .02, .18, 1) infinite;
 }
@@ -185,11 +185,15 @@ body {
 @keyframes buodPixelPulse { 0%, 100% { opacity: .72; } 45% { opacity: 1; } }
 @keyframes buodMarkNode { 0%, 100% { opacity: .38; } 48% { opacity: 1; } }
 @keyframes buodDimensionalTurn {
-  0%, 13% { transform: rotateX(-26deg) rotateY(38deg); }
-  23%, 34% { transform: rotateX(-19deg) rotateY(128deg); }
-  44%, 55% { transform: rotateX(-31deg) rotateY(218deg); }
-  65%, 76% { transform: rotateX(-18deg) rotateY(308deg); }
-  86%, 100% { transform: rotateX(-26deg) rotateY(398deg); }
+  0%, 13% { transform: rotateX(-35.264deg) rotateY(45deg); }
+  18% { transform: rotateX(-24deg) rotateY(92deg); }
+  23%, 34% { transform: rotateX(-35.264deg) rotateY(135deg); }
+  39% { transform: rotateX(-45deg) rotateY(182deg); }
+  44%, 55% { transform: rotateX(-35.264deg) rotateY(225deg); }
+  60% { transform: rotateX(-24deg) rotateY(272deg); }
+  65%, 76% { transform: rotateX(-35.264deg) rotateY(315deg); }
+  81% { transform: rotateX(-45deg) rotateY(362deg); }
+  86%, 100% { transform: rotateX(-35.264deg) rotateY(405deg); }
 }
 @keyframes buodDimensionalAura {
   0%, 100% { opacity: .42; transform: scale(.84); }
