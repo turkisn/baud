@@ -91,15 +91,74 @@ body {
 .buod-mark-nodes > path:nth-child(-n+3) { animation: buodPixelPulse 3.6s ease-in-out infinite; }
 .buod-mark-nodes > path:nth-child(2) { animation-delay: .7s; }
 .buod-mark-nodes > path:nth-child(3) { animation-delay: 1.4s; }
+.buod-mark-cube-highlight { opacity: 0; }
+.buod-brand-mark-kinetic .buod-mark-cube {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  will-change: transform, filter;
+  animation: buodCubeTurn 15.8s cubic-bezier(.34, .03, .18, 1) infinite;
+}
+.buod-brand-mark-kinetic .buod-mark-cube-face-top { animation: buodCubeTopLight 15.8s ease-in-out infinite; }
+.buod-brand-mark-kinetic .buod-mark-cube-face-left { animation: buodCubeLeftLight 15.8s ease-in-out infinite; }
+.buod-brand-mark-kinetic .buod-mark-cube-face-right { animation: buodCubeRightLight 15.8s ease-in-out infinite; }
+.buod-brand-mark-kinetic .buod-mark-cube-highlight {
+  stroke-dasharray: 14 44;
+  animation: buodCubeEdgeSweep 15.8s ease-in-out infinite;
+}
 @keyframes buodDataFlow { to { stroke-dashoffset: -36; } }
 @keyframes buodCircuitPulse { 0%, 100% { opacity: .48; } 52% { opacity: .96; } }
 @keyframes buodPixelPulse { 0%, 100% { opacity: .72; } 45% { opacity: 1; } }
 @keyframes buodMarkNode { 0%, 100% { opacity: .38; } 48% { opacity: 1; } }
+@keyframes buodCubeTurn {
+  0%, 19%, 49%, 62%, 94%, 100% {
+    transform: perspective(180px) rotateY(0deg) rotateX(0deg) rotateZ(0deg) translateY(0);
+    filter: drop-shadow(0 0 3px rgba(232, 182, 89, .22));
+  }
+  29% {
+    transform: perspective(180px) rotateY(-43deg) rotateX(17deg) rotateZ(-5deg) translateY(-2px);
+    filter: drop-shadow(0 0 11px rgba(251, 214, 132, .72));
+  }
+  33%, 39% {
+    transform: perspective(180px) rotateY(-37deg) rotateX(13deg) rotateZ(-3deg) translateY(-1px);
+    filter: drop-shadow(0 0 8px rgba(242, 195, 102, .52));
+  }
+  73% {
+    transform: perspective(180px) rotateY(46deg) rotateX(-15deg) rotateZ(5deg) translateY(-2px);
+    filter: drop-shadow(0 0 11px rgba(251, 214, 132, .72));
+  }
+  77%, 84% {
+    transform: perspective(180px) rotateY(39deg) rotateX(-11deg) rotateZ(3deg) translateY(-1px);
+    filter: drop-shadow(0 0 8px rgba(242, 195, 102, .52));
+  }
+}
+@keyframes buodCubeTopLight {
+  0%, 19%, 49%, 62%, 94%, 100% { filter: brightness(1); }
+  29%, 39% { filter: brightness(1.24); }
+  73%, 84% { filter: brightness(.83); }
+}
+@keyframes buodCubeLeftLight {
+  0%, 19%, 49%, 62%, 94%, 100% { filter: brightness(1); }
+  29%, 39% { filter: brightness(.72); }
+  73%, 84% { filter: brightness(1.43); }
+}
+@keyframes buodCubeRightLight {
+  0%, 19%, 49%, 62%, 94%, 100% { filter: brightness(1); }
+  29%, 39% { filter: brightness(1.82); }
+  73%, 84% { filter: brightness(.74); }
+}
+@keyframes buodCubeEdgeSweep {
+  0%, 19%, 42%, 62%, 86%, 100% { opacity: 0; stroke-dashoffset: 14; }
+  27%, 72% { opacity: .88; }
+  36%, 81% { opacity: .5; stroke-dashoffset: -56; }
+}
 @media (prefers-reduced-motion: reduce) {
   .buod-mark-trace,
   .buod-mark-circuitry,
   .buod-mark-junctions circle,
-  .buod-mark-nodes > path { animation: none; }
+  .buod-mark-nodes > path,
+  .buod-brand-mark-kinetic .buod-mark-cube,
+  .buod-brand-mark-kinetic .buod-mark-cube-face,
+  .buod-brand-mark-kinetic .buod-mark-cube-highlight { animation: none; }
 }
 
 @layer components {

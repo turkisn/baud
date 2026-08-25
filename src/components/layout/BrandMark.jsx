@@ -1,6 +1,6 @@
 import { useId } from 'react';
 
-export default function BrandMark({ className = '', title = 'BUOD' }) {
+export default function BrandMark({ animated = false, className = '', title = 'BUOD' }) {
   const id = useId().replaceAll(':', '');
   const frame = `${id}-frame`;
   const top = `${id}-top`;
@@ -11,7 +11,7 @@ export default function BrandMark({ className = '', title = 'BUOD' }) {
   const rightClip = `${id}-right-clip`;
 
   return (
-    <svg className={`buod-brand-mark ${className}`} viewBox="0 0 120 120" role="img" aria-label={title}>
+    <svg className={`buod-brand-mark ${animated ? 'buod-brand-mark-kinetic' : ''} ${className}`} viewBox="0 0 120 120" role="img" aria-label={title}>
       <defs>
         <linearGradient id={frame} x1="14" y1="15" x2="103" y2="102" gradientUnits="userSpaceOnUse">
           <stop stopColor="#F1D493"/>
@@ -46,22 +46,28 @@ export default function BrandMark({ className = '', title = 'BUOD' }) {
       <path d="M96 37v-5L57 10 15 34v50l42 25 39-22v-6" fill="none" stroke={`url(#${frame})`} strokeLinejoin="miter" strokeWidth="7"/>
       <path d="M94 34 57 13 18 35v47l39 23 37-21" fill="none" stroke="#F4DFAD" strokeOpacity="0.42" strokeWidth="0.8"/>
 
-      <path d="M57 36 80 49.5 57 63 34 49.5z" fill={`url(#${top})`} stroke="#F1D69C" strokeWidth="1.15"/>
-      <path d="M34 49.5 57 63v27L34 76.5z" fill={`url(#${left})`} stroke="#D0A460" strokeWidth="1.1"/>
-      <path d="M80 49.5 57 63v27l23-13.5z" fill={`url(#${right})`} stroke="#DCB677" strokeWidth="1.1"/>
+      <g className="buod-mark-cube">
+        <path className="buod-mark-cube-face buod-mark-cube-face-top" d="M57 36 80 49.5 57 63 34 49.5z" fill={`url(#${top})`} stroke="#F1D69C" strokeWidth="1.15"/>
+        <path className="buod-mark-cube-face buod-mark-cube-face-left" d="M34 49.5 57 63v27L34 76.5z" fill={`url(#${left})`} stroke="#D0A460" strokeWidth="1.1"/>
+        <path className="buod-mark-cube-face buod-mark-cube-face-right" d="M80 49.5 57 63v27l23-13.5z" fill={`url(#${right})`} stroke="#DCB677" strokeWidth="1.1"/>
 
-      <g className="buod-mark-circuitry" fill="none" stroke="#F0CF87" strokeLinecap="round" strokeWidth="0.68">
-        <g clipPath={`url(#${topClip})`}><path d="M41 39v9l6 4M48 35v10l7 5M61 38v7l-6 5v7M71 41v8l-8 5"/></g>
-        <g clipPath={`url(#${leftClip})`}><path d="M39 51v12l5 3v11M46 56v9l4 3v13M37 64l5 3v6"/></g>
-        <g clipPath={`url(#${rightClip})`}><path d="M61 65h7l4-3h12M61 72h8l4-3h11M61 80h7l4-4h12"/></g>
+        <g className="buod-mark-circuitry" fill="none" stroke="#F0CF87" strokeLinecap="round" strokeWidth="0.68">
+          <g clipPath={`url(#${topClip})`}><path d="M41 39v9l6 4M48 35v10l7 5M61 38v7l-6 5v7M71 41v8l-8 5"/></g>
+          <g clipPath={`url(#${leftClip})`}><path d="M39 51v12l5 3v11M46 56v9l4 3v13M37 64l5 3v6"/></g>
+          <g clipPath={`url(#${rightClip})`}><path d="M61 65h7l4-3h12M61 72h8l4-3h11M61 80h7l4-4h12"/></g>
+        </g>
+
+        <path className="buod-mark-cube-highlight" d="m35 49.5 22-13 22 13M57 63v25" fill="none" stroke="#FFF0C1" strokeLinecap="round" strokeWidth="1.15"/>
+        <g className="buod-mark-junctions buod-mark-cube-junctions" fill="#F6D997">
+          <circle cx="55" cy="50" r="0.9"/><circle cx="44" cy="77" r="0.85"/><circle cx="68" cy="65" r="0.9"/>
+        </g>
       </g>
 
       <g className="buod-mark-junctions" fill="#F6D997">
         <circle cx="25" cy="34" r="1"/><circle cx="43" cy="24" r="0.9"/>
         <circle cx="83" cy="29" r="0.9"/><circle cx="17" cy="52" r="0.9"/>
         <circle cx="17" cy="77" r="0.9"/><circle cx="39" cy="100" r="0.9"/>
-        <circle cx="84" cy="93" r="0.95"/><circle cx="55" cy="50" r="0.9"/>
-        <circle cx="44" cy="77" r="0.85"/><circle cx="68" cy="65" r="0.9"/>
+        <circle cx="84" cy="93" r="0.95"/>
       </g>
 
       <g className="buod-mark-nodes">

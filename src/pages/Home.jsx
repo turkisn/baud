@@ -332,7 +332,7 @@ function ProductConstellation({ products, lang, t }) {
           </Link>
         );
       })}
-      <div className="constellation-core"><BrandMark className="h-full w-full" title={t('BUOD digital network', 'شبكة بُعد الرقمية')} /></div>
+      <div className="constellation-core"><BrandMark animated className="h-full w-full" title={t('BUOD digital network', 'شبكة بُعد الرقمية')} /></div>
       <span className="constellation-core-caption" aria-hidden="true">BUOD DATA CORE</span>
     </div>
   );
