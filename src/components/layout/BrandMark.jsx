@@ -1,5 +1,14 @@
 import { useId } from 'react';
 
+const DIMENSIONAL_FACES = [
+  { side: 'front', trace: 'M7 8h10l4 4h10M12 8v11l5 5v8M30 10v9l-5 5h-7', nodes: [[7, 8], [31, 12], [17, 32]] },
+  { side: 'back', trace: 'M8 10h8l5 5h12M8 22h9l5-5h10M14 22v10', nodes: [[8, 10], [33, 15], [14, 32]] },
+  { side: 'right', trace: 'M8 9h9l5 5h10M8 20h11l4-4h9M9 30h9l5-5h9', nodes: [[8, 9], [32, 16], [9, 30]] },
+  { side: 'left', trace: 'M10 7v11l5 5v10M21 8v9l5 5v10M10 18h8l5-5h9', nodes: [[10, 7], [15, 33], [32, 13]] },
+  { side: 'top', trace: 'M8 10h9l5 5h10M12 8v12l5 5h15M8 29h10l5-5h9', nodes: [[8, 10], [32, 15], [8, 29]] },
+  { side: 'bottom', trace: 'M9 9h10l5 5h8M12 30h8l5-5h8M14 9v13l5 5', nodes: [[9, 9], [32, 14], [12, 30]] },
+];
+
 export default function BrandMark({ animated = false, className = '', title = 'BUOD' }) {
   const id = useId().replaceAll(':', '');
   const frame = `${id}-frame`;
@@ -10,8 +19,8 @@ export default function BrandMark({ animated = false, className = '', title = 'B
   const leftClip = `${id}-left-clip`;
   const rightClip = `${id}-right-clip`;
 
-  return (
-    <svg className={`buod-brand-mark ${animated ? 'buod-brand-mark-kinetic' : ''} ${className}`} viewBox="0 0 120 120" role="img" aria-label={title}>
+  const symbol = (
+    <svg className={`buod-brand-mark ${animated ? 'buod-brand-mark-shell' : className}`} viewBox="0 0 120 120" role="img" aria-label={title}>
       <defs>
         <linearGradient id={frame} x1="14" y1="15" x2="103" y2="102" gradientUnits="userSpaceOnUse">
           <stop stopColor="#F1D493"/>
@@ -46,7 +55,7 @@ export default function BrandMark({ animated = false, className = '', title = 'B
       <path d="M96 37v-5L57 10 15 34v50l42 25 39-22v-6" fill="none" stroke={`url(#${frame})`} strokeLinejoin="miter" strokeWidth="7"/>
       <path d="M94 34 57 13 18 35v47l39 23 37-21" fill="none" stroke="#F4DFAD" strokeOpacity="0.42" strokeWidth="0.8"/>
 
-      <g className="buod-mark-cube">
+      {!animated && <g className="buod-mark-cube">
         <path className="buod-mark-cube-face buod-mark-cube-face-top" d="M57 36 80 49.5 57 63 34 49.5z" fill={`url(#${top})`} stroke="#F1D69C" strokeWidth="1.15"/>
         <path className="buod-mark-cube-face buod-mark-cube-face-left" d="M34 49.5 57 63v27L34 76.5z" fill={`url(#${left})`} stroke="#D0A460" strokeWidth="1.1"/>
         <path className="buod-mark-cube-face buod-mark-cube-face-right" d="M80 49.5 57 63v27l23-13.5z" fill={`url(#${right})`} stroke="#DCB677" strokeWidth="1.1"/>
@@ -61,7 +70,7 @@ export default function BrandMark({ animated = false, className = '', title = 'B
         <g className="buod-mark-junctions buod-mark-cube-junctions" fill="#F6D997">
           <circle cx="55" cy="50" r="0.9"/><circle cx="44" cy="77" r="0.85"/><circle cx="68" cy="65" r="0.9"/>
         </g>
-      </g>
+      </g>}
 
       <g className="buod-mark-junctions" fill="#F6D997">
         <circle cx="25" cy="34" r="1"/><circle cx="43" cy="24" r="0.9"/>
@@ -77,5 +86,25 @@ export default function BrandMark({ animated = false, className = '', title = 'B
         <path d="m99 44 9 9m-9 4 9 9m-9 4 9 9" fill="none" stroke="#FFF0C0" strokeOpacity="0.28" strokeWidth="0.6"/>
       </g>
     </svg>
+  );
+
+  if (!animated) return symbol;
+
+  return (
+    <span className={`buod-dimensional-mark ${className}`}>
+      {symbol}
+      <span className="buod-dimensional-scene" aria-hidden="true">
+        <span className="buod-dimensional-cube">
+          {DIMENSIONAL_FACES.map(({ side, trace, nodes }) => (
+            <span key={side} className={`buod-dimensional-face buod-dimensional-face-${side}`}>
+              <svg viewBox="0 0 40 40" fill="none">
+                <path className="buod-dimensional-circuit" d={trace} />
+                {nodes.map(([cx, cy]) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.15" />)}
+              </svg>
+            </span>
+          ))}
+        </span>
+      </span>
+    </span>
   );
 }
