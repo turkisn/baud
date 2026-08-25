@@ -101,12 +101,12 @@ body {
 .buod-brand-mark-shell { position: absolute; inset: 0; width: 100%; height: 100%; }
 .buod-dimensional-scene {
   position: absolute;
-  top: 52.5%;
+  top: 49.625%;
   left: 47.5%;
   z-index: 2;
   width: var(--buod-cube-size);
   height: var(--buod-cube-size);
-  perspective: 210px;
+  perspective: 12000px;
   perspective-origin: 50% 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -124,7 +124,7 @@ body {
   inset: 0;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  transform: rotateX(-35.264deg) rotateY(45deg);
+  transform: rotateX(-34.593736deg) rotateY(45.184826deg);
   will-change: transform;
   animation: buodDimensionalTurn 19.2s cubic-bezier(.37, .02, .18, 1) infinite;
 }
@@ -185,15 +185,15 @@ body {
 @keyframes buodPixelPulse { 0%, 100% { opacity: .72; } 45% { opacity: 1; } }
 @keyframes buodMarkNode { 0%, 100% { opacity: .38; } 48% { opacity: 1; } }
 @keyframes buodDimensionalTurn {
-  0%, 13% { transform: rotateX(-35.264deg) rotateY(45deg); }
+  0%, 13% { transform: rotateX(-34.593736deg) rotateY(45.184826deg); }
   18% { transform: rotateX(-24deg) rotateY(92deg); }
-  23%, 34% { transform: rotateX(-35.264deg) rotateY(135deg); }
+  23%, 34% { transform: rotateX(-34.593736deg) rotateY(135.184826deg); }
   39% { transform: rotateX(-45deg) rotateY(182deg); }
-  44%, 55% { transform: rotateX(-35.264deg) rotateY(225deg); }
+  44%, 55% { transform: rotateX(-34.593736deg) rotateY(225.184826deg); }
   60% { transform: rotateX(-24deg) rotateY(272deg); }
-  65%, 76% { transform: rotateX(-35.264deg) rotateY(315deg); }
+  65%, 76% { transform: rotateX(-34.593736deg) rotateY(315.184826deg); }
   81% { transform: rotateX(-45deg) rotateY(362deg); }
-  86%, 100% { transform: rotateX(-35.264deg) rotateY(405deg); }
+  86%, 100% { transform: rotateX(-34.593736deg) rotateY(405.184826deg); }
 }
 @keyframes buodDimensionalAura {
   0%, 100% { opacity: .42; transform: scale(.84); }
