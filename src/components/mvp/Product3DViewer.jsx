@@ -57,8 +57,20 @@ function cylinderFaces(part) {
   return faces;
 }
 
+function meshFaces(part) {
+  return part.faces.map((face) => {
+    const definition = Array.isArray(face) ? { indices: face } : face;
+    const { indices, ...faceOptions } = definition;
+    return { ...part, ...faceOptions, vertices: indices.map((index) => part.vertices[index]) };
+  });
+}
+
 function buildFaces(model) {
-  return model.parts.flatMap((part) => part.kind === 'cylinder' ? cylinderFaces(part) : boxFaces(part));
+  return model.parts.flatMap((part) => {
+    if (part.kind === 'cylinder') return cylinderFaces(part);
+    if (part.kind === 'mesh') return meshFaces(part);
+    return boxFaces(part);
+  });
 }
 
 function viewPoint(point, yaw, pitch) {

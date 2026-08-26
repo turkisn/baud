@@ -1729,6 +1729,35 @@ body {
   background: rgba(5, 4, 3, .82);
   backdrop-filter: blur(10px);
 }
+.product-3d-reference {
+  position: absolute;
+  top: 16px;
+  inset-inline-start: 16px;
+  z-index: 4;
+  width: clamp(112px, 17vw, 180px);
+  overflow: hidden;
+  border: 1px solid rgba(231, 187, 88, .5);
+  border-radius: 13px;
+  background: rgba(5, 4, 3, .82);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .42);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+.product-3d-reference img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.product-3d-reference span {
+  display: block;
+  padding: 6px 9px;
+  color: #d8b35f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
 .product-3d-dialog > footer {
   display: flex;
   align-items: center;
@@ -1782,6 +1811,8 @@ body {
   .product-3d-dialog > footer { padding: 10px 12px; font-size: 9px; }
   .product-3d-dialog > footer span { display: none; }
   .product-3d-viewer-controls { right: 10px; bottom: 10px; }
+  .product-3d-reference { top: 10px; inset-inline-start: 10px; width: 106px; }
+  .product-3d-reference span { padding: 5px 7px; font-size: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

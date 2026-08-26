@@ -66,6 +66,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
               </div>
             </header>
             <div className="product-3d-canvas-wrap">
+              {product.signed_image_url && <aside className="product-3d-reference"><img src={product.signed_image_url} alt=""/><span>{t('Reference image', 'الصورة المرجعية')}</span></aside>}
               <Suspense fallback={<div className="product-3d-loading"><span/><p>{t('Preparing 3D model…', 'جارٍ تجهيز المجسم…')}</p></div>}>
                 <Product3DViewer slug={product.slug} label={t(`Interactive 3D model of ${name}`, `مجسم تفاعلي ثلاثي الأبعاد لـ ${name}`)} />
               </Suspense>
