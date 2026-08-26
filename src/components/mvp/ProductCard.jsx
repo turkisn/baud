@@ -1,6 +1,7 @@
 import { Box, Download, Eye, FileBox, ImageOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import Product3DPreview from './Product3DPreview';
 import WorkspaceActions from './WorkspaceActions';
 
 const value = (row, keys) => keys.map((key) => row?.[key]).find((item) => item !== null && item !== undefined && item !== '');
@@ -26,19 +27,22 @@ export default function ProductCard({ product }) {
     : null;
 
   return (
-    <Link to={`/blocks/${product.slug}`} className="digital-panel product-card group overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:border-gold/55">
+    <article className="digital-panel product-card group relative overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:border-gold/55">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#100e0b]">
-        {product.signed_image_url ? (
-          <img src={product.signed_image_url} alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{product.image_error ? t('Image temporarily unavailable', 'الصورة غير متاحة مؤقتاً') : t('Image unavailable', 'الصورة غير متاحة')}</span></div>
-        )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-        {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg border border-gold/20 bg-black/80 px-2.5 py-1 font-mono text-[9px] font-semibold tracking-wider text-light-gold backdrop-blur">{product.buod_reference}</span>}
-        {formats.length > 0 && <div className="absolute end-3 top-3 flex max-w-[55%] flex-wrap justify-end gap-1">{formats.map((format) => <span key={format} className="rounded-md border border-gold/25 bg-black/80 px-2 py-1 font-mono text-[9px] font-bold text-light-gold backdrop-blur">{format}</span>)}</div>}
-        <div className="absolute bottom-3 end-3"><WorkspaceActions product={product} compact/></div>
+        <Link to={`/blocks/${product.slug}`} className="block h-full" aria-label={t(`Open ${name}`, `فتح ${name}`)}>
+          {product.signed_image_url ? (
+            <img src={product.signed_image_url} alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{product.image_error ? t('Image temporarily unavailable', 'الصورة غير متاحة مؤقتاً') : t('Image unavailable', 'الصورة غير متاحة')}</span></div>
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg border border-gold/20 bg-black/80 px-2.5 py-1 font-mono text-[9px] font-semibold tracking-wider text-light-gold backdrop-blur">{product.buod_reference}</span>}
+          {formats.length > 0 && <div className="absolute end-3 top-3 flex max-w-[55%] flex-wrap justify-end gap-1">{formats.map((format) => <span key={format} className="rounded-md border border-gold/25 bg-black/80 px-2 py-1 font-mono text-[9px] font-bold text-light-gold backdrop-blur">{format}</span>)}</div>}
+        </Link>
+        <div className="absolute bottom-3 start-3 z-10"><Product3DPreview product={product}/></div>
+        <div className="absolute bottom-3 end-3 z-10"><WorkspaceActions product={product} compact/></div>
       </div>
-      <div className="p-5">
+      <Link to={`/blocks/${product.slug}`} className="block p-5">
         <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-gold"><Box size={12} />{category || t('Uncategorised', 'غير مصنف')}</div>
         <h3 className="line-clamp-2 min-h-12 text-lg font-bold leading-snug text-warm-white transition group-hover:text-light-gold">{name || t('Unnamed product', 'منتج بدون اسم')}</h3>
         <div className="mt-3 flex min-h-6 items-center justify-between gap-3">
@@ -51,7 +55,7 @@ export default function ProductCard({ product }) {
           <span className="flex items-center gap-1" title={t('Views', 'المشاهدات')}><Eye size={12}/>{Number(product.view_count || 0).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
           <span className="ms-auto font-semibold text-gold">{t('Details', 'التفاصيل')}</span>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </article>
   );
 }

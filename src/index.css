@@ -1580,3 +1580,212 @@ body {
   .digital-metric { border-inline-end: 0; border-bottom: 1px solid rgba(201, 168, 76, 0.12); }
   .digital-metric:last-child { border-bottom: 0; }
 }
+
+/* On-demand product geometry viewer. The heavy canvas module is loaded only after opening. */
+.product-3d-card-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(224, 177, 74, .55);
+  border-radius: 10px;
+  color: #f2cc72;
+  background: rgba(5, 4, 3, .88);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .34), inset 0 0 18px rgba(205, 155, 54, .08);
+  backdrop-filter: blur(12px);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  transition: border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.product-3d-card-button:hover {
+  color: #fff2c5;
+  border-color: rgba(248, 207, 107, .9);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .44), 0 0 18px rgba(218, 164, 53, .2);
+}
+.product-3d-card-button:focus-visible,
+.product-3d-dialog button:focus-visible {
+  outline: 2px solid #f1c65e;
+  outline-offset: 3px;
+}
+.product-3d-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 2, 1, .86);
+  backdrop-filter: blur(14px) saturate(.85);
+  animation: product3dBackdropIn .22s ease both;
+}
+.product-3d-dialog {
+  width: min(1100px, 100%);
+  height: min(760px, calc(100dvh - 32px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid rgba(225, 177, 70, .36);
+  border-radius: 24px;
+  color: #f7f0e4;
+  background: #080705;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, .72), 0 0 70px rgba(205, 151, 43, .11);
+  animation: product3dPanelIn .3s cubic-bezier(.2, .8, .2, 1) both;
+}
+.product-3d-dialog:fullscreen {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+.product-3d-dialog > header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(222, 174, 70, .2);
+  background: linear-gradient(90deg, rgba(28, 20, 10, .96), rgba(8, 7, 5, .96));
+}
+.product-3d-dialog > header p {
+  color: #c89e48;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+.product-3d-dialog > header h2 {
+  max-width: min(670px, 65vw);
+  margin-top: 3px;
+  overflow: hidden;
+  color: #f7f0e4;
+  font-size: clamp(15px, 2vw, 20px);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.product-3d-dialog > header button,
+.product-3d-viewer-controls button {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(223, 176, 74, .3);
+  border-radius: 11px;
+  color: #e3bd68;
+  background: rgba(0, 0, 0, .52);
+  transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.product-3d-dialog > header button:hover,
+.product-3d-viewer-controls button:hover {
+  color: #fff3cb;
+  border-color: rgba(242, 197, 92, .75);
+  background: rgba(57, 39, 16, .72);
+  transform: translateY(-1px);
+}
+.product-3d-canvas-wrap,
+.product-3d-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.product-3d-stage {
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+.product-3d-stage::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: '';
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, .78);
+}
+.product-3d-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.product-3d-stage canvas:active { cursor: grabbing; }
+.product-3d-viewer-controls {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 8px;
+}
+.product-3d-viewer-controls button {
+  background: rgba(5, 4, 3, .82);
+  backdrop-filter: blur(10px);
+}
+.product-3d-dialog > footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px 18px;
+  border-top: 1px solid rgba(222, 174, 70, .18);
+  color: #a9987e;
+  background: #0b0906;
+  font-size: 11px;
+}
+.product-3d-dialog > footer svg { flex: 0 0 auto; color: #cda347; }
+.product-3d-dialog > footer span {
+  margin-inline-start: auto;
+  color: #cda347;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.product-3d-loading {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  color: #bdaa89;
+  background: radial-gradient(circle at center, #22180c, #070604 62%);
+  font-size: 12px;
+}
+.product-3d-loading span {
+  width: 30px;
+  height: 30px;
+  border: 2px solid rgba(224, 176, 71, .2);
+  border-top-color: #e0b047;
+  border-radius: 50%;
+  animation: product3dSpin .75s linear infinite;
+}
+@keyframes product3dBackdropIn { from { opacity: 0; } }
+@keyframes product3dPanelIn { from { opacity: 0; transform: translateY(18px) scale(.975); } }
+@keyframes product3dSpin { to { transform: rotate(360deg); } }
+
+@media (max-width: 639px) {
+  .product-3d-modal { padding: 8px; }
+  .product-3d-dialog { height: calc(100dvh - 16px); border-radius: 17px; }
+  .product-3d-dialog > header { padding: 12px; }
+  .product-3d-dialog > header h2 { max-width: 56vw; }
+  .product-3d-dialog > header button { width: 35px; height: 35px; }
+  .product-3d-dialog > footer { padding: 10px 12px; font-size: 9px; }
+  .product-3d-dialog > footer span { display: none; }
+  .product-3d-viewer-controls { right: 10px; bottom: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-3d-modal,
+  .product-3d-dialog,
+  .product-3d-loading span { animation: none; }
+}

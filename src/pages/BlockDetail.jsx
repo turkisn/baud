@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ProductCard from '../components/mvp/ProductCard';
+import Product3DPreview from '../components/mvp/Product3DPreview';
 import WorkspaceActions from '../components/mvp/WorkspaceActions';
 import { ErrorState, LoadingState } from '../components/mvp/States';
 import { useAuth } from '../context/AuthContext';
@@ -151,7 +152,7 @@ export default function BlockDetail() {
         <div className="mb-4 flex flex-wrap gap-2">{product.buod_reference && <span className="badge-gold">{product.buod_reference}</span>}{category && <span className="badge-brown">{category}{subcategory ? ` / ${subcategory}` : ''}</span>}{verificationLabel && <span className="badge-green"><BadgeCheck size={14}/>{verificationLabel}</span>}{product.rights_confirmed && <span className="badge-green"><ShieldCheck size={14}/>{t('Rights confirmed', 'الحقوق مؤكدة')}</span>}</div>
         <h1 className="text-4xl font-black leading-tight text-dark-brown">{name}</h1>{otherName && <p className="mt-2 text-lg text-light-brown" dir={lang === 'ar' ? 'ltr' : 'rtl'}>{otherName}</p>}
         <p className="mt-6 whitespace-pre-line leading-8 text-medium-brown">{description || t('Description unavailable.', 'الوصف غير متاح.')}</p>
-        <div className="mt-6"><WorkspaceActions product={product}/></div>
+        <div className="mt-6 flex flex-wrap gap-3"><WorkspaceActions product={product}/><Product3DPreview product={product} variant="detail"/></div>
         {formats.length > 0 && <div className="mt-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-light-brown">{t('Available formats', 'الصيغ المتاحة')}</p><div className="flex flex-wrap gap-2">{formats.map((format) => <span key={format} className="rounded-lg border border-gold/25 bg-gold/10 px-3 py-1.5 font-mono text-xs font-bold text-dark-brown">{format}</span>)}</div></div>}
         <dl className="mt-8 grid grid-cols-2 gap-x-6"><DataValue label={t('Supplier', 'المورد')} value={supplierName} to={product.supplier_slug ? `/suppliers/${product.supplier_slug}` : null}/><DataValue label={t('Brand', 'العلامة التجارية')} value={product.brand_name}/><DataValue label={t('Product type', 'نوع المنتج')} value={product.product_type}/><DataValue label={t('Model number', 'رقم الطراز')} value={product.model_number}/><DataValue label={t('Country of origin', 'بلد المنشأ')} value={product.country_of_origin}/><DataValue label={t('Price', 'السعر')} value={price}/><DataValue label={t('Availability', 'التوفر')} value={typeof product.in_stock === 'boolean' ? (product.in_stock ? t('In stock', 'متوفر') : t('Out of stock', 'غير متوفر')) : null}/><DataValue label={t('Lead time', 'مدة التوريد')} value={product.lead_time}/><DataValue label={t('Minimum order', 'الحد الأدنى للطلب')} value={product.min_order_qty ? `${product.min_order_qty} ${product.unit || ''}`.trim() : null}/><DataValue label={t('File version', 'إصدار الملف')} value={product.version_number}/><DataValue label={t('Software', 'البرامج')} value={software.join(' · ')}/><DataValue label={t('Product page', 'صفحة المنتج')} value={productUrl ? t('Open supplier link', 'فتح رابط المورد') : null} href={productUrl}/></dl>
       </section>
