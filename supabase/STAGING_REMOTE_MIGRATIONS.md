@@ -2,7 +2,7 @@
 
 The remote **staging** database is the source of truth for the current BUOD MVP backend contract.
 
-- The staging database currently contains remote migrations through `20260915142959_fail_closed_missing_profile_role`.
+- The staging database currently contains remote migrations through `20260915144104_revoke_unused_anon_read_surface`.
 - The repository's historical baseline files stop at `012`; the targeted post-baseline security migration is tracked separately with its remote timestamp.
 - This difference is a known migration-history reconciliation task.
 - Do not run a destructive reset or a database push in an attempt to repair this drift.
