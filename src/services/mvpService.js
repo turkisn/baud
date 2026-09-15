@@ -1,5 +1,6 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 import { BUNDLED_CATALOG_PRODUCTS, getBundledCatalogProduct } from '../data/bundledCatalog';
+import { collectPages } from '../utils/catalog';
 
 const PRIVATE_BUCKETS = Object.freeze({
   PRODUCT_IMAGES: 'product-images',
@@ -43,6 +44,10 @@ const READ_TTL_SECONDS = 60 * 5;
 const ANALYTICS_SESSION_KEY = 'buod_mvp_session_id';
 const ANALYTICS_DEDUP_WINDOW_MS = 5_000;
 const MAX_ANALYTICS_DEDUP_ENTRIES = 100;
+const SAFE_ANALYTICS_EVENT_NAMES = new Set([
+  'session_start', 'catalog_view', 'product_view', 'supplier_view', 'search',
+  'filter', 'block_download', 'datasheet_download', 'signup_complete', 'login',
+]);
 const SAFE_ANALYTICS_METADATA_KEYS = new Set(['page', 'category_id', 'supplier_id', 'file_id']);
 const STORAGE_PATH_FIELDS = [
   'featured_image_path', 'image_path', 'logo_path', 'logo', 'cover_image_path',
@@ -426,15 +431,17 @@ export const mvpService = {
   async searchProducts({ query = '', categoryId = null, supplierId = null, limit = 24, offset = 0 } = {}) {
     assertConfigured();
     const normalizedQuery = query.trim();
-    const { data, error } = await supabase.rpc('search_mvp_products', {
-      p_query: null,
-      p_category_id: categoryId || null,
-      p_supplier_id: supplierId || null,
-      p_limit: 100,
-      p_offset: 0,
+    const remoteProducts = await collectPages(async ({ limit: pageLimit, offset: pageOffset }) => {
+      const { data, error } = await supabase.rpc('search_mvp_products', {
+        p_query: null,
+        p_category_id: categoryId || null,
+        p_supplier_id: supplierId || null,
+        p_limit: pageLimit,
+        p_offset: pageOffset,
+      });
+      if (error) throw error;
+      return hydrateProductSummaries(normalizeListResult(data));
     });
-    if (error) throw error;
-    const remoteProducts = await hydrateProductSummaries(normalizeListResult(data));
     const bundledProducts = BUNDLED_CATALOG_PRODUCTS.filter((product) =>
       (!categoryId || product.category_id === categoryId)
       && (!supplierId || product.supplier_id === supplierId)
@@ -503,22 +510,25 @@ export const mvpService = {
   async recordEvent(eventName, metadata = {}) {
     if (!SUPABASE_CONFIGURED || typeof eventName !== 'string') return;
     const safeEventName = eventName.trim();
-    if (!/^[a-z\d_]{1,64}$/i.test(safeEventName)) return;
+    if (!SAFE_ANALYTICS_EVENT_NAMES.has(safeEventName)) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
       const productId = safeAnalyticsId(metadata?.product_id);
       const supplierId = safeAnalyticsId(metadata?.supplier_id);
       const safeMetadata = safeAnalyticsMetadata(metadata);
       const eventKey = JSON.stringify([safeEventName, productId, supplierId, safeMetadata]);
       if (shouldSuppressAnalytics(eventKey)) return;
 
-      await supabase.rpc('record_usage_event', {
+      const { error } = await supabase.rpc('record_usage_event', {
         p_event_name: safeEventName,
         p_product_id: productId,
         p_supplier_id: supplierId,
         p_session_id: getAnalyticsSessionId(),
         p_metadata: safeMetadata,
       });
+      if (error) throw error;
     } catch {
       // Analytics must never interrupt browsing or secure downloads.
     }

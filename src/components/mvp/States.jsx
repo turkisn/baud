@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export function LoadingState() {
   const { t } = useLanguage();
-  return <div className="flex min-h-52 items-center justify-center gap-3 text-light-brown"><Loader2 className="animate-spin text-gold" />{t('Loading library…', 'جارٍ تحميل المكتبة…')}</div>;
+  return <div role="status" aria-live="polite" className="flex min-h-52 items-center justify-center gap-3 text-light-brown"><Loader2 aria-hidden="true" className="animate-spin text-gold" />{t('Loading library…', 'جارٍ تحميل المكتبة…')}</div>;
 }
 
 export function EmptyState({ title, description }) {
@@ -12,5 +12,5 @@ export function EmptyState({ title, description }) {
 
 export function ErrorState({ message }) {
   const { t } = useLanguage();
-  return <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center text-red-800"><AlertTriangle className="mx-auto mb-3" /><p className="font-semibold">{t('We could not load this data.', 'تعذّر تحميل البيانات.')}</p>{message && <p className="mt-1 text-xs opacity-80">{message}</p>}</div>;
+  return <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center text-red-800"><AlertTriangle aria-hidden="true" className="mx-auto mb-3" /><p className="font-semibold">{t('We could not load this data.', 'تعذّر تحميل البيانات.')}</p>{message && <p className="mt-1 text-xs opacity-80">{message}</p>}</div>;
 }

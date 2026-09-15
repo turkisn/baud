@@ -289,14 +289,15 @@ export const auditLogService = {
 // ── Internal: non-blocking audit log helper ───────────────────
 async function logAction(action, targetType, targetId, metadata = {}) {
   if (!SUPABASE_CONFIGURED) return;
-  await supabase
-    .rpc('admin_log_action', {
+  try {
+    const { error } = await supabase.rpc('admin_log_action', {
       p_action:      action,
       p_target_type: targetType,
       p_target_id:   targetId,
       p_metadata:    metadata,
-    })
-    .catch(() => {
-      // Non-blocking — a logging failure must never block the admin action
     });
+    if (error) throw error;
+  } catch {
+    // Non-blocking — a logging failure must never block the admin action.
+  }
 }

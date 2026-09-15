@@ -48,7 +48,7 @@ export default function ForgotPassword() {
           ) : (
             <>
               <h1 className="text-2xl font-bold text-dark-brown">{t('Reset your password', 'استعادة كلمة المرور')}</h1>
-              <p className="mt-2 text-sm leading-6 text-light-brown">{t('Enter your account email and we will send you a secure reset link.', 'أدخل بريد حسابك وسنرسل لك رابطاً آمناً لإعادة التعيين.')}</p>
+              <p className="mt-2 text-sm leading-6 text-medium-brown">{t('Enter your account email and we will send you a secure reset link.', 'أدخل بريد حسابك وسنرسل لك رابطاً آمناً لإعادة التعيين.')}</p>
               {!SUPABASE_CONFIGURED && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{t('Password recovery is unavailable in this environment.', 'استعادة كلمة المرور غير متاحة في هذه البيئة.')}</p>}
               <form onSubmit={submit} className="mt-7 space-y-4" noValidate>
                 <label htmlFor="recovery-email" className="label">{t('Email Address', 'البريد الإلكتروني')}</label>

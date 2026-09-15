@@ -230,7 +230,7 @@ export default function LibraryAdmin() {
                       <td className="px-4 py-3 text-xs" style={{ color: '#6A5A48' }}>{m.dateAdded}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Link to={`/library/${m.id}`} target="_blank"
+                          <Link to={`/library/${m.id}`} target="_blank" rel="noopener noreferrer"
                             className="p-1.5 rounded-lg transition-colors hover:opacity-80"
                             style={{ background: '#3A2A18', color: '#C4A882' }}>
                             <Eye size={13} />

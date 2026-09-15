@@ -51,7 +51,8 @@ export default function AdminSettings() {
           <InfoRow label={t('3D File formats', 'صيغ الملفات ثلاثية الأبعاد')} value={ALLOWED_FORMATS.join(', ')} />
           <InfoRow label={t('BIM / 3D file limit', 'حد ملفات BIM / 3D')} value={t('100 MB per file', '100 ميجابايت لكل ملف')} />
           <InfoRow label={t('Image formats', 'صيغ الصور')}   value={ALLOWED_IMAGE_FORMATS.join(', ')} />
-          <InfoRow label={t('Image / datasheet limit', 'حد الصور / أوراق البيانات')} value={t('20 MB per file', '20 ميجابايت لكل ملف')} />
+          <InfoRow label={t('Product image / datasheet limit', 'حد صورة المنتج / ورقة البيانات')} value={t('20 MB per file', '20 ميجابايت لكل ملف')} />
+          <InfoRow label={t('Supplier image limit', 'حد صورة المورد')} value={t('10 MB per file', '10 ميجابايت لكل ملف')} />
           <InfoRow label={t('Datasheets', 'أوراق البيانات')} value={t('PDF only', 'PDF فقط')} />
         </section>
 

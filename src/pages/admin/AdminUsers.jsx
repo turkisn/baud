@@ -201,6 +201,7 @@ export default function AdminUsers() {
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-light-brown" />
           <input
+            aria-label={t('Search users', 'البحث في المستخدمين')}
             value={search}
             onChange={e => setSrch(e.target.value)}
             placeholder={t('Search name, email, company…', 'بحث بالاسم أو البريد…')}
@@ -208,6 +209,7 @@ export default function AdminUsers() {
           />
         </div>
         <select
+          aria-label={t('Filter by authorization role', 'تصفية حسب دور الصلاحية')}
           value={roleFilter}
           onChange={e => { setRF(e.target.value); setPage(0); }}
           className="px-4 py-2.5 text-sm border border-sand rounded-xl outline-none focus:border-dark-brown bg-white transition-colors"
@@ -218,6 +220,7 @@ export default function AdminUsers() {
           ))}
         </select>
         <button
+          type="button"
           onClick={load}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-medium-brown border border-sand hover:bg-sand transition-all"
         >
@@ -227,7 +230,7 @@ export default function AdminUsers() {
       </div>
 
       {!SUPABASE_CONFIGURED && (
-        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-4">
+        <div role="status" className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-4">
           <AlertCircle size={18} className="flex-shrink-0" />
           {t('Supabase not configured.', 'Supabase غير متصل.')}
         </div>

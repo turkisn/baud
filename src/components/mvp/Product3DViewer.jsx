@@ -149,7 +149,7 @@ function drawScene(context, width, height, faces, view) {
   context.globalAlpha = 1;
 }
 
-function Product3DViewer({ slug, label }) {
+function Product3DViewer({ slug, label, pauseLabel, resumeLabel, resetLabel }) {
   const canvasRef = useRef(null);
   const pointerRef = useRef(null);
   const viewRef = useRef(null);
@@ -214,10 +214,10 @@ function Product3DViewer({ slug, label }) {
 
   return (
     <div className="product-3d-stage">
-      <canvas ref={canvasRef} aria-label={label} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onWheel={zoom} onDoubleClick={resetView} />
+      <canvas ref={canvasRef} role="img" aria-label={label} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onWheel={zoom} onDoubleClick={resetView} />
       <div className="product-3d-viewer-controls">
-        <button type="button" onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? 'Pause rotation' : 'Resume rotation'}>{autoRotate ? <Pause size={15}/> : <Play size={15}/>}</button>
-        <button type="button" onClick={resetView} aria-label="Reset 3D view"><RotateCcw size={15}/></button>
+        <button type="button" onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? pauseLabel : resumeLabel}>{autoRotate ? <Pause size={15}/> : <Play size={15}/>}</button>
+        <button type="button" onClick={resetView} aria-label={resetLabel}><RotateCcw size={15}/></button>
       </div>
     </div>
   );

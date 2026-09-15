@@ -114,6 +114,9 @@ export default function Login() {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
+      const firstInvalidField = Object.keys(errs)[0];
+      const firstInvalidId = firstInvalidField === 'name' ? 'full-name' : firstInvalidField;
+      window.requestAnimationFrame(() => document.getElementById(firstInvalidId)?.focus());
       return;
     }
 
@@ -203,7 +206,7 @@ export default function Login() {
           <h2 className="text-4xl font-bold text-warm-white mb-4 leading-tight">
             {t('Product data for professional design workflows.', 'بيانات منتجات لسير عمل تصميمي احترافي.')}
           </h2>
-          <p className="text-light-brown text-lg leading-relaxed mb-8">
+          <p className="text-sand/80 text-lg leading-relaxed mb-8">
             {t(
               'Access available BIM, 3D and technical datasheet files through one focused construction library.',
               'ادخل إلى ملفات BIM وثلاثية الأبعاد وملفات البيانات الفنية المتاحة من خلال مكتبة إنشائية واحدة متخصصة.'
@@ -215,14 +218,14 @@ export default function Login() {
               t('BIM and 3D file metadata', 'بيانات ملفات BIM وثلاثية الأبعاد'),
               t('Supplier windows and source links', 'نوافذ الموردين وروابط المصدر'),
             ].map((feat, i) => (
-              <div key={i} className="flex items-center gap-3 text-light-brown text-sm">
+              <div key={i} className="flex items-center gap-3 text-sand/80 text-sm">
                 <CheckCircle size={15} className="text-gold flex-shrink-0" /> {feat}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative text-xs text-medium-brown flex items-center gap-2">
+        <div className="relative text-xs text-sand/65 flex items-center gap-2">
           {t('Structured · Secure · Bilingual', 'منظمة · آمنة · ثنائية اللغة')}
         </div>
       </div>
@@ -236,7 +239,7 @@ export default function Login() {
             <Link to="/" className="lg:hidden flex items-center gap-2">
               <span className="font-black tracking-[0.14em] text-dark-brown">BUOD</span>
             </Link>
-            <button onClick={toggleLang} className="flex items-center gap-1.5 text-sm text-medium-brown hover:text-dark-brown ms-auto">
+            <button type="button" onClick={toggleLang} className="flex items-center gap-1.5 text-sm text-medium-brown hover:text-dark-brown ms-auto">
               <Globe size={15} /> {lang === 'ar' ? 'EN' : 'عربي'}
             </button>
           </motion.div>
@@ -267,7 +270,7 @@ export default function Login() {
             <h1 className="text-2xl font-bold text-dark-brown mb-1">
               {mode === 'login' ? t('Welcome back', 'أهلاً بعودتك') : t('Get started', 'ابدأ الآن')}
             </h1>
-            <p className="text-light-brown text-sm mb-7">
+            <p className="text-medium-brown text-sm mb-7">
               {mode === 'login'
                 ? t('Sign in to your BUOD account', 'سجّل الدخول إلى حسابك في BUOD')
                 : t('Create your BUOD account', 'أنشئ حسابك في BUOD')}
@@ -388,7 +391,7 @@ export default function Login() {
                 <p id="password-error" className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
               )}
               {mode === 'signup' && !fieldErrors.password && (
-                <p id="password-hint" className="mt-1 text-xs text-light-brown">
+                <p id="password-hint" className="mt-1 text-xs text-medium-brown">
                   {t('Minimum 8 characters', 'الحد الأدنى 8 أحرف')}
                 </p>
               )}
@@ -407,7 +410,7 @@ export default function Login() {
             {/* Forgot password */}
             {mode === 'login' && (
               <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-gold hover:underline">
+                <Link to="/forgot-password" className="text-sm font-semibold text-dark-brown underline decoration-gold underline-offset-4 hover:text-medium-brown">
                   {t('Forgot password?', 'نسيت كلمة المرور؟')}
                 </Link>
               </div>
@@ -450,11 +453,11 @@ export default function Login() {
           </motion.form>
 
           {mode === 'signup' && (
-            <p className="text-xs text-light-brown text-center mt-4">
+            <p className="text-xs text-medium-brown text-center mt-4">
               {t('By signing up, you agree to our', 'بالتسجيل توافق على')}{' '}
-              <Link to="/terms" className="text-gold hover:underline">{t('Terms', 'الشروط')}</Link>
+              <Link to="/terms" className="font-semibold text-dark-brown underline decoration-gold underline-offset-2 hover:text-medium-brown">{t('Terms', 'الشروط')}</Link>
               {' & '}
-              <Link to="/privacy" className="text-gold hover:underline">{t('Privacy Policy', 'الخصوصية')}</Link>
+              <Link to="/privacy" className="font-semibold text-dark-brown underline decoration-gold underline-offset-2 hover:text-medium-brown">{t('Privacy Policy', 'الخصوصية')}</Link>
             </p>
           )}
         </motion.div>

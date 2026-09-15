@@ -551,6 +551,7 @@ body {
 .public-shell .bg-dark-brown,
 .public-shell .bg-deep-brown { background-color: #050403 !important; }
 .public-shell .text-dark-brown { color: #f5ecdc !important; }
+.public-shell .btn-gold { color: #1f170d !important; }
 .public-shell .text-medium-brown { color: #c8bba7 !important; }
 .public-shell .text-light-brown { color: #968a78 !important; }
 .public-shell .border-sand { border-color: rgba(201, 168, 76, 0.2) !important; }
@@ -1758,7 +1759,7 @@ body {
   letter-spacing: .08em;
   text-transform: uppercase;
 }
-.product-3d-dialog > footer {
+.product-3d-dialog-footer {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1769,8 +1770,8 @@ body {
   background: #0b0906;
   font-size: 11px;
 }
-.product-3d-dialog > footer svg { flex: 0 0 auto; color: #cda347; }
-.product-3d-dialog > footer span {
+.product-3d-dialog-footer svg { flex: 0 0 auto; color: #cda347; }
+.product-3d-dialog-footer span {
   margin-inline-start: auto;
   color: #cda347;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -1808,8 +1809,8 @@ body {
   .product-3d-dialog > header { padding: 12px; }
   .product-3d-dialog > header h2 { max-width: 56vw; }
   .product-3d-dialog > header button { width: 35px; height: 35px; }
-  .product-3d-dialog > footer { padding: 10px 12px; font-size: 9px; }
-  .product-3d-dialog > footer span { display: none; }
+  .product-3d-dialog-footer { padding: 10px 12px; font-size: 9px; }
+  .product-3d-dialog-footer span { display: none; }
   .product-3d-viewer-controls { right: 10px; bottom: 10px; }
   .product-3d-reference { top: 10px; inset-inline-start: 10px; width: 106px; }
   .product-3d-reference span { padding: 5px 7px; font-size: 8px; }

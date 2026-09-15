@@ -43,7 +43,7 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    mvpService.recordEvent('page_view', { page: 'home' });
+    mvpService.recordEvent('catalog_view', { page: 'home' });
 
     mvpService.getLatestProducts(80)
       .then((rows) => { if (active) setProducts(rows); })
@@ -98,7 +98,7 @@ export default function Home() {
                 <Search className={`absolute top-1/2 -translate-y-1/2 text-gold/65 ${lang === 'ar' ? 'right-4' : 'left-4'}`} size={18} />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} className={`h-14 w-full rounded-xl border border-gold/10 bg-black/65 text-warm-white outline-none transition placeholder:text-sand/30 focus:border-gold/50 ${lang === 'ar' ? 'pl-4 pr-12' : 'pl-12 pr-4'}`} placeholder={t('Product, BUOD reference or category…', 'منتج أو مرجع BUOD أو فئة…')} />
               </label>
-              <button className="btn-gold h-14 justify-center px-7">
+              <button type="submit" className="btn-gold h-14 justify-center px-7">
                 {t('Search library', 'ابحث في المكتبة')}
                 <ArrowRight className={lang === 'ar' ? 'rotate-180' : ''} size={17} />
               </button>
@@ -181,7 +181,7 @@ function LiveDataRibbon({ products, categories, suppliers, loading, hasError, la
   const highestValue = Math.max(...metrics.map(({ value }) => value), 1);
 
   return (
-    <div className="data-console mx-auto mt-8 max-w-5xl" aria-label={t('Connected library data', 'بيانات المكتبة المترابطة')}>
+    <div className="data-console mx-auto mt-8 max-w-5xl" role="region" aria-label={t('Connected library data', 'بيانات المكتبة المترابطة')}>
       <div className="data-console-header">
         <span className="data-console-heading"><Database size={17} /><span>{t('LIVE PRODUCT INTELLIGENCE', 'مركز بيانات المنتجات المباشر')}</span></span>
         <span className="data-console-protocols" aria-hidden="true"><i>BIM</i><i>IFC</i><i>RVT</i><i>3D</i></span>
@@ -217,7 +217,7 @@ function DataSignalTicker({ products, lang, t }) {
   const entries = records.length ? records : [{ id: 'sync', reference: 'BUOD.DATA', category: t('Synchronising product records', 'مزامنة سجلات المنتجات') }];
 
   return (
-    <div className="data-signal-ticker" aria-label={t('Product data feed', 'تدفق بيانات المنتجات')}>
+    <div className="data-signal-ticker" role="region" aria-label={t('Product data feed', 'تدفق بيانات المنتجات')}>
       <span className="data-signal-title"><Database size={13} />{t('DATA FLOW', 'تدفق البيانات')}</span>
       <div className="data-signal-window">
         <div className="data-signal-track">
@@ -274,6 +274,7 @@ function ProductConstellation({ products, lang, t }) {
     <div
       ref={stageRef}
       className="constellation-stage mx-auto mt-2 max-w-6xl"
+      role="region"
       aria-label={t('Connected product data network', 'شبكة بيانات المنتجات المترابطة')}
       onPointerMove={moveLight}
       onPointerLeave={resetLight}

@@ -62,13 +62,13 @@ export default function AdminDashboard() {
       subtitle={t('Platform overview', 'نظرة عامة على المنصة')}
     >
       {!SUPABASE_CONFIGURED && (
-        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-6">
+        <div role="status" className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-6">
           <AlertCircle size={18} className="flex-shrink-0" />
           {t('Supabase not configured — stats unavailable.', 'Supabase غير متصل.')}
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm mb-6">
+        <div role="alert" className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm mb-6">
           <AlertCircle size={18} className="flex-shrink-0" />
           {error}
         </div>

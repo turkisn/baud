@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart2, ClipboardList, Users, Store,
@@ -37,6 +38,8 @@ export default function AdminLayout({ children, title, subtitle }) {
   const { user, logout }   = useAuth();
   const location           = useLocation();
   const navigate           = useNavigate();
+  const [logoutError, setLogoutError] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const initial     = (user?.name || user?.email || '?')[0].toUpperCase();
   const displayName = user?.name || user?.email || '';
@@ -44,7 +47,14 @@ export default function AdminLayout({ children, title, subtitle }) {
 
   const visible = NAV.filter(n => n.roles.includes(role));
 
-  const handleLogout = async () => { await logout(); navigate('/'); };
+  const handleLogout = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    setLogoutError(false);
+    try { await logout(); navigate('/'); }
+    catch { setLogoutError(true); }
+    finally { setSigningOut(false); }
+  };
 
   return (
     <div className="min-h-screen bg-ivory flex">
@@ -68,7 +78,7 @@ export default function AdminLayout({ children, title, subtitle }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-4 space-y-0.5">
+        <nav aria-label={t('Admin navigation', 'تنقل لوحة الإدارة')} className="flex-1 p-4 space-y-0.5">
           {visible.map(item => {
             const active = location.pathname === item.path ||
               (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
@@ -76,6 +86,7 @@ export default function AdminLayout({ children, title, subtitle }) {
               <Link
                 key={item.path}
                 to={item.path}
+                aria-current={active ? 'page' : undefined}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
                     ? 'bg-[#B68D57]/20 text-[#B68D57]'
@@ -101,7 +112,7 @@ export default function AdminLayout({ children, title, subtitle }) {
             <Home size={17} />
             {t('Back to Site', 'العودة للموقع')}
           </Link>
-          <button onClick={handleLogout}
+          <button type="button" onClick={handleLogout} disabled={signingOut}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-light-brown hover:bg-medium-brown/40 transition-all">
             <LogOut size={17} />
             {t('Sign Out', 'تسجيل الخروج')}
@@ -123,6 +134,8 @@ export default function AdminLayout({ children, title, subtitle }) {
           {/* Mobile nav */}
           <nav aria-label={t('Admin navigation', 'تنقل لوحة الإدارة')} dir={lang === 'ar' ? 'rtl' : 'ltr'} className="mt-3 w-full min-w-0 max-w-full overflow-x-auto pb-1 lg:hidden">
               <div className="flex min-w-max gap-2">
+                <Link to="/" className="inline-flex items-center gap-1.5 rounded-lg bg-sand px-3 py-2 text-xs font-medium text-medium-brown"><Home size={13}/>{t('Back to Site', 'العودة للموقع')}</Link>
+                <button type="button" onClick={handleLogout} disabled={signingOut} className="inline-flex items-center gap-1.5 rounded-lg bg-sand px-3 py-2 text-xs font-medium text-medium-brown disabled:opacity-50"><LogOut size={13}/>{t('Sign Out', 'تسجيل الخروج')}</button>
                 {visible.map(item => {
                   const active = location.pathname === item.path ||
                     (item.path !== '/admin/dashboard' && location.pathname.startsWith(item.path));
@@ -144,6 +157,7 @@ export default function AdminLayout({ children, title, subtitle }) {
 
         {/* Content */}
         <div className="flex-1 p-4 sm:p-6">
+          {logoutError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{t('Sign out failed. You are still signed in; check your connection and try again.', 'تعذّر تسجيل الخروج. ما زلت مسجلاً؛ تحقق من الاتصال وحاول مجدداً.')}</p>}
           {children}
         </div>
       </div>
@@ -182,10 +196,10 @@ export function AdminEmptyState({ icon: Icon, message }) {
 export function AdminErrorState({ message, onRetry }) {
   const { t } = useLanguage();
   return (
-    <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-sm text-red-700 flex items-start gap-3">
+    <div role="alert" className="bg-red-50 border border-red-200 rounded-2xl p-5 text-sm text-red-700 flex items-start gap-3">
       <span className="flex-1">{message}</span>
       {onRetry && (
-        <button onClick={onRetry} className="font-semibold underline underline-offset-2 flex-shrink-0">
+        <button type="button" onClick={onRetry} className="font-semibold underline underline-offset-2 flex-shrink-0">
           {t('Retry', 'إعادة المحاولة')}
         </button>
       )}
@@ -194,6 +208,7 @@ export function AdminErrorState({ message, onRetry }) {
 }
 
 export function AdminTable({ headers, children, loading, colSpan }) {
+  const { t } = useLanguage();
   return (
     <div className="bg-white rounded-2xl border border-sand overflow-hidden">
       <div className="overflow-x-auto">
@@ -211,7 +226,10 @@ export function AdminTable({ headers, children, loading, colSpan }) {
             {loading ? (
               <tr>
                 <td colSpan={colSpan || headers.length} className="py-16 text-center">
-                  <div className="w-6 h-6 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div role="status">
+                    <div aria-hidden="true" className="w-6 h-6 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto" />
+                    <span className="sr-only">{t('Loading records…', 'جارٍ تحميل السجلات…')}</span>
+                  </div>
                 </td>
               </tr>
             ) : children}
@@ -228,6 +246,7 @@ export function Pagination({ page, totalPages, onPage }) {
   return (
     <div className="flex items-center justify-between mt-4 text-sm text-medium-brown">
       <button
+        type="button"
         disabled={page === 0}
         onClick={() => onPage(page - 1)}
         className="px-4 py-2 rounded-lg bg-white border border-sand disabled:opacity-40 hover:bg-sand transition-all"
@@ -236,6 +255,7 @@ export function Pagination({ page, totalPages, onPage }) {
       </button>
       <span>{t(`Page ${page + 1} of ${totalPages}`, `صفحة ${page + 1} من ${totalPages}`)}</span>
       <button
+        type="button"
         disabled={page >= totalPages - 1}
         onClick={() => onPage(page + 1)}
         className="px-4 py-2 rounded-lg bg-white border border-sand disabled:opacity-40 hover:bg-sand transition-all"

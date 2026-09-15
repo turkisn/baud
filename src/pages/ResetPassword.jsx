@@ -19,15 +19,17 @@ export default function ResetPassword() {
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) { setChecking(false); return undefined; }
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (active) {
-        setHasSession(Boolean(data.session));
+        setHasSession(!sessionError && Boolean(data.session));
         setChecking(false);
       }
+    }).catch(() => {
+      if (active) { setHasSession(false); setChecking(false); }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
-      if (event === 'PASSWORD_RECOVERY' || session) setHasSession(true);
+      setHasSession(Boolean(session));
       setChecking(false);
     });
     return () => { active = false; subscription.unsubscribe(); };
@@ -67,7 +69,7 @@ export default function ResetPassword() {
           {checking ? <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gold" size={30}/><span className="sr-only">{t('Checking reset link', 'جارٍ التحقق من رابط الاستعادة')}</span></div> : updated ? (
             <div role="status" className="text-center"><CheckCircle2 className="mx-auto mb-5 text-green-600" size={44}/><h1 className="text-2xl font-bold text-dark-brown">{t('Password updated', 'تم تحديث كلمة المرور')}</h1><p className="mt-3 text-light-brown">{t('You can now sign in with your new password.', 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.')}</p><Link to="/login" className="btn-primary mt-7 justify-center">{t('Sign in', 'تسجيل الدخول')}</Link></div>
           ) : !hasSession ? (
-            <div className="text-center"><h1 className="text-2xl font-bold text-dark-brown">{t('Reset link unavailable', 'رابط الاستعادة غير متاح')}</h1><p role="alert" className="mt-3 leading-7 text-light-brown">{t('This link is invalid or expired. Request a new password reset email.', 'هذا الرابط غير صالح أو منتهي. اطلب رسالة استعادة جديدة.')}</p><Link to="/forgot-password" className="btn-primary mt-7 justify-center">{t('Request a new link', 'طلب رابط جديد')}</Link></div>
+            <div className="text-center"><h1 className="text-2xl font-bold text-dark-brown">{t('Reset link unavailable', 'رابط الاستعادة غير متاح')}</h1><p role="alert" className="mt-3 leading-7 text-medium-brown">{t('This link is invalid or expired. Request a new password reset email.', 'هذا الرابط غير صالح أو منتهي. اطلب رسالة استعادة جديدة.')}</p><Link to="/forgot-password" className="btn-primary mt-7 justify-center">{t('Request a new link', 'طلب رابط جديد')}</Link></div>
           ) : (
             <>
               <h1 className="text-2xl font-bold text-dark-brown">{t('Choose a new password', 'اختر كلمة مرور جديدة')}</h1>

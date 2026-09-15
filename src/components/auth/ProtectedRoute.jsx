@@ -16,8 +16,8 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F4EF]">
-        <div className="w-8 h-8 border-4 border-[#B68D57] border-t-transparent rounded-full animate-spin" />
+      <div role="status" aria-label="Loading account / جارٍ تحميل الحساب" className="min-h-screen flex items-center justify-center bg-[#F7F4EF]">
+        <div aria-hidden="true" className="w-8 h-8 border-4 border-[#B68D57] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

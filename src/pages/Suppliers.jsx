@@ -46,7 +46,7 @@ export default function Suppliers() {
   }, [query]);
 
   useEffect(() => {
-    mvpService.recordEvent('page_view', { page: 'suppliers' });
+    mvpService.recordEvent('catalog_view', { page: 'suppliers' });
   }, []);
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function Suppliers() {
     }
   };
 
-  return <div className="min-h-screen bg-ivory pt-[76px]"><header className="digital-hero relative overflow-hidden border-b border-gold/10 px-6 py-16 text-warm-white"><div className="relative mx-auto max-w-7xl"><p className="mb-3 flex items-center gap-3 text-xs font-bold uppercase tracking-[.25em] text-gold"><span className="h-px w-8 bg-gold"/>{t('Connected supplier network', 'شبكة الموردين المترابطة')}</p><h1 className="text-4xl font-black sm:text-5xl">{t('Product suppliers', 'موردو المنتجات')}</h1><p className="mt-4 max-w-2xl text-sand/55">{t('Explore supplier identities and the construction products linked to each source.', 'استكشف هويات الموردين والمنتجات المرتبطة مباشرة بكل مصدر.')}</p></div></header><main className="mx-auto max-w-7xl px-6 py-10"><label className="digital-panel relative mb-8 block max-w-xl rounded-2xl p-2"><span className="sr-only">{t('Search suppliers', 'البحث عن الموردين')}</span><Search className="absolute start-6 top-1/2 -translate-y-1/2 text-gold/65" size={18}/><input className="input-field border-0 ps-11" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Search by supplier name…', 'ابحث باسم المورد…')}/></label>
+  return <div className="min-h-screen bg-ivory pt-[76px]"><header className="digital-hero relative overflow-hidden border-b border-gold/10 px-6 py-16 text-warm-white"><div className="relative mx-auto max-w-7xl"><p className="mb-3 flex items-center gap-3 text-xs font-bold uppercase tracking-[.25em] text-gold"><span className="h-px w-8 bg-gold"/>{t('Connected supplier network', 'شبكة الموردين المترابطة')}</p><h1 className="text-4xl font-black sm:text-5xl">{t('Product suppliers', 'موردو المنتجات')}</h1><p className="mt-4 max-w-2xl text-sand/55">{t('Explore supplier identities and the construction products linked to each source.', 'استكشف هويات الموردين والمنتجات المرتبطة مباشرة بكل مصدر.')}</p></div></header><div className="mx-auto max-w-7xl px-6 py-10"><label className="digital-panel relative mb-8 block max-w-xl rounded-2xl p-2"><span className="sr-only">{t('Search suppliers', 'البحث عن الموردين')}</span><Search className="absolute start-6 top-1/2 -translate-y-1/2 text-gold/65" size={18}/><input className="input-field border-0 ps-11" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('Search by supplier name…', 'ابحث باسم المورد…')}/></label>
     {loading ? <LoadingState/> : suppliers.length === 0 && error ? <ErrorState/> : suppliers.length === 0 ? <EmptyState title={t('No supplier windows found', 'لا توجد نوافذ موردين')} description={t('Published supplier windows will appear here.', 'ستظهر نوافذ الموردين المنشورة هنا.')}/> : <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{suppliers.map((supplier) => {
         const name = lang === 'ar' ? pick(supplier, 'company_name_ar', 'name_ar', 'company_name_en') : pick(supplier, 'company_name_en', 'name_en', 'company_name_ar');
@@ -109,5 +109,5 @@ export default function Suppliers() {
       {error && <div className="mt-6"><ErrorState/></div>}
       <div className="mt-10 flex flex-col items-center gap-3">{hasMore ? <button type="button" className="btn-primary min-w-44 justify-center disabled:opacity-60" onClick={loadMore} disabled={loadingMore}>{loadingMore && <Loader2 className="animate-spin" size={17}/>} {loadingMore ? t('Loading more…', 'جارٍ تحميل المزيد…') : t('Load more suppliers', 'تحميل المزيد من الموردين')}</button> : <p className="text-sm text-light-brown">{t('You have reached the end of the supplier windows.', 'وصلت إلى نهاية نوافذ الموردين.')}</p>}</div>
     </>}
-  </main></div>;
+  </div></div>;
 }

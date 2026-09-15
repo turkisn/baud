@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Globe, LogOut, Menu, UserRound, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -20,8 +20,29 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const menuButtonRef = useRef(null);
   useEffect(() => setOpen(false), [location.pathname]);
-  const signOut = async () => { await logout(); navigate('/'); };
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      menuButtonRef.current?.focus();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [open]);
+  const signOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    setLogoutError(false);
+    try { await logout(); navigate('/'); }
+    catch { setLogoutError(true); }
+    finally { setSigningOut(false); }
+  };
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 h-[76px] border-b border-gold/15 bg-black/75 shadow-[0_8px_30px_rgba(0,0,0,.35)] backdrop-blur-xl">
@@ -29,14 +50,14 @@ export default function Navbar() {
         <Link to="/" aria-label={t('BUOD home', 'الصفحة الرئيسية لمنصة BUOD')}><BrandWordmark inverse compact /></Link>
 
         <div className="hidden items-center gap-1 lg:flex">
-          {links.map((link) => <Link key={link.to} to={link.to} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${location.pathname.startsWith(link.to) ? 'bg-gold/15 text-light-gold' : 'text-sand/70 hover:bg-white/5 hover:text-white'}`}>{lang === 'ar' ? link.ar : link.en}{link.to === '/compare' && comparison.length > 0 && <span className="ms-1.5 rounded-full bg-gold px-1.5 py-0.5 text-[10px] text-black">{comparison.length}</span>}</Link>)}
+          {links.map((link) => <Link key={link.to} to={link.to} aria-current={isActive(link.to) ? 'page' : undefined} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${isActive(link.to) ? 'bg-gold/15 text-light-gold' : 'text-sand/70 hover:bg-white/5 hover:text-white'}`}>{lang === 'ar' ? link.ar : link.en}{link.to === '/compare' && comparison.length > 0 && <span className="ms-1.5 rounded-full bg-gold px-1.5 py-0.5 text-[10px] text-black">{comparison.length}</span>}</Link>)}
         </div>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <button onClick={toggleLang} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sand/75 hover:bg-white/5 hover:text-white" aria-label={t('Switch language', 'تغيير اللغة')}><Globe size={16} />{lang === 'ar' ? 'EN' : 'عربي'}</button>
+          <button type="button" onClick={toggleLang} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sand/75 hover:bg-white/5 hover:text-white" aria-label={t('Switch language', 'تغيير اللغة')}><Globe size={16} />{lang === 'ar' ? 'EN' : 'عربي'}</button>
           {user ? <>
             <Link to={isAdmin() ? '/admin/dashboard' : '/'} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white hover:bg-white/5"><UserRound size={16} />{user.name?.split(' ')[0] || t('Account', 'الحساب')}</Link>
-            <button onClick={signOut} className="rounded-lg p-2 text-sand/70 hover:bg-gold/10 hover:text-gold" aria-label={t('Sign out', 'تسجيل الخروج')}><LogOut size={17} /></button>
+            <button type="button" onClick={signOut} disabled={signingOut} className="rounded-lg p-2 text-sand/70 hover:bg-gold/10 hover:text-gold disabled:opacity-50" aria-label={t('Sign out', 'تسجيل الخروج')}><LogOut size={17} /></button>
           </> : <>
             <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-semibold text-warm-white hover:bg-white/10">{t('Sign In', 'تسجيل الدخول')}</Link>
             <Link to="/login?mode=signup" className="btn-gold px-5 py-2.5 text-sm">{t('Create account', 'إنشاء حساب')}</Link>
@@ -44,17 +65,28 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
-          <button onClick={toggleLang} className="p-2 text-white" aria-label={t('Switch language', 'تغيير اللغة')}><Globe size={19} /></button>
-          <button onClick={() => setOpen(!open)} className="p-2 text-white" aria-label={t('Open menu', 'فتح القائمة')}>{open ? <X /> : <Menu />}</button>
+          <button type="button" onClick={toggleLang} className="p-2 text-white" aria-label={t('Switch language', 'تغيير اللغة')}><Globe size={19} /></button>
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setOpen((current) => !current)}
+            className="p-2 text-white"
+            aria-controls="mobile-navigation"
+            aria-expanded={open}
+            aria-label={open ? t('Close menu', 'إغلاق القائمة') : t('Open menu', 'فتح القائمة')}
+          >
+            {open ? <X /> : <Menu />}
+          </button>
         </div>
       </div>
 
-      {open && <div className="border-t border-gold/15 bg-[#080705]/95 p-5 shadow-2xl backdrop-blur-xl lg:hidden">
-        {links.map((link) => <Link key={link.to} to={link.to} className="block rounded-lg px-4 py-3 font-semibold text-sand hover:bg-white/5 hover:text-gold">{lang === 'ar' ? link.ar : link.en}</Link>)}
+      {open && <div id="mobile-navigation" className="border-t border-gold/15 bg-[#080705]/95 p-5 shadow-2xl backdrop-blur-xl lg:hidden">
+        {links.map((link) => <Link key={link.to} to={link.to} aria-current={isActive(link.to) ? 'page' : undefined} className={`block rounded-lg px-4 py-3 font-semibold ${isActive(link.to) ? 'bg-gold/15 text-light-gold' : 'text-sand hover:bg-white/5 hover:text-gold'}`}>{lang === 'ar' ? link.ar : link.en}</Link>)}
         <div className="mt-3 grid gap-2 border-t border-gold/15 pt-4">
-          {user ? <button onClick={signOut} className="flex items-center justify-center gap-2 rounded-xl border border-gold/20 px-4 py-3 font-semibold text-sand"><LogOut size={16} />{t('Sign out', 'تسجيل الخروج')}</button> : <><Link to="/login" className="rounded-xl border border-gold/25 px-4 py-3 text-center font-semibold text-sand">{t('Sign In', 'تسجيل الدخول')}</Link><Link to="/login?mode=signup" className="btn-gold justify-center">{t('Create account', 'إنشاء حساب')}</Link></>}
+          {user ? <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center justify-center gap-2 rounded-xl border border-gold/20 px-4 py-3 font-semibold text-sand disabled:opacity-50"><LogOut size={16} />{t('Sign out', 'تسجيل الخروج')}</button> : <><Link to="/login" className="rounded-xl border border-gold/25 px-4 py-3 text-center font-semibold text-sand">{t('Sign In', 'تسجيل الدخول')}</Link><Link to="/login?mode=signup" className="btn-gold justify-center">{t('Create account', 'إنشاء حساب')}</Link></>}
         </div>
       </div>}
+      {logoutError && <p role="alert" className="border border-red-300 bg-red-50 px-6 py-3 text-sm text-red-800">{t('Sign out failed. You are still signed in; check your connection and try again.', 'تعذّر تسجيل الخروج. ما زلت مسجلاً؛ تحقق من الاتصال وحاول مجدداً.')}</p>}
     </nav>
   );
 }

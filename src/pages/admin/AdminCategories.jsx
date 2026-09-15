@@ -355,13 +355,14 @@ export default function AdminCategories() {
         <div className="mb-5">
           <h3 className="text-sm font-bold text-dark-brown mb-3">{t('New Category', 'فئة جديدة')}</h3>
           <CategoryForm onSave={handleCreate} onCancel={() => setAdding(false)} loading={saving} t={t} />
-          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          {error && <p role="alert" className="mt-2 text-xs text-red-600">{error}</p>}
         </div>
       )}
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-6 h-6 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+        <div role="status" className="flex justify-center py-16">
+          <div aria-hidden="true" className="w-6 h-6 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+          <span className="sr-only">{t('Loading categories…', 'جارٍ تحميل الفئات…')}</span>
         </div>
       ) : error && !adding ? (
         <AdminErrorState message={error} onRetry={load} />

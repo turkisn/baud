@@ -12,6 +12,7 @@ import { ErrorState, LoadingState } from '../components/mvp/States';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { mvpService } from '../services/mvpService';
+import { formatCurrency } from '../utils/number';
 
 const pick = (row, ...keys) => keys.map((key) => row?.[key]).find((value) => value !== null && value !== undefined && value !== '');
 const formatBytes = (bytes) => !bytes ? null : `${(bytes / 1024 / 1024).toFixed(bytes > 10485760 ? 0 : 1)} MB`;
@@ -35,7 +36,7 @@ function SectionError({ children }) {
 
 function Permit({ label, allowed, t }) {
   const known = typeof allowed === 'boolean';
-  return <div className="flex items-center justify-between gap-4 rounded-xl bg-ivory px-4 py-3 text-sm"><span className="text-medium-brown">{label}</span><span className={`inline-flex items-center gap-1 font-semibold ${allowed ? 'text-green-700' : known ? 'text-red-700' : 'text-light-brown'}`}>{allowed ? <CheckCircle2 size={15}/> : known ? <XCircle size={15}/> : null}{allowed ? t('Allowed', 'مسموح') : known ? t('Not allowed', 'غير مسموح') : '—'}</span></div>;
+  return <div className="flex items-center justify-between gap-4 rounded-xl bg-ivory px-4 py-3 text-sm"><span className="text-medium-brown">{label}</span><span className={`inline-flex items-center gap-1 font-semibold ${allowed ? 'text-green-700' : known ? 'text-red-300' : 'text-light-brown'}`}>{allowed ? <CheckCircle2 size={15}/> : known ? <XCircle size={15}/> : null}{allowed ? t('Allowed', 'مسموح') : known ? t('Not allowed', 'غير مسموح') : '—'}</span></div>;
 }
 
 export default function BlockDetail() {
@@ -58,7 +59,7 @@ export default function BlockDetail() {
     setProduct(null);
     setRelated([]);
     setActiveImage(0);
-    mvpService.recordEvent('page_view', { page: 'block_detail' });
+    mvpService.recordEvent('catalog_view', { page: 'block_detail' });
     mvpService.getProduct(slug).then((data) => {
       if (!active) return;
       setProduct(data);
@@ -132,7 +133,7 @@ export default function BlockDetail() {
   const displayImage = images[activeImage]?.signed_url || product.signed_image_url;
   const productUrl = safeExternalUrl(product.supplier_product_url);
   const detailErrors = product.detail_errors || {};
-  const price = product.price !== null && product.price !== undefined ? new Intl.NumberFormat(lang === 'ar' ? 'ar-SA' : 'en-SA', { style: 'currency', currency: product.currency || 'SAR', maximumFractionDigits: 0 }).format(Number(product.price)) : null;
+  const price = product.price !== null && product.price !== undefined ? formatCurrency(product.price, product.currency, lang === 'ar' ? 'ar-SA' : 'en-SA') : null;
   const verificationLabel = {
     verified: t('BUOD verified', 'موثق من بُعد'),
     manufacturer_verified: t('Manufacturer verified', 'موثق من المصنع'),
@@ -145,7 +146,7 @@ export default function BlockDetail() {
       <div className="flex items-center gap-3"><span role="status" className="text-xs text-green-700">{shareNotice}</span><button type="button" onClick={sharePage} className="digital-panel inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-medium-brown transition hover:border-gold"><Share2 size={15}/>{t('Share', 'مشاركة')}</button></div>
     </div>
 
-    <main className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1.1fr_.9fr]">
+    <div className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1.1fr_.9fr]">
       <section><div className="digital-panel group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl">{displayImage ? <img src={displayImage} alt={name} className="h-full w-full object-contain transition duration-700 group-hover:scale-110"/> : <div className="text-center text-light-brown"><ImageOff className="mx-auto mb-3" size={38}/>{t('Product image unavailable', 'صورة المنتج غير متاحة')}</div>}<span className="pointer-events-none absolute bottom-4 start-4 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-black/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-light-gold"><ScanSearch size={14}/>{t('Product visual inspection', 'معاينة المنتج')}</span>{files.length > 0 && <span className="absolute end-4 top-4 rounded-lg border border-gold/30 bg-black/80 px-3 py-1.5 text-xs text-light-gold">{files.length} {t('design files', 'ملفات تصميم')}</span>}</div>{detailErrors.images && <div className="mt-3"><SectionError>{t('Some product images could not be loaded.', 'تعذّر تحميل بعض صور المنتج.')}</SectionError></div>}{images.length > 1 && <div className="mt-3 flex gap-3 overflow-auto">{images.map((image, index) => <button type="button" key={image.id} onClick={() => setActiveImage(index)} className={`h-20 w-24 flex-none overflow-hidden rounded-xl border-2 bg-white ${activeImage === index ? 'border-gold' : 'border-transparent'}`} aria-label={t(`View image ${index + 1}`, `عرض الصورة ${index + 1}`)}><img src={image.signed_url} alt={lang === 'ar' ? image.alt_text_ar : image.alt_text_en} className="h-full w-full object-cover"/></button>)}</div>}</section>
 
       <section>
@@ -156,7 +157,7 @@ export default function BlockDetail() {
         {formats.length > 0 && <div className="mt-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-light-brown">{t('Available formats', 'الصيغ المتاحة')}</p><div className="flex flex-wrap gap-2">{formats.map((format) => <span key={format} className="rounded-lg border border-gold/25 bg-gold/10 px-3 py-1.5 font-mono text-xs font-bold text-dark-brown">{format}</span>)}</div></div>}
         <dl className="mt-8 grid grid-cols-2 gap-x-6"><DataValue label={t('Supplier', 'المورد')} value={supplierName} to={product.supplier_slug ? `/suppliers/${product.supplier_slug}` : null}/><DataValue label={t('Brand', 'العلامة التجارية')} value={product.brand_name}/><DataValue label={t('Product type', 'نوع المنتج')} value={product.product_type}/><DataValue label={t('Model number', 'رقم الطراز')} value={product.model_number}/><DataValue label={t('Country of origin', 'بلد المنشأ')} value={product.country_of_origin}/><DataValue label={t('Price', 'السعر')} value={price}/><DataValue label={t('Availability', 'التوفر')} value={typeof product.in_stock === 'boolean' ? (product.in_stock ? t('In stock', 'متوفر') : t('Out of stock', 'غير متوفر')) : null}/><DataValue label={t('Lead time', 'مدة التوريد')} value={product.lead_time}/><DataValue label={t('Minimum order', 'الحد الأدنى للطلب')} value={product.min_order_qty ? `${product.min_order_qty} ${product.unit || ''}`.trim() : null}/><DataValue label={t('File version', 'إصدار الملف')} value={product.version_number}/><DataValue label={t('Software', 'البرامج')} value={software.join(' · ')}/><DataValue label={t('Product page', 'صفحة المنتج')} value={productUrl ? t('Open supplier link', 'فتح رابط المورد') : null} href={productUrl}/></dl>
       </section>
-    </main>
+    </div>
 
     <div className="mx-auto mt-14 grid max-w-7xl gap-8 px-6 lg:grid-cols-2">
       <section className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown"><Box className="text-gold"/>{t('Specifications', 'المواصفات')}</h2>{detailErrors.specifications ? <SectionError>{t('Specifications could not be loaded.', 'تعذّر تحميل المواصفات.')}</SectionError> : product.product_specifications.length ? <dl>{product.product_specifications.map((spec) => <DataValue key={spec.id} label={lang === 'ar' ? spec.specification_name_ar || spec.specification_name_en : spec.specification_name_en || spec.specification_name_ar} value={[spec.value, spec.unit].filter(Boolean).join(' ')}/>)}</dl> : <p className="text-sm text-light-brown">{t('Specifications unavailable.', 'المواصفات غير متاحة.')}</p>}</section>

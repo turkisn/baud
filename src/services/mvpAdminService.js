@@ -33,7 +33,7 @@ const IMAGE_FIELDS = [
 
 const FILE_FIELDS = [
   'id', 'product_id', 'file_type', 'software_name', 'software_version', 'file_format',
-  'original_file_name', 'stored_file_name', 'file_path', 'file_size', 'mime_type',
+  'original_file_name', 'file_path', 'file_size', 'mime_type',
   'is_primary', 'storage_bucket', 'is_available', 'created_at',
 ].join(',');
 
@@ -60,7 +60,8 @@ const SUPPLIER_PAYLOAD_FIELDS = new Set([
 
 const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp']);
-const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_PRODUCT_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_SUPPLIER_ASSET_BYTES = 10 * 1024 * 1024;
 const MAX_DATASHEET_BYTES = 20 * 1024 * 1024;
 const MAX_BLOCK_BYTES = 100 * 1024 * 1024;
 const SIGNED_ASSET_TTL = 60 * 5;
@@ -109,13 +110,15 @@ function objectPath(entityId, filename) {
   return { storedFileName, path: `${entityId}/${storedFileName}` };
 }
 
-function validateImage(file) {
+function validateImage(file, maxBytes = MAX_PRODUCT_IMAGE_BYTES) {
   if (!file || file.size <= 0) throw new Error('Choose a non-empty image file.');
   const extension = extensionOf(file.name);
   if (!IMAGE_EXTENSIONS.has(extension) || !IMAGE_MIME_TYPES.has(file.type)) {
     throw new Error('Images must be JPG, JPEG, PNG, or WEBP.');
   }
-  if (file.size > MAX_IMAGE_BYTES) throw new Error('Images must be 20 MB or smaller.');
+  if (file.size > maxBytes) {
+    throw new Error(`Images must be ${maxBytes / 1024 / 1024} MB or smaller.`);
+  }
 }
 
 async function uploadObject(bucket, path, file, contentType) {
@@ -334,7 +337,7 @@ export const mvpAdminService = {
 
   async uploadSupplierAsset(supplierId, file) {
     assertConfigured();
-    validateImage(file);
+    validateImage(file, MAX_SUPPLIER_ASSET_BYTES);
     const { path } = objectPath(supplierId, file.name);
     await uploadObject('supplier-assets', path, file, file.type);
     return { bucket: 'supplier-assets', path };

@@ -248,16 +248,22 @@ export const productService = {
   // ── incrementViewCount ────────────────────────────────────────
   async incrementViewCount(productId) {
     if (!SUPABASE_CONFIGURED) return;
-    await supabase
-      .rpc('increment_view_count', { product_id: productId })
-      .catch(() => { /* non-critical */ });
+    try {
+      const { error } = await supabase.rpc('increment_view_count', { product_id: productId });
+      if (error) throw error;
+    } catch {
+      // Non-critical — a counter failure must never interrupt product browsing.
+    }
   },
 
   // ── incrementDownloadCount ────────────────────────────────────
   async incrementDownloadCount(productId) {
     if (!SUPABASE_CONFIGURED) return;
-    await supabase
-      .rpc('increment_download_count', { product_id: productId })
-      .catch(() => { /* non-critical */ });
+    try {
+      const { error } = await supabase.rpc('increment_download_count', { product_id: productId });
+      if (error) throw error;
+    } catch {
+      // Non-critical — a counter failure must never interrupt secure downloads.
+    }
   },
 };

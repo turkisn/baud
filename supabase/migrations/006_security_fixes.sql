@@ -12,7 +12,7 @@
 --
 --      UPDATE public.profiles
 --      SET    role = 'super_admin'
---      WHERE  email = 'turkey.alnusian@gmail.com';
+--      WHERE  email = 'owner@example.com';
 --
 -- Why this works safely: the enforce_profile_role_acl trigger below
 -- calls get_my_role() → auth.uid(). The SQL Editor runs as the postgres
