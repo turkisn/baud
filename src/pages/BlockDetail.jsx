@@ -18,13 +18,13 @@ const formatBytes = (bytes) => !bytes ? null : `${(bytes / 1024 / 1024).toFixed(
 const safeExternalUrl = (value) => {
   try {
     const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
+    return url.protocol === 'https:' ? url.toString() : null;
   } catch { return null; }
 };
 
 function DataValue({ label, value, href, to }) {
   let content = value;
-  if (value && href) content = <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-gold hover:underline">{value}<ExternalLink size={12}/></a>;
+  if (value && href) content = <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-gold hover:underline">{value}<ExternalLink size={12}/></a>;
   if (value && to) content = <Link to={to} className="inline-flex items-center gap-1 text-gold hover:underline">{value}</Link>;
   return <div className="border-b border-sand/70 py-3"><dt className="text-xs font-semibold uppercase tracking-wider text-light-brown">{label}</dt><dd className="mt-1 text-sm font-medium text-dark-brown">{value ? content : <span className="font-normal text-light-brown/70">—</span>}</dd></div>;
 }
