@@ -49,6 +49,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
     };
     const updateFullscreen = () => setFullscreen(Boolean(document.fullscreenElement));
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('product-3d-open');
     if (appRoot) {
       appRoot.inert = true;
       appRoot.setAttribute('aria-hidden', 'true');
@@ -58,6 +59,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
     document.addEventListener('fullscreenchange', updateFullscreen);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.classList.remove('product-3d-open');
       document.removeEventListener('keydown', handleDialogKeys);
       document.removeEventListener('fullscreenchange', updateFullscreen);
       if (appRoot) {
@@ -102,7 +104,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
               </div>
             </header>
             <div className="product-3d-canvas-wrap">
-              {product.signed_image_url && <aside className="product-3d-reference"><img src={product.signed_image_url} alt=""/><span>{t('Reference image', 'الصورة المرجعية')}</span></aside>}
+              {product.signed_image_url && <aside className="product-3d-reference"><img src={product.signed_image_url} alt="" loading="eager" decoding="async"/><span>{t('Reference image', 'الصورة المرجعية')}</span></aside>}
               <Suspense fallback={<div className="product-3d-loading"><span/><p>{t('Preparing 3D model…', 'جارٍ تجهيز المجسم…')}</p></div>}>
                 <Product3DViewer
                   slug={product.slug}
@@ -110,6 +112,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
                   pauseLabel={t('Pause rotation', 'إيقاف الدوران')}
                   resumeLabel={t('Resume rotation', 'استئناف الدوران')}
                   resetLabel={t('Reset 3D view', 'إعادة ضبط العرض ثلاثي الأبعاد')}
+                  errorLabel={t('The 3D view could not start on this device. Close it and try again.', 'تعذّر تشغيل العرض ثلاثي الأبعاد على هذا الجهاز. أغلقه وحاول مرة أخرى.')}
                 />
               </Suspense>
             </div>

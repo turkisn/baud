@@ -1,8 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pause, Play, RotateCcw } from 'lucide-react';
 import { getDemo3DModel } from '../../data/demo3dCatalog';
+import { canvasRenderSize } from '../../utils/canvas';
 
 const TAU = Math.PI * 2;
+const FRAME_INTERVAL = 1000 / 30;
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
 
 function rotatePoint(point, rotation = [0, 0, 0]) {
@@ -149,44 +151,105 @@ function drawScene(context, width, height, faces, view) {
   context.globalAlpha = 1;
 }
 
-function Product3DViewer({ slug, label, pauseLabel, resumeLabel, resetLabel }) {
+function Product3DViewer({ slug, label, pauseLabel, resumeLabel, resetLabel, errorLabel }) {
   const canvasRef = useRef(null);
   const pointerRef = useRef(null);
   const viewRef = useRef(null);
+  const drawRef = useRef(null);
+  const scheduleRef = useRef(null);
   const model = useMemo(() => getDemo3DModel(slug), [slug]);
   const faces = useMemo(() => model ? buildFaces(model) : [], [model]);
   const [autoRotate, setAutoRotate] = useState(() => typeof window === 'undefined' || !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [renderError, setRenderError] = useState(false);
   const autoRotateRef = useRef(autoRotate);
 
   const resetView = useCallback(() => {
+    if (!model) return;
     viewRef.current = { ...model.camera };
+    drawRef.current?.();
   }, [model]);
 
   useEffect(() => {
     autoRotateRef.current = autoRotate;
+    drawRef.current?.();
+    if (autoRotate) scheduleRef.current?.();
   }, [autoRotate]);
 
   useEffect(() => {
     if (!model) return undefined;
     resetView();
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d', { alpha: false });
-    let width = 1; let height = 1; let frame; let previousTime = performance.now();
-    const resize = () => {
-      const bounds = canvas.getBoundingClientRect();
-      const density = Math.min(window.devicePixelRatio || 1, 2);
-      width = Math.max(1, Math.round(bounds.width * density)); height = Math.max(1, Math.round(bounds.height * density));
-      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+    const context = canvas?.getContext?.('2d', { alpha: false });
+    if (!canvas || !context) {
+      setRenderError(true);
+      return undefined;
+    }
+    setRenderError(false);
+    let disposed = false;
+    let width = 1; let height = 1; let frame = null; let previousTime = performance.now(); let previousFrame = 0;
+    const stopFrame = () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      frame = null;
     };
-    const observer = new ResizeObserver(resize); observer.observe(canvas); resize();
-    const render = (time) => {
-      const elapsed = Math.min(time - previousTime, 40); previousTime = time;
-      if (autoRotateRef.current && !pointerRef.current) viewRef.current.yaw += elapsed * .00012;
-      drawScene(context, width, height, faces, viewRef.current);
+    const failRender = () => {
+      stopFrame();
+      if (!disposed) setRenderError(true);
+    };
+    const draw = () => {
+      if (disposed || !viewRef.current) return;
+      try { drawScene(context, width, height, faces, viewRef.current); }
+      catch { failRender(); }
+    };
+    const schedule = () => {
+      if (disposed || document.hidden || frame !== null) return;
       frame = requestAnimationFrame(render);
     };
-    frame = requestAnimationFrame(render);
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
+    function render(time) {
+      frame = null;
+      if (disposed || document.hidden) return;
+      if (autoRotateRef.current && time - previousFrame < FRAME_INTERVAL) {
+        schedule();
+        return;
+      }
+      const elapsed = Math.min(time - previousTime, 40);
+      previousTime = time;
+      previousFrame = time;
+      if (autoRotateRef.current && !pointerRef.current) viewRef.current.yaw += elapsed * .00012;
+      draw();
+      if (autoRotateRef.current) schedule();
+    }
+    const resize = () => {
+      const bounds = canvas.getBoundingClientRect();
+      const size = canvasRenderSize(bounds.width, bounds.height, window.devicePixelRatio || 1);
+      width = size.width; height = size.height;
+      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+      draw();
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) stopFrame();
+      else { previousTime = performance.now(); draw(); if (autoRotateRef.current) schedule(); }
+    };
+    const onContextLost = (event) => { event.preventDefault(); failRender(); };
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
+    observer?.observe(canvas);
+    if (!observer) window.addEventListener('resize', resize);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    canvas.addEventListener('contextlost', onContextLost);
+    drawRef.current = draw;
+    scheduleRef.current = schedule;
+    resize();
+    if (autoRotateRef.current) schedule();
+    return () => {
+      disposed = true;
+      stopFrame();
+      observer?.disconnect();
+      if (!observer) window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      canvas.removeEventListener('contextlost', onContextLost);
+      if (drawRef.current === draw) drawRef.current = null;
+      if (scheduleRef.current === schedule) scheduleRef.current = null;
+      pointerRef.current = null;
+    };
   }, [faces, model, resetView]);
 
   if (!model) return null;
@@ -194,6 +257,7 @@ function Product3DViewer({ slug, label, pauseLabel, resumeLabel, resetLabel }) {
   const pointerDown = (event) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     pointerRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    drawRef.current?.();
   };
   const pointerMove = (event) => {
     const pointer = pointerRef.current;
@@ -202,19 +266,23 @@ function Product3DViewer({ slug, label, pauseLabel, resumeLabel, resetLabel }) {
     viewRef.current.yaw += deltaX * .009;
     viewRef.current.pitch = clamp(viewRef.current.pitch + deltaY * .007, -1.18, .75);
     pointerRef.current = { ...pointer, x: event.clientX, y: event.clientY };
+    drawRef.current?.();
   };
   const pointerUp = (event) => {
     if (pointerRef.current?.id === event.pointerId) pointerRef.current = null;
+    if (autoRotateRef.current) scheduleRef.current?.();
   };
   const zoom = (event) => {
     event.preventDefault();
     if (!viewRef.current) return;
     viewRef.current.zoom = clamp(viewRef.current.zoom * (event.deltaY > 0 ? .92 : 1.08), .62, 1.7);
+    drawRef.current?.();
   };
 
   return (
     <div className="product-3d-stage">
       <canvas ref={canvasRef} role="img" aria-label={label} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onWheel={zoom} onDoubleClick={resetView} />
+      {renderError && <div className="product-3d-error" role="alert">{errorLabel}</div>}
       <div className="product-3d-viewer-controls">
         <button type="button" onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? pauseLabel : resumeLabel}>{autoRotate ? <Pause size={15}/> : <Play size={15}/>}</button>
         <button type="button" onClick={resetView} aria-label={resetLabel}><RotateCcw size={15}/></button>

@@ -598,11 +598,9 @@ body {
   backdrop-filter: blur(18px);
 }
 .public-shell .digital-panel {
-  animation: panelAura 5.2s ease-in-out infinite;
+  animation: none;
 }
-.public-shell .digital-panel:nth-child(2n) { animation-delay: -1.7s; }
-.public-shell .digital-panel:nth-child(3n) { animation-delay: -3.1s; }
-.public-shell .digital-panel img { animation: siteMediaFloat 6.2s ease-in-out infinite; }
+.public-shell .digital-panel img { animation: none; }
 .public-shell .product-card {
   position: relative;
   isolation: isolate;
@@ -614,14 +612,17 @@ body {
   pointer-events: none;
   content: '';
   background: linear-gradient(110deg, transparent 41%, rgba(255, 222, 151, .16) 49%, transparent 57%);
-  animation: productCardShine 6.2s ease-in-out infinite;
+  opacity: 0;
 }
-.public-shell .product-card:nth-child(2n)::after { animation-delay: -2.4s; }
-.public-shell .product-card:nth-child(3n)::after { animation-delay: -4.1s; }
+.public-shell .product-card:hover::after { animation: productCardShine 1.15s ease-out 1; }
 .public-shell .btn-gold,
 .public-shell .btn-primary {
-  animation: siteButtonGlow 2.9s ease-in-out infinite;
+  animation: none;
 }
+
+/* Icons communicate actions; continuous movement across every card created hundreds
+   of compositor animations and made the catalogue feel unresponsive. */
+.public-shell :is(nav, main, footer) svg.lucide:not(.animate-spin) { animation: none; }
 
 .digital-hero {
   isolation: isolate;
@@ -1618,8 +1619,7 @@ body {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(2, 2, 1, .86);
-  backdrop-filter: blur(14px) saturate(.85);
+  background: rgba(2, 2, 1, .96);
   animation: product3dBackdropIn .22s ease both;
 }
 .product-3d-dialog {
@@ -1632,6 +1632,7 @@ body {
   border-radius: 24px;
   color: #f7f0e4;
   background: #080705;
+  contain: layout paint;
   box-shadow: 0 40px 120px rgba(0, 0, 0, .72), 0 0 70px rgba(205, 151, 43, .11);
   animation: product3dPanelIn .3s cubic-bezier(.2, .8, .2, 1) both;
 }
@@ -1700,6 +1701,7 @@ body {
   width: 100%;
   height: 100%;
   isolation: isolate;
+  contain: strict;
 }
 .product-3d-stage::after {
   position: absolute;
@@ -1728,7 +1730,6 @@ body {
 }
 .product-3d-viewer-controls button {
   background: rgba(5, 4, 3, .82);
-  backdrop-filter: blur(10px);
 }
 .product-3d-reference {
   position: absolute;
@@ -1741,8 +1742,27 @@ body {
   border-radius: 13px;
   background: rgba(5, 4, 3, .82);
   box-shadow: 0 12px 32px rgba(0, 0, 0, .42);
-  backdrop-filter: blur(10px);
   pointer-events: none;
+}
+.product-3d-error {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: #080705;
+  color: #e7c776;
+  text-align: center;
+}
+
+body.product-3d-open .public-shell,
+body.product-3d-open .public-shell *,
+body.product-3d-open .public-shell::before,
+body.product-3d-open .public-shell::after,
+body.product-3d-open .public-shell *::before,
+body.product-3d-open .public-shell *::after {
+  animation-play-state: paused !important;
 }
 .product-3d-reference img {
   display: block;
@@ -1804,6 +1824,17 @@ body {
 @keyframes product3dSpin { to { transform: rotate(360deg); } }
 
 @media (max-width: 639px) {
+  .public-shell::before,
+  .public-shell::after,
+  .public-atmosphere-stars,
+  .public-atmosphere-mesh,
+  .public-atmosphere-scan,
+  .atmosphere-icon,
+  .atmosphere-icon::after,
+  .atmosphere-trail,
+  .atmosphere-data-tag,
+  .atmosphere-data-tag::before { animation: none; }
+  .public-atmosphere-trails { display: none; }
   .product-3d-modal { padding: 8px; }
   .product-3d-dialog { height: calc(100dvh - 16px); border-radius: 17px; }
   .product-3d-dialog > header { padding: 12px; }
