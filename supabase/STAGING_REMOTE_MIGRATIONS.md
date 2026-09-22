@@ -1,12 +1,10 @@
-# Staging remote migration history
+# Staging migration history
 
 The remote **staging** database is the source of truth for the current BUOD MVP backend contract.
 
-- The staging database currently contains remote migrations through `20260915172206_consolidate_and_optimize_storage_rls`.
-- The repository's historical baseline files stop at `012`; targeted post-baseline security migrations are tracked separately with their exact remote timestamps.
-- This difference is a known migration-history reconciliation task.
-- Do not run a destructive reset or a database push in an attempt to repair this drift.
-- Do not fabricate the missing migration SQL or re-apply the staging contract from this repository.
-- Before any production promotion, the local and remote migration histories must be deliberately baselined and reconciled.
+- Reconciled on **22 September 2026** from `supabase_migrations.schema_migrations` in project `BUOD Staging`.
+- All **52** remote migrations, from `20260816022848_001_initial_schema` through `20260915172206_consolidate_and_optimize_storage_rls`, are present locally with their exact remote version, name, and recorded SQL.
+- Every local SQL file was checksum-compared with the recorded remote statement. The only permitted byte difference is a normalized final newline; there are no SQL-content mismatches.
+- The legacy untimestamped `001`–`012` filenames were replaced with their original remote timestamps so Supabase tooling sees the same history on both sides.
 
-Until that reconciliation is completed, frontend staging work must consume the documented remote RPC, RLS, and private-storage contracts as they exist. New targeted migrations must keep the exact remote version and SQL so they remain auditable without fabricating the missing `013`–`043` history.
+These historical migrations are already applied to staging and must not be re-applied there manually. Future schema changes must be created as new timestamped migrations and verified with Supabase advisors before deployment. Never use a destructive reset to repair migration history.

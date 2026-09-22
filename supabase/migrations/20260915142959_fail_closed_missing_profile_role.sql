@@ -1,11 +1,3 @@
--- Fail closed when an authenticated user has no matching profile row.
---
--- The administrative RPCs intentionally use SECURITY DEFINER and validate the
--- caller through this helper. Returning NULL made PL/pgSQL `role NOT IN (...)`
--- guards evaluate to NULL instead of TRUE, so a profile-less account could
--- reach privileged code paths. Treating that exceptional state as the normal
--- `user` role keeps all existing RLS behavior while denying privileged access.
-
 create or replace function private.get_my_role()
 returns text
 language sql

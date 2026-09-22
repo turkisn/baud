@@ -1,12 +1,3 @@
--- Keep the admin save flows working after public catalogue SELECT privileges
--- were narrowed to safe columns. These functions return complete composite
--- rows, so SECURITY INVOKER would require every caller to have SELECT access
--- to internal columns such as admin notes and supplier contact details.
---
--- Both functions enforce admin/super_admin authorization before touching data.
--- SECURITY DEFINER lets that guarded code return the saved row without
--- re-opening those internal columns to every authenticated account.
-
 alter function public.admin_save_mvp_product(uuid, jsonb)
   security definer;
 alter function public.admin_save_mvp_product(uuid, jsonb)

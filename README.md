@@ -1,9 +1,60 @@
-# React + Vite
+# بُعد (BUOD)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+منصة عربية لاستكشاف منتجات ومواد التصميم المعماري، إدارة الموردين، عرض النماذج ثلاثية الأبعاد، وحفظ المنتجات في مشاريع محلية داخل المتصفح.
 
-Currently, two official plugins are available:
+## المتطلبات
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-<!-- staging -->
+- Node.js 22 أو 24
+- npm
+- مشروع Supabase مهيأ
+
+## التشغيل المحلي
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+القيم المطلوبة في `.env.local`:
+
+- `VITE_SUPABASE_URL`: رابط مشروع Supabase.
+- `VITE_SUPABASE_ANON_KEY`: المفتاح العام المخصص للمتصفح. لا تستخدم مفتاح `service_role` هنا.
+- `VITE_APP_NAME`: اسم التطبيق الظاهر.
+- `VITE_APP_URL`: رابط البيئة الحالية.
+
+ملفات `.env.local` و`.env.development.local` محلية فقط ولا تُرفع إلى المستودع.
+
+## أوامر الجودة
+
+```bash
+npm run lint
+npm test
+npm run build
+npm run check
+npm audit --audit-level=low
+```
+
+`npm run check` ينفذ الفحص الثابت، اختبارات الانحدار، وبناء نسخة الإنتاج. فرع `staging` يعيد تنفيذ بوابات الجودة نفسها آليًا قبل اعتماد النشر.
+
+## البنية
+
+- React + Vite للواجهة.
+- Supabase للمصادقة وقاعدة البيانات والتخزين وواجهات RPC.
+- Vercel للاستضافة ونشر بيئة التجربة.
+- عارض 3D محمّل عند الطلب حتى لا يثقل الكتالوج الأساسي.
+
+## ترحيلات قاعدة البيانات
+
+مجلد `supabase/migrations` يطابق سجل بيئة التجربة، و`manifest.json` يحفظ بصمات الملفات التي يتحقق منها الاختبار الآلي.
+
+- لا تعدّل ترحيلًا طُبّق على بيئة مشتركة.
+- أنشئ ترحيلًا جديدًا بختم زمني لأي تغيير لاحق.
+- لا تشغّل reset على قاعدة بيانات التجربة أو الإنتاج.
+- لا تحدّث manifest يدويًا إلا ضمن عملية مصالحة موثقة مع السجل البعيد.
+
+راجع [سجل مطابقة الترحيلات](supabase/STAGING_REMOTE_MIGRATIONS.md) قبل أي تغيير في المخطط.
+
+## الإطلاق
+
+بيئة التجربة ليست تصريحًا تلقائيًا بالنشر العام. نفّذ [دليل الإطلاق والتراجع](docs/LAUNCH_RUNBOOK.md)، وراجع [تقرير الجودة الحالي](STAGING_QUALITY_REVIEW.md) قبل ترقية أي نسخة إلى الإنتاج.

@@ -1,3 +1,4 @@
+
 revoke select on table
   public.products,
   public.suppliers,

@@ -1,7 +1,3 @@
--- Remove overlapping storage reads and evaluate authorization helpers once per query.
--- Public assets remain readable only when they are attached to published records;
--- authenticated downloads remain limited to registered, available product files.
-
 begin;
 
 drop policy if exists "mvp_product_images_public_read" on storage.objects;

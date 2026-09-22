@@ -85,7 +85,6 @@ CREATE TABLE IF NOT EXISTS public.manufacturers (
 );
 
 -- ── buod_reference_counters ──────────────────────────────────
--- Atomic counter per category-subcategory pair (race-condition safe)
 CREATE TABLE IF NOT EXISTS public.buod_reference_counters (
   category_code    VARCHAR(6) NOT NULL,
   subcategory_code VARCHAR(6) NOT NULL,
@@ -151,7 +150,6 @@ CREATE INDEX IF NOT EXISTS idx_products_category    ON public.products(category_
 CREATE INDEX IF NOT EXISTS idx_products_created_by  ON public.products(created_by);
 CREATE INDEX IF NOT EXISTS idx_products_buod_ref    ON public.products(buod_reference);
 
--- ── product_images ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_images (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id  UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -165,7 +163,6 @@ CREATE TABLE IF NOT EXISTS public.product_images (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── product_files ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_files (
   id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id         UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -185,7 +182,6 @@ CREATE TABLE IF NOT EXISTS public.product_files (
   created_at         TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── product_specifications ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_specifications (
   id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id            UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -199,7 +195,6 @@ CREATE TABLE IF NOT EXISTS public.product_specifications (
   created_at            TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── product_materials ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_materials (
   id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id           UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -218,7 +213,6 @@ CREATE TABLE IF NOT EXISTS public.product_materials (
   created_at           TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── product_components ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_components (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id          UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -226,13 +220,12 @@ CREATE TABLE IF NOT EXISTS public.product_components (
   component_name_en   VARCHAR(200),
   component_code      VARCHAR(50),
   quantity            DECIMAL(10,4),
-  unit                VARCHAR(50),
+  unit                 VARCHAR(50),
   linked_product_id   UUID REFERENCES public.products(id),
   notes               TEXT,
   created_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── product_revisions ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_revisions (
   id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id     UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -244,7 +237,6 @@ CREATE TABLE IF NOT EXISTS public.product_revisions (
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── product_review_actions ────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.product_review_actions (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id  UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -255,7 +247,6 @@ CREATE TABLE IF NOT EXISTS public.product_review_actions (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── project_product_instances (future BOQ) ────────────────────
 CREATE TABLE IF NOT EXISTS public.project_product_instances (
   id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id           UUID,
@@ -274,7 +265,6 @@ CREATE TABLE IF NOT EXISTS public.project_product_instances (
 CREATE INDEX IF NOT EXISTS idx_instances_buod    ON public.project_product_instances(buod_reference);
 CREATE INDEX IF NOT EXISTS idx_instances_project ON public.project_product_instances(project_id);
 
--- ── Auto-update updated_at ────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN NEW.updated_at = NOW(); RETURN NEW; END;
@@ -288,7 +278,6 @@ CREATE TRIGGER trg_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
--- ── Auto-create profile after signup ─────────────────────────
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
