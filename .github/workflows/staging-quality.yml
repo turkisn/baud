@@ -47,8 +47,8 @@ jobs:
       - name: Install test browser
         run: npx playwright install --with-deps chromium
 
-      - name: Workspace browser contracts (isolated fixtures, no live credentials)
-        run: npm run test:browser -- workspace.spec.js
+      - name: Auth and workspace browser contracts (isolated fixtures, no live credentials)
+        run: npm run test:browser -- auth.spec.js workspace.spec.js
         env:
           BUOD_BROWSER_FIXTURES: '1'
 

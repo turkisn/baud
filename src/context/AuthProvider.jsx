@@ -117,7 +117,9 @@ export function AuthProvider({ children }) {
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error('Invalid login credentials');
+    // Preserve the SDK error so the UI can distinguish unconfirmed email,
+    // rate limiting and outages. Login renders only allowlisted messages.
+    if (error) throw error;
     return data;
   }, []);
 
