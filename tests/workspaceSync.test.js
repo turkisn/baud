@@ -15,7 +15,7 @@ function setup(t, options = {}) {
     save: async pending => {
       calls.push(structuredClone(pending));
       if (row?.last_mutation_id === pending.id) return row;
-      if (pending.expectedRevision !== (row?.revision || 0)) throw { code: '40001' };
+      if (pending.expectedRevision !== (row?.revision || 0)) throw { code: 'PT409' };
       row = { projects: pending.projects, revision: (row?.revision || 0) + 1, last_mutation_id: pending.id };
       return row;
     },
@@ -90,6 +90,18 @@ test('stale revisions retain both the local draft and remote data', async t => {
   assert.equal(getRow().projects.length, 2);
   assert.equal(getRow().projects[0].id, 'remote');
   assert.notEqual(getRow().projects[1].id, 'local');
+});
+test('legacy server conflicts preserve the pending draft without retrying', async t => {
+  const { store, service, cache } = setup(t);
+  await store.refresh();
+  store.change(() => [project('local')]);
+  let calls = 0;
+  service.save = async () => { calls++; throw { code: '40001' }; };
+  await store.flush();
+  await store.flush();
+  assert.equal(calls, 1);
+  assert.equal(store.state.status, 'conflict');
+  assert.equal(JSON.parse(cache.get(store.key)).pending.projects[0].id, 'local');
 });
 test('legacy local drafts cannot overwrite an existing cloud workspace', async t => {
   const cache = new Map([['buod-projects:user-a', JSON.stringify([project('legacy')])]]);

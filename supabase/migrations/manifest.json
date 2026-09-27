@@ -331,6 +331,12 @@
       "name": "workspace_rls_initplans",
       "file": "supabase/migrations/20260927222233_workspace_rls_initplans.sql",
       "sha256": "2142289b41b4c10e06c2315fb726c1c8609bd419a02f7ccc3127dfc101ac47de"
+    },
+    {
+      "version": "20260927233543",
+      "name": "workspace_conflict_http409",
+      "file": "supabase/migrations/20260927233543_workspace_conflict_http409.sql",
+      "sha256": "692d9e44d88a93b01473ab603f380bee985732f67c965392ade3d83b0a80c314"
     }
   ]
 }

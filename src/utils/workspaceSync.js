@@ -94,7 +94,8 @@ export class WorkspaceSync {
     const timeout = setTimeout(() => request.abort(), 15_000);
     try { await run(request.signal, () => this.active && this.epoch === epoch); }
     catch (error) {
-      if (this.active && this.epoch === epoch) this.emit({ status: error.code === '40001' ? 'conflict' : 'error' });
+      // Keep compatibility with older deployments while using non-retryable PT409.
+      if (this.active && this.epoch === epoch) this.emit({ status: ['PT409', '40001'].includes(error?.code) ? 'conflict' : 'error' });
     } finally {
       clearTimeout(timeout);
       if (this.epoch === epoch) { this.busy = false; this.request = null; }

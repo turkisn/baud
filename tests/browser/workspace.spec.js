@@ -31,7 +31,7 @@ async function workspace(page, { signedIn = true, initial = null, language = 'en
       if (fail) return respond({ message: 'Temporary fixture outage' }, 503);
       const body = route.request().postDataJSON();
       if (row?.last_mutation_id === body.p_mutation_id) return respond(row);
-      if ((row?.revision || 0) !== body.p_expected_revision) return respond({ code: '40001', message: 'Conflict' }, 409);
+      if ((row?.revision || 0) !== body.p_expected_revision) return respond({ code: 'PT409', message: 'Conflict' }, 409);
       row = { owner_id: owner, projects: body.p_projects, revision: (row?.revision || 0) + 1, last_mutation_id: body.p_mutation_id };
       return respond(row);
     }

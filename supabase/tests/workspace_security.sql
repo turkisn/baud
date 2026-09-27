@@ -22,11 +22,11 @@ begin
   begin
     perform public.save_my_workspace('[]',1,gen_random_uuid());
     raise exception 'Stale update was accepted';
-  exception when serialization_failure then null; end;
+  exception when sqlstate 'PT409' then null; end;
   begin
     perform public.save_my_workspace('[]',0,gen_random_uuid());
     raise exception 'Stale create was accepted';
-  exception when serialization_failure then null; end;
+  exception when sqlstate 'PT409' then null; end;
   begin
     perform public.save_my_workspace('[{"id":"bad","name":"Missing products"}]',2,gen_random_uuid());
     raise exception 'Invalid payload was accepted';
