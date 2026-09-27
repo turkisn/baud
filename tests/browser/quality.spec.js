@@ -1,6 +1,19 @@
 import { test, expect } from '@playwright/test';
 
 const cards = page => page.locator('a[aria-label^="Open "]');
+test('home loads only featured cards while showing the complete catalog total', async ({ page }) => {
+  const pageRequests = [];
+  page.on('request', request => {
+    if (request.url().endsWith('/rpc/get_mvp_catalog_page')) pageRequests.push(request.postDataJSON());
+  });
+  await page.goto('/');
+  await expect(cards(page)).toHaveCount(8);
+  await expect(page.locator('.data-ribbon-metric').filter({ hasText: 'Product records' }).locator('.data-ribbon-value')).toHaveText('100');
+  expect(pageRequests.length).toBeGreaterThan(0);
+  // All eight featured cards are bundled; fetch totals but no remote card data.
+  expect(pageRequests.every(request => request.p_limit === 0)).toBe(true);
+});
+
 test('catalog paging, server facets, URL persistence, and search', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));

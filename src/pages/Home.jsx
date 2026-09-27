@@ -35,6 +35,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState([]);
+  const [productTotal, setProductTotal] = useState(0);
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [productState, setProductState] = useState({ loading: true, error: '' });
@@ -43,10 +44,11 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     mvpService.recordEvent('catalog_view', { page: 'home' });
 
-    mvpService.getLatestProducts(80)
-      .then((rows) => { if (active) setProducts(rows); })
+    mvpService.getCatalogPage({ limit: 8, signal: controller.signal })
+      .then(({ products: rows, total }) => { if (active) { setProducts(rows); setProductTotal(total); } })
       .catch(() => { if (active) setProductState({ loading: false, error: true }); })
       .finally(() => { if (active) setProductState((state) => ({ ...state, loading: false })); });
 
@@ -60,7 +62,7 @@ export default function Home() {
       .catch(() => { if (active) setSupplierState({ loading: false, error: true }); })
       .finally(() => { if (active) setSupplierState((state) => ({ ...state, loading: false })); });
 
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, []);
 
   const submit = (event) => {
@@ -107,6 +109,7 @@ export default function Home() {
 
           <LiveDataRibbon
             products={products}
+            productTotal={productTotal}
             categories={categories}
             suppliers={suppliers}
             loading={productState.loading || categoryState.loading || supplierState.loading}
@@ -168,15 +171,14 @@ export default function Home() {
   );
 }
 
-function LiveDataRibbon({ products, categories, suppliers, loading, hasError, lang, t }) {
-  const formats = new Set(products.flatMap((product) => product.available_formats || []));
+function LiveDataRibbon({ products, productTotal, categories, suppliers, loading, hasError, lang, t }) {
   const formatNumber = (number) => number.toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US', { minimumIntegerDigits: 2 });
   const status = loading ? t('SYNCING', 'جارِ المزامنة') : hasError ? t('PARTIAL DATA', 'بيانات جزئية') : t('CONNECTED', 'متصل');
   const metrics = [
-    { label: t('Product records', 'سجلات المنتجات'), value: products.length, icon: Box, code: 'PRODUCT.DB' },
+    { label: t('Product records', 'سجلات المنتجات'), value: productTotal, icon: Box, code: 'PRODUCT.DB' },
     { label: t('Supplier nodes', 'عُقد الموردين'), value: suppliers.length, icon: Building2, code: 'SUPPLIER.ID' },
     { label: t('Classifications', 'التصنيفات'), value: categories.length, icon: Layers3, code: 'CATEGORY.AI' },
-    { label: t('File formats', 'صيغ الملفات'), value: formats.size, icon: FileBox, code: 'BIM.FORMAT' },
+    { label: t('Featured products', 'منتجات الواجهة'), value: products.length, icon: FileBox, code: 'PRODUCT.FEED' },
   ];
   const highestValue = Math.max(...metrics.map(({ value }) => value), 1);
 
