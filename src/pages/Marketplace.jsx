@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { blocks, categories } from '../data/mockData';
 import BlockCard from '../components/BlockCard';
-import { fadeInUp, viewport } from '../utils/animations';
 
 const formats = ['DWG', 'RVT', 'SKP', 'OBJ', 'FBX', '3DS', 'MAX', 'STL', 'IES'];
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, ChevronDown, ChevronUp, ArrowRight, Zap } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { pricingPlans, faqItems } from '../data/mockData';
 import SectionHeader from '../components/ui/SectionHeader';

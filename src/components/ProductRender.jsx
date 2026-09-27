@@ -370,17 +370,17 @@ const renders = {
 
 // ─── Fallback by category ─────────────────────────────────────────────────────
 const categoryFallback = {
-  furniture:     ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🛋️</text>,
-  lighting:      ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">💡</text>,
-  decor:         ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🎨</text>,
-  doors:         ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🚪</text>,
-  'wall-finishes': ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🧱</text>,
-  flooring:      ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">⬛</text>,
-  kitchen:       ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🍳</text>,
-  bathroom:      ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🛁</text>,
-  outdoor:       ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🌿</text>,
-  office:        ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">💼</text>,
-  hospitality:   ({ c }) => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🏨</text>,
+  furniture:     () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🛋️</text>,
+  lighting:      () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">💡</text>,
+  decor:         () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🎨</text>,
+  doors:         () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🚪</text>,
+  'wall-finishes': () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🧱</text>,
+  flooring:      () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">⬛</text>,
+  kitchen:       () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🍳</text>,
+  bathroom:      () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🛁</text>,
+  outdoor:       () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🌿</text>,
+  office:        () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">💼</text>,
+  hospitality:   () => <text x="140" y="110" textAnchor="middle" fontSize="80" dominantBaseline="middle">🏨</text>,
 };
 
 export default function ProductRender({ block }) {

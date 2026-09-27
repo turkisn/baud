@@ -450,7 +450,7 @@ export default function Library() {
               <>
                 <span className="font-bold text-dark-brown">{filtered.length}</span>{' '}
                 {t('models', 'موديل')}
-                {search && <span> — {t('for', 'لـ')} "<strong className="text-dark-brown">{search}</strong>"</span>}
+                {search && <span> — {t('for', 'لـ')} &quot;<strong className="text-dark-brown">{search}</strong>&quot;</span>}
               </>
             )}
           </p>

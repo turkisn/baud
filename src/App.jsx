@@ -54,8 +54,8 @@ const PAGE_METADATA = {
     ar: ['موردو منتجات البناء — بُعد', 'استكشف موردي منتجات البناء ومكتبات منتجاتهم المنشورة.'],
   },
   '/projects': {
-    en: ['My Projects — BUOD', 'Organise selected construction products into private project collections in your browser.'],
-    ar: ['مشاريعي — بُعد', 'نظّم منتجات البناء المختارة في مجموعات مشاريع خاصة داخل متصفحك.'],
+    en: ['My Projects — BUOD', 'Organise selected construction products into private project collections, with account cloud sync.'],
+    ar: ['مشاريعي — بُعد', 'نظّم منتجات البناء المختارة في مشاريع خاصة مع المزامنة السحابية للحساب.'],
   },
   '/compare': {
     en: ['Compare Construction Products — BUOD', 'Compare construction product specifications side by side.'],

@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Plus, Search, Filter, Eye, Pencil, Send, Archive,
+  Plus, Search, Eye, Pencil, Send,
   BadgeCheck, Copy, Check, ChevronDown, Package,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -64,7 +64,6 @@ function RefBadge({ buodRef }) {
 export default function MyProducts() {
   const { t, lang }  = useLanguage();
   const { user }     = useAuth();
-  const navigate     = useNavigate();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);

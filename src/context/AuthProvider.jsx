@@ -18,6 +18,7 @@ async function fetchProfile(userId) {
 function mergeProfile(authUser, profile) {
   return {
     id: authUser.id,
+    isAnonymous: Boolean(authUser.is_anonymous),
     email: authUser.email,
     name: profile?.full_name || authUser.user_metadata?.full_name || authUser.email,
     nameAr: profile?.full_name || authUser.email,

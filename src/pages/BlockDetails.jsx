@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Download, Star, Package, Building, Phone, Mail, Globe, CheckCircle, ChevronRight, ExternalLink } from 'lucide-react';
+import { Download, Star, Building, Phone, Mail, CheckCircle, ChevronRight, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { blocks, suppliers } from '../data/mockData';
 import BlockCard from '../components/BlockCard';

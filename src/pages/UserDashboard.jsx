@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Search, Heart, Download, Package } from 'lucide-react';
+import { Search, Heart, Package } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function UserDashboard() {
-  const { t, lang }   = useLanguage();
-  const { user, logout } = useAuth();
+  const { t }   = useLanguage();
+  const { user } = useAuth();
 
   const displayName   = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
   const initial       = (user?.name || user?.email || '?')[0].toUpperCase();

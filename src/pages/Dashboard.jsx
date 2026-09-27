@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Upload, Package, Download, Eye, TrendingUp, Users, Bell, Settings,
-  Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, ArrowLeft, X, Home
+  Plus, MoreVertical, CheckCircle, Clock, Star, BarChart2, Home
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { blocks } from '../data/mockData';

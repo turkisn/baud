@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Plus, Search, BadgeCheck, Eye, Download, Pencil,
-  Trash2, Filter, ChevronDown, X, ToggleLeft, ToggleRight, Home
+  Plus, Search, Eye, Download, Pencil,
+  Trash2, ChevronDown, X, ToggleLeft, ToggleRight, Home
 } from 'lucide-react';
 import { libraryModels, libraryCategories } from '../data/mockData';
 import { fadeInUp, viewport } from '../utils/animations';
@@ -25,7 +25,7 @@ function Badge({ label, color }) {
 export default function LibraryAdmin() {
   const [models, setModels]   = useState(libraryModels);
   const [search, setSearch]   = useState('');
-  const [catFilter, setCat]   = useState('all');
+  const [catFilter, setCatFilter]   = useState('all');
   const [sort, setSort]       = useState('dateAdded');
   const [editModal, setEdit]  = useState(null);
   const [deleteId, setDelId]  = useState(null);
@@ -151,7 +151,7 @@ export default function LibraryAdmin() {
           </div>
 
           <div className="relative">
-            <select value={catFilter} onChange={e => setCat(e.target.value)}
+            <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
               className="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-medium border outline-none cursor-pointer"
               style={{ background: '#2B1B0E', borderColor: '#3A2A18', color: '#C4A882' }}>
               {libraryCategories.map(c => (

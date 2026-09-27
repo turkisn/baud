@@ -2,7 +2,6 @@
 // When Supabase is connected, swap this layer with Supabase queries.
 // All functions return Promises to mirror async API behavior.
 
-import { CATEGORIES, SUBCATEGORIES } from '../data/categoriesData';
 
 const KEY = 'buad_products';
 const CTR = 'buad_ref_counters';
@@ -20,7 +19,7 @@ function nextRef(catId, subId) {
   const subCode = subId || 'GEN';
   const key = `${catCode}-${subCode}`;
   let counters = {};
-  try { counters = JSON.parse(localStorage.getItem(CTR) || '{}'); } catch {}
+  try { counters = JSON.parse(localStorage.getItem(CTR) || '{}'); } catch { /* Invalid cached counters restart from an empty map. */ }
   const n = (counters[key] || 0) + 1;
   counters[key] = n;
   localStorage.setItem(CTR, JSON.stringify(counters));

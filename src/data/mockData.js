@@ -427,10 +427,6 @@ export const libraryCategories = [
   { id: 'office',   labelEn: 'Office',    labelAr: 'المكاتب',        icon: '💼' },
 ];
 
-const FORMAT_COLOR_MAP = {
-  RVT: '#0696D7', SKP: '#D73A0A', MAX: '#00A3E0',
-  FBX: '#5A8A2A', OBJ: '#7B5EA7', DWG: '#C4302B',
-};
 
 export const libraryModels = [
   // ── FURNITURE ────────────────────────────────────

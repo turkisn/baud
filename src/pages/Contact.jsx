@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle, MessageCircle, Building2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import SectionHeader from '../components/ui/SectionHeader';
 import { fadeInUp, slideInLeft, slideInRight, stagger, viewport } from '../utils/animations';
 
 const topics = [

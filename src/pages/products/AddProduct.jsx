@@ -2,8 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronRight, ChevronLeft, Save, Send, Eye, Check, Plus, Trash2,
-  Upload, FileText, Image as ImgIcon, AlertCircle, Copy, Info,
+  ChevronRight, ChevronLeft, Save, Send, Check, Plus, Trash2,
+  Upload, Image as ImgIcon, AlertCircle, Copy, Info,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -842,7 +842,7 @@ export default function AddProduct() {
 
   const [step, setStep]           = useState(1);
   const [form, setForm]           = useState({ ...INITIAL_FORM });
-  const [draftId, setDraftId]     = useState(null);
+  const [, setDraftId]     = useState(null);
   const [buodRef, setBuodRef]     = useState(null);
   const [saving, setSaving]       = useState(false);
   const [submitting, setSub]      = useState(false);
