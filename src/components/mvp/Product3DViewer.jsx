@@ -1,294 +1,217 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pause, Play, RotateCcw } from 'lucide-react';
+import { lazy, memo, Suspense, useEffect, useRef, useState } from 'react';
+import { Pause, Play, RotateCcw, ZoomIn, ZoomOut, Sun, Moon, ScanLine } from 'lucide-react';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { getDemo3DModel } from '../../data/demo3dCatalog';
 import { canvasRenderSize } from '../../utils/canvas';
+import { buildProductScene, cameraFitDistance, disposeProductScene } from '../../utils/productScene';
 
-const TAU = Math.PI * 2;
+const FallbackViewer = lazy(() => import('./Product3DFallback'));
 const FRAME_INTERVAL = 1000 / 30;
-const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
 
-function rotatePoint(point, rotation = [0, 0, 0]) {
-  let [x, y, z] = point;
-  const [rx, ry, rz] = rotation;
-  if (rx) {
-    const cosine = Math.cos(rx); const sine = Math.sin(rx);
-    [y, z] = [y * cosine - z * sine, y * sine + z * cosine];
-  }
-  if (ry) {
-    const cosine = Math.cos(ry); const sine = Math.sin(ry);
-    [x, z] = [x * cosine + z * sine, -x * sine + z * cosine];
-  }
-  if (rz) {
-    const cosine = Math.cos(rz); const sine = Math.sin(rz);
-    [x, y] = [x * cosine - y * sine, x * sine + y * cosine];
-  }
-  return [x, y, z];
-}
-
-function movePoint(point, part) {
-  const rotated = rotatePoint(point, part.rotation);
-  return rotated.map((value, index) => value + part.position[index]);
-}
-
-function boxFaces(part) {
-  const [width, height, depth] = part.size;
-  const vertices = [
-    [-width / 2, -height / 2, -depth / 2], [width / 2, -height / 2, -depth / 2],
-    [width / 2, height / 2, -depth / 2], [-width / 2, height / 2, -depth / 2],
-    [-width / 2, -height / 2, depth / 2], [width / 2, -height / 2, depth / 2],
-    [width / 2, height / 2, depth / 2], [-width / 2, height / 2, depth / 2],
-  ].map((point) => movePoint(point, part));
-  return [[0, 1, 2, 3], [4, 7, 6, 5], [0, 4, 5, 1], [3, 2, 6, 7], [1, 5, 6, 2], [0, 3, 7, 4]]
-    .map((indices) => ({ ...part, vertices: indices.map((index) => vertices[index]) }));
-}
-
-function cylinderFaces(part) {
-  const segments = part.segments || 18;
-  const top = []; const bottom = [];
-  for (let index = 0; index < segments; index += 1) {
-    const angle = (index / segments) * TAU;
-    const point = [Math.cos(angle) * part.radius, part.height / 2, Math.sin(angle) * part.radius];
-    top.push(movePoint(point, part));
-    bottom.push(movePoint([point[0], -part.height / 2, point[2]], part));
-  }
-  const faces = [{ ...part, vertices: top }, { ...part, vertices: [...bottom].reverse() }];
-  for (let index = 0; index < segments; index += 1) {
-    const next = (index + 1) % segments;
-    faces.push({ ...part, vertices: [bottom[index], bottom[next], top[next], top[index]] });
-  }
-  return faces;
-}
-
-function meshFaces(part) {
-  return part.faces.map((face) => {
-    const definition = Array.isArray(face) ? { indices: face } : face;
-    const { indices, ...faceOptions } = definition;
-    return { ...part, ...faceOptions, vertices: indices.map((index) => part.vertices[index]) };
-  });
-}
-
-function buildFaces(model) {
-  return model.parts.flatMap((part) => {
-    if (part.kind === 'cylinder') return cylinderFaces(part);
-    if (part.kind === 'mesh') return meshFaces(part);
-    return boxFaces(part);
-  });
-}
-
-function viewPoint(point, yaw, pitch) {
-  const cosineY = Math.cos(yaw); const sineY = Math.sin(yaw);
-  const x = point[0] * cosineY + point[2] * sineY;
-  const z = -point[0] * sineY + point[2] * cosineY;
-  const cosineX = Math.cos(pitch); const sineX = Math.sin(pitch);
-  return [x, point[1] * cosineX - z * sineX, point[1] * sineX + z * cosineX];
-}
-
-function normal(vertices) {
-  const first = vertices[0]; const second = vertices[1]; const third = vertices[2];
-  const a = [second[0] - first[0], second[1] - first[1], second[2] - first[2]];
-  const b = [third[0] - first[0], third[1] - first[1], third[2] - first[2]];
-  const result = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  const length = Math.hypot(...result) || 1;
-  return result.map((value) => value / length);
-}
-
-function litColor(hex, light, emissive = 0) {
-  const value = hex.replace('#', '');
-  const expanded = value.length === 3 ? value.split('').map((character) => character.repeat(2)).join('') : value;
-  const multiplier = clamp(.42 + light * .68 + emissive, .28, 1.28);
-  const channels = [0, 2, 4].map((index) => clamp(Math.round(Number.parseInt(expanded.slice(index, index + 2), 16) * multiplier), 0, 255));
-  return `rgb(${channels.join(',')})`;
-}
-
-function drawScene(context, width, height, faces, view) {
-  context.clearRect(0, 0, width, height);
-  const gradient = context.createRadialGradient(width * .5, height * .42, 0, width * .5, height * .55, Math.max(width, height) * .72);
-  gradient.addColorStop(0, '#271b0d'); gradient.addColorStop(.46, '#0d0b08'); gradient.addColorStop(1, '#050403');
-  context.fillStyle = gradient; context.fillRect(0, 0, width, height);
-
-  context.save();
-  context.globalAlpha = .28; context.strokeStyle = '#9c7336'; context.lineWidth = 1;
-  for (let index = -8; index <= 8; index += 1) {
-    const x = width / 2 + index * Math.min(width, height) * .065;
-    context.beginPath(); context.moveTo(x, height * .73); context.lineTo(width / 2 + index * Math.min(width, height) * .018, height * .48); context.stroke();
-  }
-  for (let index = 0; index < 6; index += 1) {
-    const y = height * (.52 + index * .055);
-    context.beginPath(); context.moveTo(width * (.18 - index * .035), y); context.lineTo(width * (.82 + index * .035), y); context.stroke();
-  }
-  context.restore();
-
-  context.save();
-  context.filter = 'blur(14px)'; context.globalAlpha = .55; context.fillStyle = '#000';
-  context.beginPath(); context.ellipse(width / 2, height * .73, width * .25, height * .055, 0, 0, TAU); context.fill(); context.restore();
-
-  const distance = 8;
-  const scale = Math.min(width, height) * distance * .155 * view.zoom;
-  const projected = faces.map((face) => {
-    const vertices = face.vertices.map((point) => viewPoint(point, view.yaw, view.pitch));
-    return { ...face, transformed: vertices, depth: vertices.reduce((total, point) => total + point[2], 0) / vertices.length };
-  }).sort((left, right) => left.depth - right.depth);
-  const lightDirection = [-.35, .72, .92];
-
-  for (const face of projected) {
-    const points = face.transformed.map(([x, y, z]) => {
-      const perspective = scale / (distance - z);
-      return [width / 2 + x * perspective, height * .67 - y * perspective];
-    });
-    const faceNormal = normal(face.transformed);
-    const light = Math.abs(faceNormal[0] * lightDirection[0] + faceNormal[1] * lightDirection[1] + faceNormal[2] * lightDirection[2]) / 1.22;
-    context.beginPath();
-    points.forEach(([x, y], index) => index ? context.lineTo(x, y) : context.moveTo(x, y));
-    context.closePath();
-    context.globalAlpha = face.alpha ?? 1;
-    context.fillStyle = litColor(face.color, light, face.emissive || 0);
-    context.fill();
-    context.globalAlpha = Math.min(face.alpha ?? 1, .74);
-    context.strokeStyle = face.emissive ? '#f4cb74' : '#c69b55';
-    context.lineWidth = face.emissive ? 1.35 : .55;
-    context.stroke();
-  }
-  context.globalAlpha = 1;
-}
-
-function Product3DViewer({ slug, label, pauseLabel, resumeLabel, resetLabel, errorLabel }) {
+function Product3DViewer(props) {
+  const { slug, label, pauseLabel, resumeLabel, resetLabel, errorLabel, lang = 'en' } = props;
   const canvasRef = useRef(null);
-  const pointerRef = useRef(null);
-  const viewRef = useRef(null);
-  const drawRef = useRef(null);
-  const scheduleRef = useRef(null);
-  const model = useMemo(() => getDemo3DModel(slug), [slug]);
-  const faces = useMemo(() => model ? buildFaces(model) : [], [model]);
-  const [autoRotate, setAutoRotate] = useState(() => typeof window === 'undefined' || !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const [renderError, setRenderError] = useState(false);
-  const autoRotateRef = useRef(autoRotate);
-
-  const resetView = useCallback(() => {
-    if (!model) return;
-    viewRef.current = { ...model.camera };
-    drawRef.current?.();
-  }, [model]);
+  const apiRef = useRef(null);
+  const [fallback, setFallback] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [lightStudio, setLightStudio] = useState(false);
+  const [wireframe, setWireframe] = useState(false);
+  const [view, setView] = useState('perspective');
+  const t = (en, ar) => lang === 'ar' ? ar : en;
 
   useEffect(() => {
-    autoRotateRef.current = autoRotate;
-    drawRef.current?.();
-    if (autoRotate) scheduleRef.current?.();
-  }, [autoRotate]);
-
-  useEffect(() => {
-    if (!model) return undefined;
-    resetView();
+    const model = getDemo3DModel(slug);
     const canvas = canvasRef.current;
-    const context = canvas?.getContext?.('2d', { alpha: false });
-    if (!canvas || !context) {
-      setRenderError(true);
-      return undefined;
-    }
-    setRenderError(false);
-    let disposed = false;
-    let width = 1; let height = 1; let frame = null; let previousTime = performance.now(); let previousFrame = 0;
-    const stopFrame = () => {
-      if (frame !== null) cancelAnimationFrame(frame);
-      frame = null;
-    };
-    const failRender = () => {
-      stopFrame();
-      if (!disposed) setRenderError(true);
-    };
-    const draw = () => {
-      if (disposed || !viewRef.current) return;
-      try { drawScene(context, width, height, faces, viewRef.current); }
-      catch { failRender(); }
-    };
+    if (!model || !canvas || fallback) return undefined;
+    let renderer, environment, controls, observer;
+    let disposed = false, failed = false, frame = null, previous = 0;
+    let rotating = false, dirty = true;
+    let resetCamera = () => {};
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, 1, .05, 160);
+    const stop = () => { if (frame !== null) cancelAnimationFrame(frame); frame = null; };
+    const fail = () => { failed = true; stop(); if (!disposed) setFallback(true); };
     const schedule = () => {
-      if (disposed || document.hidden || frame !== null) return;
+      if (disposed || failed || document.hidden || frame !== null) return;
       frame = requestAnimationFrame(render);
     };
     function render(time) {
       frame = null;
-      if (disposed || document.hidden) return;
-      if (autoRotateRef.current && time - previousFrame < FRAME_INTERVAL) {
-        schedule();
-        return;
-      }
-      const elapsed = Math.min(time - previousTime, 40);
-      previousTime = time;
-      previousFrame = time;
-      if (autoRotateRef.current && !pointerRef.current) viewRef.current.yaw += elapsed * .00012;
-      draw();
-      if (autoRotateRef.current) schedule();
+      if (disposed || failed || document.hidden) return;
+      if (time - previous < FRAME_INTERVAL && !dirty) { schedule(); return; }
+      const delta = Math.min((time - previous) / 1000 || .033, .05);
+      previous = time;
+      try {
+        const moving = controls.update(delta);
+        renderer.render(scene, camera);
+        dirty = false;
+        if (rotating || moving) schedule();
+      } catch { fail(); }
     }
-    const resize = () => {
-      const bounds = canvas.getBoundingClientRect();
-      const size = canvasRenderSize(bounds.width, bounds.height, window.devicePixelRatio || 1);
-      width = size.width; height = size.height;
-      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
-      draw();
-    };
-    const onVisibilityChange = () => {
-      if (document.hidden) stopFrame();
-      else { previousTime = performance.now(); draw(); if (autoRotateRef.current) schedule(); }
-    };
-    const onContextLost = (event) => { event.preventDefault(); failRender(); };
-    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
-    observer?.observe(canvas);
-    if (!observer) window.addEventListener('resize', resize);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    canvas.addEventListener('contextlost', onContextLost);
-    drawRef.current = draw;
-    scheduleRef.current = schedule;
-    resize();
-    if (autoRotateRef.current) schedule();
+    const invalidate = () => { dirty = true; schedule(); };
+    const visibility = () => { if (document.hidden) stop(); else { previous = performance.now(); invalidate(); } };
+    const lost = (event) => { event.preventDefault(); fail(); };
+    const reset = () => { resetCamera(); invalidate(); };
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
+      renderer.shadowMap.autoUpdate = false;
+      scene.background = new THREE.Color('#14191d');
+      const room = new RoomEnvironment();
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      environment = pmrem.fromScene(room, .04);
+      room.dispose(); pmrem.dispose();
+      scene.environment = environment.texture;
+      scene.environmentIntensity = .8;
+      const product = buildProductScene(model, slug);
+      scene.add(product);
+      const bounds = new THREE.Box3().setFromObject(product);
+      const size = bounds.getSize(new THREE.Vector3());
+      const center = bounds.getCenter(new THREE.Vector3());
+      const radius = size.length() / 2;
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200),
+        new THREE.MeshStandardMaterial({ color: '#20272c', roughness: .85, metalness: .05 }));
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -.025;
+      floor.receiveShadow = true;
+      scene.add(floor);
+      const key = new THREE.DirectionalLight('#fff0dc', 3.5);
+      key.position.set(-3, 7, 5);
+      key.castShadow = true;
+      key.shadow.mapSize.set(1024, 1024);
+      Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: .5, far: 24 });
+      key.shadow.normalBias = .035;
+      key.shadow.bias = -.0002;
+      key.shadow.radius = 3;
+      key.target.position.copy(center);
+      scene.add(key, key.target, new THREE.HemisphereLight('#dcecff', '#444039', 1.1));
+      const rim = new THREE.DirectionalLight('#bed8ff', 2);
+      rim.position.set(4, 4, -5);
+      scene.add(rim);
+      controls = new OrbitControls(camera, canvas);
+      controls.target.copy(center);
+      controls.enableDamping = true;
+      controls.dampingFactor = .13;
+      controls.enablePan = false;
+      controls.maxPolarAngle = Math.PI * .49;
+      controls.minPolarAngle = .015;
+      controls.autoRotateSpeed = .65;
+      controls.zoomSpeed = .7;
+      controls.addEventListener('change', invalidate);
+      let fitDistance = 1;
+      let activeView = 'perspective';
+      const positionCamera = () => {
+        const direction = activeView === 'front' ? new THREE.Vector3(0, .06, 1)
+          : activeView === 'top' ? new THREE.Vector3(0, 1, .01)
+          : new THREE.Vector3(Math.sin(model.camera.yaw), Math.max(.35, -model.camera.pitch + .2), Math.cos(model.camera.yaw));
+        camera.position.copy(center).add(direction.normalize().multiplyScalar(fitDistance));
+        controls.target.copy(center);
+        controls.update();
+        controls.saveState();
+      };
+      resetCamera = positionCamera;
+      const resize = () => {
+        const rect = canvas.getBoundingClientRect();
+        const aspect = Math.max(1, rect.width) / Math.max(1, rect.height);
+        const renderSize = canvasRenderSize(rect.width, rect.height, window.devicePixelRatio);
+        const oldDistance = camera.position.distanceTo(center);
+        const oldFit = fitDistance;
+        camera.aspect = aspect;
+        fitDistance = cameraFitDistance(radius, aspect);
+        camera.far = Math.max(160, fitDistance * 5);
+        camera.updateProjectionMatrix();
+        controls.minDistance = fitDistance * .3;
+        controls.maxDistance = fitDistance * 2.5;
+        renderer.setSize(renderSize.width, renderSize.height, false);
+        if (oldFit === 1) positionCamera();
+        else camera.position.sub(center).normalize().multiplyScalar(oldDistance * fitDistance / oldFit).add(center);
+        invalidate();
+      };
+      apiRef.current = {
+        rotate(value) { rotating = value; controls.autoRotate = value; invalidate(); },
+        zoom(multiplier) {
+          const distance = THREE.MathUtils.clamp(camera.position.distanceTo(center) * multiplier, controls.minDistance, controls.maxDistance);
+          camera.position.sub(center).normalize().multiplyScalar(distance).add(center);
+          invalidate();
+        },
+        reset,
+        view(value) { activeView = value; positionCamera(); invalidate(); },
+        studio(light) {
+          scene.background.set(light ? '#e8e5df' : '#14191d');
+          floor.material.color.set(light ? '#c5c0b7' : '#20272c');
+          renderer.toneMappingExposure = light ? 1.1 : 1.2;
+          invalidate();
+        },
+        wireframe(value) { product.traverse(o => { for (const m of [o.material].flat().filter(Boolean)) m.wireframe = value; }); invalidate(); },
+        orbit(x, y) {
+          const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(center));
+          spherical.theta += x; spherical.phi = THREE.MathUtils.clamp(spherical.phi + y, controls.minPolarAngle, controls.maxPolarAngle);
+          camera.position.copy(center).add(new THREE.Vector3().setFromSpherical(spherical));
+          invalidate();
+        },
+      };
+      observer = new ResizeObserver(resize);
+      observer.observe(canvas);
+      document.addEventListener('visibilitychange', visibility);
+      canvas.addEventListener('webglcontextlost', lost);
+      resize();
+      renderer.shadowMap.needsUpdate = true;
+      renderer.render(scene, camera);
+      setReady(true);
+    } catch { fail(); }
     return () => {
-      disposed = true;
-      stopFrame();
-      observer?.disconnect();
-      if (!observer) window.removeEventListener('resize', resize);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      canvas.removeEventListener('contextlost', onContextLost);
-      if (drawRef.current === draw) drawRef.current = null;
-      if (scheduleRef.current === schedule) scheduleRef.current = null;
-      pointerRef.current = null;
+      disposed = true; stop(); observer?.disconnect(); controls?.dispose();
+      document.removeEventListener('visibilitychange', visibility);
+      canvas.removeEventListener('webglcontextlost', lost);
+      disposeProductScene(scene);
+      scene.traverse(object => object.shadow?.dispose());
+      environment?.dispose();
+      renderer?.dispose();
+      // Release the GPU context after a real unmount. StrictMode reuses the
+      // connected canvas for its effect check, so that context must stay alive.
+      queueMicrotask(() => { if (!canvas.isConnected) renderer?.forceContextLoss(); });
+      apiRef.current = null;
     };
-  }, [faces, model, resetView]);
+  }, [slug, fallback]);
 
-  if (!model) return null;
+  useEffect(() => { apiRef.current?.rotate(autoRotate); }, [autoRotate, ready]);
+  useEffect(() => { apiRef.current?.studio(lightStudio); }, [lightStudio, ready]);
+  useEffect(() => { apiRef.current?.wireframe(wireframe); }, [wireframe, ready]);
 
-  const pointerDown = (event) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    pointerRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    drawRef.current?.();
-  };
-  const pointerMove = (event) => {
-    const pointer = pointerRef.current;
-    if (!pointer || pointer.id !== event.pointerId || !viewRef.current) return;
-    const deltaX = event.clientX - pointer.x; const deltaY = event.clientY - pointer.y;
-    viewRef.current.yaw += deltaX * .009;
-    viewRef.current.pitch = clamp(viewRef.current.pitch + deltaY * .007, -1.18, .75);
-    pointerRef.current = { ...pointer, x: event.clientX, y: event.clientY };
-    drawRef.current?.();
-  };
-  const pointerUp = (event) => {
-    if (pointerRef.current?.id === event.pointerId) pointerRef.current = null;
-    if (autoRotateRef.current) scheduleRef.current?.();
-  };
-  const zoom = (event) => {
-    event.preventDefault();
-    if (!viewRef.current) return;
-    viewRef.current.zoom = clamp(viewRef.current.zoom * (event.deltaY > 0 ? .92 : 1.08), .62, 1.7);
-    drawRef.current?.();
-  };
+  if (fallback) return <Suspense fallback={<div className="product-3d-error">{errorLabel}</div>}><FallbackViewer {...props}/><span className="product-3d-mode-label">{t('Compatibility view', 'عرض متوافق مع الجهاز')}</span></Suspense>;
 
-  return (
-    <div className="product-3d-stage">
-      <canvas ref={canvasRef} role="img" aria-label={label} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onWheel={zoom} onDoubleClick={resetView} />
-      {renderError && <div className="product-3d-error" role="alert">{errorLabel}</div>}
-      <div className="product-3d-viewer-controls">
-        <button type="button" onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? pauseLabel : resumeLabel}>{autoRotate ? <Pause size={15}/> : <Play size={15}/>}</button>
-        <button type="button" onClick={resetView} aria-label={resetLabel}><RotateCcw size={15}/></button>
-      </div>
+  const selectView = (value) => { setView(value); setAutoRotate(false); apiRef.current?.view(value); };
+  const reset = () => { setView('perspective'); apiRef.current?.view('perspective'); };
+  const keyboard = (event) => {
+    const actions = {
+      ArrowLeft: () => apiRef.current?.orbit(-.12, 0), ArrowRight: () => apiRef.current?.orbit(.12, 0),
+      ArrowUp: () => apiRef.current?.orbit(0, -.12), ArrowDown: () => apiRef.current?.orbit(0, .12),
+      '+': () => apiRef.current?.zoom(.88), '-': () => apiRef.current?.zoom(1.12),
+      Home: reset,
+    };
+    if (actions[event.key]) { event.preventDefault(); actions[event.key](); }
+  };
+  return <div className="product-3d-stage" data-renderer="webgl" data-ready={ready}>
+    <canvas ref={canvasRef} role="img" aria-label={label} tabIndex={0} onKeyDown={keyboard} onDoubleClick={reset}/>
+    <div className="product-3d-views" role="group" aria-label={t('Camera views', 'زوايا المشاهدة')}>
+      {[['perspective', t('Perspective', 'منظور')], ['front', t('Front', 'أمامي')], ['top', t('Top', 'علوي')]].map(([value, title]) =>
+        <button key={value} type="button" aria-pressed={view === value} onClick={() => selectView(value)}>{title}</button>)}
     </div>
-  );
+    <div className="product-3d-viewer-controls" role="group" aria-label={t('3D controls', 'أدوات العرض')}>
+      <button type="button" onClick={() => setLightStudio(v => !v)} aria-label={t('Switch studio lighting', 'تبديل إضاءة الاستوديو')} aria-pressed={lightStudio}>{lightStudio ? <Moon size={16}/> : <Sun size={16}/>}</button>
+      <button type="button" onClick={() => setWireframe(v => !v)} aria-label={t('Show model structure', 'إظهار هيكل المجسم')} aria-pressed={wireframe}><ScanLine size={16}/></button>
+      <button type="button" onClick={() => apiRef.current?.zoom(.84)} aria-label={t('Zoom in', 'تقريب')}><ZoomIn size={16}/></button>
+      <button type="button" onClick={() => apiRef.current?.zoom(1.18)} aria-label={t('Zoom out', 'إبعاد')}><ZoomOut size={16}/></button>
+      <button type="button" onClick={() => setAutoRotate(v => !v)} aria-label={autoRotate ? pauseLabel : resumeLabel} aria-pressed={autoRotate}>{autoRotate ? <Pause size={16}/> : <Play size={16}/>}</button>
+      <button type="button" onClick={reset} aria-label={resetLabel}><RotateCcw size={16}/></button>
+    </div>
+  </div>;
 }
-
 export default memo(Product3DViewer);

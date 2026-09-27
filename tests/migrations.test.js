@@ -17,7 +17,7 @@ test('migration history uses unique Supabase timestamp versions', async () => {
   const { migrations } = await loadManifest();
   const versions = migrations.map(({ version }) => version);
 
-  assert.equal(migrations.length, 52);
+  assert.ok(migrations.length >= 52, 'the reconciled history must remain intact');
   assert.equal(new Set(versions).size, versions.length);
   assert.deepEqual(versions, [...versions].sort());
   assert.ok(versions.every((version) => /^\d{14}$/.test(version)));

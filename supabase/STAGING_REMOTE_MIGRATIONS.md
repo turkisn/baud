@@ -8,3 +8,5 @@ The remote **staging** database is the source of truth for the current BUOD MVP 
 - The legacy untimestamped `001`–`012` filenames were replaced with their original remote timestamps so Supabase tooling sees the same history on both sides.
 
 These historical migrations are already applied to staging and must not be re-applied there manually. Future schema changes must be created as new timestamped migrations and verified with Supabase advisors before deployment. Never use a destructive reset to repair migration history.
+
+On **27 September 2026**, migration `20260927033045_paginated_catalog_search` was applied to staging and added to the manifest (53 migrations total). It adds a bounded, SECURITY INVOKER catalog endpoint with database-side search, facets, stable pagination, counts, and public file metadata. Tests as `anon` confirmed zero page overlap and zero unpublished records. The existing API remains available to older deployments.

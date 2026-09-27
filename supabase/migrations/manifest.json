@@ -1,6 +1,6 @@
 {
   "projectRef": "uhcvfwajowdszxteanlx",
-  "reconciledAt": "2026-09-22",
+  "reconciledAt": "2026-09-27",
   "migrations": [
     {
       "version": "20260816022848",
@@ -313,6 +313,12 @@
       "name": "consolidate_and_optimize_storage_rls",
       "file": "supabase/migrations/20260915172206_consolidate_and_optimize_storage_rls.sql",
       "sha256": "a82d38b24b6a1e02afb04939b90c297f72e22e23b15148a65397a008c7646b32"
+    },
+    {
+      "version": "20260927033045",
+      "name": "paginated_catalog_search",
+      "file": "supabase/migrations/20260927033045_paginated_catalog_search.sql",
+      "sha256": "d6850e8f954c910d6bd84fae0791aaffe2a01fd4f9c533efbbdd19e9608dd101"
     }
   ]
 }

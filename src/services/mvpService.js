@@ -1,6 +1,6 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 import { BUNDLED_CATALOG_PRODUCTS, getBundledCatalogProduct } from '../data/bundledCatalog';
-import { collectPages } from '../utils/catalog';
+import { catalogFacets, mergeCatalogFacets, planCatalogPage } from '../utils/catalogPage';
 
 const PRIVATE_BUCKETS = Object.freeze({
   PRODUCT_IMAGES: 'product-images',
@@ -141,16 +141,6 @@ function normalizeSingleResult(data) {
   return result && typeof result === 'object' && Object.keys(result).length > 0 ? result : null;
 }
 
-function uniqueCatalogProducts(rows) {
-  const seen = new Set();
-  return rows.filter((row) => {
-    const key = row?.id || row?.product_id || row?.slug;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function sortCatalogProducts(left, right) {
   const featured = Number(Boolean(right.is_featured)) - Number(Boolean(left.is_featured));
   if (featured) return featured;
@@ -200,72 +190,6 @@ async function settleQuery(query) {
   } catch {
     return { data: null, error: true };
   }
-}
-
-async function hydrateProductSummaries(rows) {
-  const summaries = rows.map((row) => {
-    const rawImagePath = first(row, ['featured_image_path', 'image_path']);
-    return {
-      row,
-      rawImagePath,
-      imagePath: isValidStoragePath(rawImagePath) ? rawImagePath : null,
-    };
-  });
-  const productIds = summaries.map(({ row }) => row.id || row.product_id).filter(Boolean);
-  const [signed, filesResult, specificationsResult, materialsResult] = await Promise.all([
-    batchSignedUrls(
-      PRIVATE_BUCKETS.PRODUCT_IMAGES,
-      summaries.map(({ imagePath }) => imagePath)
-    ),
-    productIds.length
-      ? settleQuery(supabase.from('product_files').select(PUBLIC_PRODUCT_FILE_FIELDS)
-        .in('product_id', productIds).eq('is_available', true))
-      : Promise.resolve({ data: [], error: null }),
-    productIds.length
-      ? settleQuery(supabase.from('product_specifications').select(PUBLIC_SPECIFICATION_FIELDS).in('product_id', productIds))
-      : Promise.resolve({ data: [], error: null }),
-    productIds.length
-      ? settleQuery(supabase.from('product_materials').select(PUBLIC_MATERIAL_FIELDS).in('product_id', productIds))
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-
-  const filesByProduct = new Map();
-  if (!filesResult.error && Array.isArray(filesResult.data)) {
-    for (const file of filesResult.data) {
-      const current = filesByProduct.get(file.product_id) || [];
-      current.push(file);
-      filesByProduct.set(file.product_id, current);
-    }
-  }
-
-  const specificationsByProduct = new Map();
-  for (const spec of specificationsResult.error ? [] : specificationsResult.data || []) {
-    const current = specificationsByProduct.get(spec.product_id) || [];
-    current.push(spec);
-    specificationsByProduct.set(spec.product_id, current);
-  }
-  const materialsByProduct = new Map();
-  for (const material of materialsResult.error ? [] : materialsResult.data || []) {
-    const current = materialsByProduct.get(material.product_id) || [];
-    current.push(material);
-    materialsByProduct.set(material.product_id, current);
-  }
-
-  return summaries.map(({ row, rawImagePath, imagePath }) => {
-    const files = filesByProduct.get(row.id || row.product_id) || [];
-    return {
-      ...withoutStoragePaths(row),
-      slug: slugFor(row),
-      signed_image_url: imagePath ? signed.urls.get(imagePath) || null : null,
-      image_error: Boolean(rawImagePath && (!imagePath || signed.failedPaths.has(imagePath))),
-      available_formats: [...new Set(files.map((file) => file.file_format).filter(Boolean))],
-      available_software: [...new Set(files.map((file) => file.software_name).filter(Boolean))],
-      available_file_count: files.length,
-      file_metadata_error: Boolean(filesResult.error),
-      product_specifications: specificationsByProduct.get(row.id || row.product_id) || [],
-      product_materials: materialsByProduct.get(row.id || row.product_id) || [],
-    };
-  });
 }
 
 async function hydrateProductDetail(row) {
@@ -419,6 +343,38 @@ function shouldSuppressAnalytics(eventKey) {
 }
 
 export const mvpService = {
+  async getCatalogPage({ query = '', categoryId = null, supplierId = null, facets = {}, suppliers = [], limit = 24, offset = 0, signal } = {}) {
+    assertConfigured();
+    const local = rankCatalogProducts(BUNDLED_CATALOG_PRODUCTS.filter(product =>
+      (!categoryId || product.category_id === categoryId) && (!supplierId || product.supplier_id === supplierId)
+    ).sort(sortCatalogProducts), query);
+    const plan = planCatalogPage(local, { offset, limit, facets, suppliers });
+    const timeout = AbortSignal.timeout(15_000);
+    const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
+    const { data, error } = await supabase.rpc('get_mvp_catalog_page', {
+      p_query: query.slice(0, 200) || null,
+      p_category_id: categoryId || null,
+      p_supplier_id: supplierId || null,
+      p_facets: facets,
+      p_limit: plan.remoteLimit,
+      p_offset: plan.remoteOffset,
+      p_exclude_slugs: BUNDLED_CATALOG_PRODUCTS.map(product => product.slug),
+    }).abortSignal(requestSignal);
+    if (error) throw error;
+    if (!Array.isArray(data?.products) || !Number.isSafeInteger(data.total) || data.total < 0) throw new Error('Unexpected catalog page.');
+    const signed = await batchSignedUrls(PRIVATE_BUCKETS.PRODUCT_IMAGES, data.products.map(row => row.featured_image_path));
+    if (requestSignal.aborted) throw new Error('Catalog request cancelled.');
+    return {
+      products: [...plan.products, ...data.products.map(row => ({
+        ...withoutStoragePaths(row), slug: slugFor(row),
+        signed_image_url: signed.urls.get(row.featured_image_path) || null,
+        image_error: Boolean(row.featured_image_path && !signed.urls.has(row.featured_image_path)),
+        file_metadata_error: false,
+      }))],
+      total: plan.localTotal + data.total,
+      facets: mergeCatalogFacets(catalogFacets(local), data.facets),
+    };
+  },
   async getCategories() {
     assertConfigured();
     const { data, error } = await supabase.from('categories')
@@ -428,30 +384,9 @@ export const mvpService = {
     return data;
   },
 
-  async searchProducts({ query = '', categoryId = null, supplierId = null, limit = 24, offset = 0 } = {}) {
-    assertConfigured();
-    const normalizedQuery = query.trim();
-    const remoteProducts = await collectPages(async ({ limit: pageLimit, offset: pageOffset }) => {
-      const { data, error } = await supabase.rpc('search_mvp_products', {
-        p_query: null,
-        p_category_id: categoryId || null,
-        p_supplier_id: supplierId || null,
-        p_limit: pageLimit,
-        p_offset: pageOffset,
-      });
-      if (error) throw error;
-      return hydrateProductSummaries(normalizeListResult(data));
-    });
-    const bundledProducts = BUNDLED_CATALOG_PRODUCTS.filter((product) =>
-      (!categoryId || product.category_id === categoryId)
-      && (!supplierId || product.supplier_id === supplierId)
-    );
-    const mergedProducts = uniqueCatalogProducts([...bundledProducts, ...remoteProducts])
-      .sort(sortCatalogProducts);
-    const filteredProducts = normalizedQuery
-      ? rankCatalogProducts(mergedProducts, normalizedQuery)
-      : mergedProducts;
-    return filteredProducts.slice(offset, offset + limit);
+  async searchProducts(options = {}) {
+    const { products } = await this.getCatalogPage(options);
+    return products;
   },
 
   async getLatestProducts(limit = 8) {

@@ -1584,6 +1584,11 @@ body {
 }
 
 /* On-demand product geometry viewer. The heavy canvas module is loaded only after opening. */
+.catalog-skeleton-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 24px; }
+.catalog-skeleton { border: 1px solid #cba14b26; border-radius: 20px; padding: 12px; }
+.catalog-skeleton div { aspect-ratio: 4 / 3; border-radius: 12px; background: #a9957030; }
+.catalog-skeleton span { display: block; margin-top: 16px; height: 12px; width: 75%; border-radius: 6px; background: #a9957020; }
+.catalog-skeleton span:last-child { width: 45%; margin-bottom: 12px; }
 .product-3d-card-button {
   display: inline-flex;
   align-items: center;
@@ -1709,8 +1714,40 @@ body {
   z-index: 1;
   pointer-events: none;
   content: '';
-  box-shadow: inset 0 0 90px rgba(0, 0, 0, .78);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, .14);
 }
+.product-3d-views {
+  position: absolute;
+  bottom: 68px;
+  inset-inline-end: 16px;
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #dcb56940;
+  border-radius: 12px;
+  background: #101619e8;
+}
+.product-3d-views button {
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: #d6d4cd;
+  font-size: 11px;
+}
+.product-3d-views button[aria-pressed="true"],
+.product-3d-viewer-controls button[aria-pressed="true"] {
+  background: #b58b3938;
+  color: #ffe0a1;
+}
+.product-3d-mode-label {
+  position: absolute;
+  inset-inline-start: 16px;
+  bottom: 16px;
+  z-index: 4;
+  color: #d6d4cd;
+  font-size: 11px;
+}
+.product-3d-stage canvas:focus-visible { outline: 2px solid #dcb569; outline-offset: -4px; }
 .product-3d-stage canvas {
   display: block;
   width: 100%;

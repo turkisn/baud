@@ -107,6 +107,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
               {product.signed_image_url && <aside className="product-3d-reference"><img src={product.signed_image_url} alt="" loading="eager" decoding="async"/><span>{t('Reference image', 'الصورة المرجعية')}</span></aside>}
               <Suspense fallback={<div className="product-3d-loading"><span/><p>{t('Preparing 3D model…', 'جارٍ تجهيز المجسم…')}</p></div>}>
                 <Product3DViewer
+                  lang={lang}
                   slug={product.slug}
                   label={t(`Interactive 3D model of ${name}`, `مجسم تفاعلي ثلاثي الأبعاد لـ ${name}`)}
                   pauseLabel={t('Pause rotation', 'إيقاف الدوران')}
@@ -116,7 +117,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
                 />
               </Suspense>
             </div>
-            <div className="product-3d-dialog-footer"><MousePointer2 size={15}/>{t('Drag to rotate · Scroll to zoom · Double-click to reset', 'اسحب للدوران · استخدم عجلة الفأرة للتقريب · انقر مرتين لإعادة الضبط')}<span>{t('BUOD demonstration model', 'نموذج بُعد تجريبي')}</span></div>
+            <div className="product-3d-dialog-footer"><MousePointer2 size={15}/>{t('Drag to rotate · Pinch or scroll to zoom · Double-click to reset', 'اسحب للدوران · باعد إصبعين أو مرّر للتقريب · انقر مرتين لإعادة الضبط')}<span>{t('BUOD demonstration model', 'نموذج بُعد تجريبي')}</span></div>
           </section>
         </div>,
         document.body
