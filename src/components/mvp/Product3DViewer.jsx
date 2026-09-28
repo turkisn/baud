@@ -5,6 +5,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { getDemo3DModel } from '../../data/demo3dCatalog';
 import { canvasRenderSize } from '../../utils/canvas';
+import { setOrbitRotation } from '../../utils/orbitMotion';
 import { buildProductScene, cameraFitDistance, disposeProductScene } from '../../utils/productScene';
 
 const FallbackViewer = lazy(() => import('./Product3DFallback'));
@@ -135,7 +136,7 @@ function Product3DViewer(props) {
         invalidate();
       };
       apiRef.current = {
-        rotate(value) { rotating = value; controls.autoRotate = value; invalidate(); },
+        rotate(value) { rotating = value; setOrbitRotation(controls, value); invalidate(); },
         zoom(multiplier) {
           const distance = THREE.MathUtils.clamp(camera.position.distanceTo(center) * multiplier, controls.minDistance, controls.maxDistance);
           camera.position.sub(center).normalize().multiplyScalar(distance).add(center);
