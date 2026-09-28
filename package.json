@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "test": "node --test tests/*.test.js",
     "test:browser": "playwright test",
-    "check": "npm run lint && npm test && npm run build",
+    "test:budget": "node scripts/build-budget.js",
+    "test:staging-health": "node scripts/staging-health.js",
+    "check": "npm run lint && npm test && npm run build && npm run test:budget",
     "preview": "vite preview"
   },
   "dependencies": {

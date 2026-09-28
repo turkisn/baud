@@ -44,11 +44,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Browser payload budgets
+        run: npm run test:budget
+
       - name: Install test browser
         run: npx playwright install --with-deps chromium
 
-      - name: Auth and workspace browser contracts (isolated fixtures, no live credentials)
-        run: npm run test:browser -- auth.spec.js workspace.spec.js
+      - name: Auth, workspace and real 3D browser checks (isolated data, no live credentials)
+        run: npm run test:browser -- auth.spec.js workspace.spec.js 3d.spec.js
         env:
           BUOD_BROWSER_FIXTURES: '1'
 

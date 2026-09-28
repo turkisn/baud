@@ -186,27 +186,29 @@ function Product3DFallback({ slug, label, pauseLabel, resumeLabel, resetLabel, e
     }
     setRenderError(false);
     let disposed = false;
+    let failed = false;
     let width = 1; let height = 1; let frame = null; let previousTime = performance.now(); let previousFrame = 0;
     const stopFrame = () => {
       if (frame !== null) cancelAnimationFrame(frame);
       frame = null;
     };
     const failRender = () => {
+      failed = true;
       stopFrame();
       if (!disposed) setRenderError(true);
     };
     const draw = () => {
-      if (disposed || !viewRef.current) return;
+      if (disposed || failed || !viewRef.current) return;
       try { drawScene(context, width, height, faces, viewRef.current); }
       catch { failRender(); }
     };
     const schedule = () => {
-      if (disposed || document.hidden || frame !== null) return;
+      if (disposed || failed || document.hidden || frame !== null) return;
       frame = requestAnimationFrame(render);
     };
     function render(time) {
       frame = null;
-      if (disposed || document.hidden) return;
+      if (disposed || failed || document.hidden) return;
       if (autoRotateRef.current && time - previousFrame < FRAME_INTERVAL) {
         schedule();
         return;
@@ -278,13 +280,27 @@ function Product3DFallback({ slug, label, pauseLabel, resumeLabel, resetLabel, e
     viewRef.current.zoom = clamp(viewRef.current.zoom * (event.deltaY > 0 ? .92 : 1.08), .62, 1.7);
     drawRef.current?.();
   };
+  const keyboard = (event) => {
+    const view = viewRef.current;
+    if (!view) return;
+    const actions = {
+      ArrowLeft: () => { view.yaw -= .12; },
+      ArrowRight: () => { view.yaw += .12; },
+      ArrowUp: () => { view.pitch = clamp(view.pitch - .12, -1.18, .75); },
+      ArrowDown: () => { view.pitch = clamp(view.pitch + .12, -1.18, .75); },
+      '+': () => { view.zoom = clamp(view.zoom * 1.08, .62, 1.7); },
+      '-': () => { view.zoom = clamp(view.zoom * .92, .62, 1.7); },
+      Home: resetView,
+    };
+    if (actions[event.key]) { event.preventDefault(); actions[event.key](); drawRef.current?.(); }
+  };
 
   return (
     <div className="product-3d-stage">
-      <canvas ref={canvasRef} role="img" aria-label={label} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onWheel={zoom} onDoubleClick={resetView} />
+      <canvas ref={canvasRef} role="img" aria-label={label} tabIndex={0} onKeyDown={keyboard} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onWheel={zoom} onDoubleClick={resetView} />
       {renderError && <div className="product-3d-error" role="alert">{errorLabel}</div>}
       <div className="product-3d-viewer-controls">
-        <button type="button" onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? pauseLabel : resumeLabel}>{autoRotate ? <Pause size={15}/> : <Play size={15}/>}</button>
+        <button type="button" onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? pauseLabel : resumeLabel} aria-pressed={autoRotate}>{autoRotate ? <Pause size={15}/> : <Play size={15}/>}</button>
         <button type="button" onClick={resetView} aria-label={resetLabel}><RotateCcw size={15}/></button>
       </div>
     </div>

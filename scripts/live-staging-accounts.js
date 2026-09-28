@@ -146,6 +146,11 @@ try {
     assert.deepEqual(ok(await a.client.from('user_workspaces').select('projects').eq('owner_id', a.id).single()).projects, initial);
   });
 
+  if (process.env.BUOD_LIVE_BROWSER === '1') {
+    const { runBrowserAcceptance } = await import('./live-staging-browser.js');
+    await runBrowserAcceptance({ a, b, admin, client, fixture, ok, step, run });
+  }
+
   console.log(JSON.stringify({ result: 'PASS', scope: 'accounts-and-workspace', checks: passed.length, run }));
 } catch (error) {
   console.error(JSON.stringify({ result: 'FAIL', phase, code: error.code || error.name,
