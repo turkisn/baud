@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft, BadgeCheck, Box, CheckCircle2, Download, ExternalLink, FileText,
   ImageOff, Layers3, LockKeyhole, PackageCheck, Share2, ShieldCheck, XCircle,
@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { mvpService } from '../services/mvpService';
 import { formatCurrency } from '../utils/number';
+import { productImage } from '../utils/productImage';
 
 const pick = (row, ...keys) => keys.map((key) => row?.[key]).find((value) => value !== null && value !== undefined && value !== '');
 const formatBytes = (bytes) => !bytes ? null : `${(bytes / 1024 / 1024).toFixed(bytes > 10485760 ? 0 : 1)} MB`;
@@ -49,6 +50,8 @@ export default function BlockDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloadError, setDownloadError] = useState('');
+  const [pendingDownload, setPendingDownload] = useState(null);
+  const downloadLock = useRef(false);
   const [shareNotice, setShareNotice] = useState('');
   const [activeImage, setActiveImage] = useState(0);
 
@@ -85,6 +88,9 @@ export default function BlockDetail() {
 
   async function download(file, eventName) {
     if (!user) { navigate('/login', { state: { from: { pathname: `/blocks/${slug}` } } }); return; }
+    if (downloadLock.current) return;
+    downloadLock.current = true;
+    setPendingDownload(file.id);
     setDownloadError('');
     try {
       const url = await mvpService.createDownloadUrl(file);
@@ -96,6 +102,9 @@ export default function BlockDetail() {
       window.location.assign(url);
     } catch {
       setDownloadError(t('The download could not be prepared. Please try again.', 'تعذّر تجهيز التحميل. يرجى المحاولة مجدداً.'));
+    } finally {
+      downloadLock.current = false;
+      setPendingDownload(null);
     }
   }
 
@@ -130,7 +139,7 @@ export default function BlockDetail() {
   const materials = product.product_materials || [];
   const formats = [...new Set(blocks.map((file) => file.file_format).filter(Boolean))];
   const software = [...new Set(blocks.map((file) => file.software_name).filter(Boolean))];
-  const displayImage = images[activeImage]?.signed_url || product.signed_image_url;
+  const displayImage = activeImage === 0 ? productImage(product) : images[activeImage]?.signed_url || productImage(product);
   const productUrl = safeExternalUrl(product.supplier_product_url);
   const detailErrors = product.detail_errors || {};
   const price = product.price !== null && product.price !== undefined ? formatCurrency(product.price, product.currency, lang === 'ar' ? 'ar-SA' : 'en-SA') : null;
@@ -161,7 +170,7 @@ export default function BlockDetail() {
 
     <div className="mx-auto mt-14 grid max-w-7xl gap-8 px-6 lg:grid-cols-2">
       <section className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown"><Box className="text-gold"/>{t('Specifications', 'المواصفات')}</h2>{detailErrors.specifications ? <SectionError>{t('Specifications could not be loaded.', 'تعذّر تحميل المواصفات.')}</SectionError> : product.product_specifications.length ? <dl>{product.product_specifications.map((spec) => <DataValue key={spec.id} label={lang === 'ar' ? spec.specification_name_ar || spec.specification_name_en : spec.specification_name_en || spec.specification_name_ar} value={[spec.value, spec.unit].filter(Boolean).join(' ')}/>)}</dl> : <p className="text-sm text-light-brown">{t('Specifications unavailable.', 'المواصفات غير متاحة.')}</p>}</section>
-      <section className="space-y-6">{downloadError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{downloadError}</div>}{detailErrors.files ? <SectionError>{t('Files could not be loaded. Please try again later.', 'تعذّر تحميل الملفات. يرجى المحاولة لاحقاً.')}</SectionError> : <><FileSection title={t('BIM & 3D files', 'ملفات BIM وثلاثية الأبعاد')} icon={<Layers3 className="text-gold"/>} files={blocks} user={user} onDownload={(file) => download(file, 'block_download')} t={t}/><FileSection title={t('Datasheet PDFs', 'ملفات PDF التعريفية')} icon={<FileText className="text-gold"/>} files={datasheets} user={user} onDownload={(file) => download(file, 'datasheet_download')} t={t}/></>}</section>
+      <section className="space-y-6">{downloadError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{downloadError}</div>}{detailErrors.files ? <SectionError>{t('Files could not be loaded. Please try again later.', 'تعذّر تحميل الملفات. يرجى المحاولة لاحقاً.')}</SectionError> : <><FileSection title={t('BIM & 3D files', 'ملفات BIM وثلاثية الأبعاد')} icon={<Layers3 className="text-gold"/>} files={blocks} user={user} pendingDownload={pendingDownload} onDownload={(file) => download(file, 'block_download')} t={t}/><FileSection title={t('Datasheet PDFs', 'ملفات PDF التعريفية')} icon={<FileText className="text-gold"/>} files={datasheets} user={user} pendingDownload={pendingDownload} onDownload={(file) => download(file, 'datasheet_download')} t={t}/></>}</section>
     </div>
 
     <div className="mx-auto mt-8 grid max-w-7xl gap-8 px-6 lg:grid-cols-2">
@@ -173,6 +182,6 @@ export default function BlockDetail() {
   </div>;
 }
 
-function FileSection({ title, icon, files, user, onDownload, t }) {
-  return <div className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown">{icon}{title}</h2>{files.length ? <div className="space-y-3">{files.map((file) => <div key={file.id} className="flex items-center justify-between gap-4 rounded-xl bg-ivory p-4"><div className="min-w-0"><p className="truncate text-sm font-semibold text-dark-brown">{file.original_file_name || file.file_format || t('File', 'ملف')}</p><p className="mt-1 text-xs text-light-brown">{[file.software_name, file.software_version, file.file_format, formatBytes(file.file_size)].filter(Boolean).join(' · ') || t('File details unavailable', 'تفاصيل الملف غير متاحة')}</p></div><button type="button" onClick={() => onDownload(file)} className="btn-primary shrink-0 px-4 py-2 text-xs">{user ? <Download size={14}/> : <LockKeyhole size={14}/>} {user ? t('Download', 'تحميل') : t('Sign in', 'تسجيل الدخول')}</button></div>)}</div> : <p className="text-sm text-light-brown">{t('No files are currently available.', 'لا توجد ملفات متاحة حالياً.')}</p>}</div>;
+function FileSection({ title, icon, files, user, pendingDownload, onDownload, t }) {
+  return <div className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown">{icon}{title}</h2>{files.length ? <div className="space-y-3">{files.map((file) => <div key={file.id} className="flex items-center justify-between gap-4 rounded-xl bg-ivory p-4"><div className="min-w-0"><p className="truncate text-sm font-semibold text-dark-brown">{file.original_file_name || file.file_format || t('File', 'ملف')}</p><p className="mt-1 text-xs text-light-brown">{[file.software_name, file.software_version, file.file_format, formatBytes(file.file_size)].filter(Boolean).join(' · ') || t('File details unavailable', 'تفاصيل الملف غير متاحة')}</p></div><button type="button" disabled={pendingDownload !== null} aria-busy={pendingDownload === file.id} onClick={() => onDownload(file)} className="btn-primary shrink-0 px-4 py-2 text-xs">{user ? <Download size={14}/> : <LockKeyhole size={14}/>} {pendingDownload === file.id ? t('Preparing…', 'جارٍ التجهيز…') : user ? t('Download', 'تحميل') : t('Sign in', 'تسجيل الدخول')}</button></div>)}</div> : <p className="text-sm text-light-brown">{t('No files are currently available.', 'لا توجد ملفات متاحة حالياً.')}</p>}</div>;
 }

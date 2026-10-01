@@ -96,7 +96,7 @@ export default function Login() {
     const errs = {};
     if (mode === 'signup' && !form.name.trim())
       errs.name = lang === 'ar' ? 'الاسم مطلوب.' : 'Name is required.';
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email))
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
       errs.email = lang === 'ar' ? 'بريد إلكتروني صحيح مطلوب.' : 'Valid email required.';
     if (!form.password)
       errs.password = lang === 'ar' ? 'كلمة المرور مطلوبة.' : 'Password is required.';
@@ -126,15 +126,15 @@ export default function Login() {
         // login() triggers guarded profile hydration, then the user effect navigates.
         // Do NOT navigate here — it would race with the server-controlled role result,
         // causing Navbar to mount before user state is committed (shows "Sign in" flash).
-        await login(form.email, form.password);
+        await login(form.email.trim(), form.password);
         // navigation is handled by the useEffect below that watches user
       } else {
         await register({
-          email:    form.email,
+          email:    form.email.trim(),
           password: form.password,
-          fullName: form.name,
+          fullName: form.name.trim(),
           userType: userTypes[userTypeIdx].id,
-          companyName: form.company,
+          companyName: form.company.trim(),
         });
         setSuccess(true);
       }
@@ -154,19 +154,19 @@ export default function Login() {
             <CheckCircle size={40} className="text-green-600" />
           </motion.div>
           <motion.h2 variants={fadeInUp} className="text-2xl font-bold text-dark-brown mb-3">
-            {t('Account created!', 'تم إنشاء الحساب!')}
+            {t('Check your email', 'تحقّق من بريدك')}
           </motion.h2>
           <motion.p variants={fadeInUp} className="text-medium-brown mb-2">
             {t(
-              'We sent a confirmation email to',
-              'أرسلنا رسالة تأكيد إلى'
+              'If confirmation is required, you will receive instructions at',
+              'إذا كان التسجيل يتطلب تأكيداً، ستصلك التعليمات على'
             )}
           </motion.p>
           <motion.p variants={fadeInUp} className="font-semibold text-dark-brown mb-6">{form.email}</motion.p>
           <motion.p variants={fadeInUp} className="text-sm text-light-brown mb-8">
             {t(
-              'Open your email and click the confirmation link, then come back to sign in.',
-              'افتح بريدك الإلكتروني واضغط رابط التأكيد، ثم عُد وسجّل الدخول.'
+              'Check your inbox and spam folder. If you already have an account, sign in or reset your password.',
+              'راجع الوارد والبريد غير الهام. إذا كان لديك حساب مسبقاً، سجّل الدخول أو استعد كلمة المرور.'
             )}
           </motion.p>
           <motion.button

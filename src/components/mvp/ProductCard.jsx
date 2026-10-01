@@ -4,11 +4,13 @@ import { useLanguage } from '../../context/LanguageContext';
 import { formatCount, formatCurrency } from '../../utils/number';
 import Product3DPreview from './Product3DPreview';
 import WorkspaceActions from './WorkspaceActions';
+import { productImage } from '../../utils/productImage';
 
 const value = (row, keys) => keys.map((key) => row?.[key]).find((item) => item !== null && item !== undefined && item !== '');
 
 export default function ProductCard({ product }) {
   const { lang, t } = useLanguage();
+  const image = productImage(product);
   const name = lang === 'ar'
     ? value(product, ['product_name_ar', 'name_ar', 'product_name_en'])
     : value(product, ['product_name_en', 'name_en', 'product_name_ar']);
@@ -28,8 +30,8 @@ export default function ProductCard({ product }) {
     <article className="digital-panel product-card group relative overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:border-gold/55">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#100e0b]">
         <Link to={`/blocks/${product.slug}`} className="block h-full" aria-label={t(`Open ${name}`, `فتح ${name}`)}>
-          {product.signed_image_url ? (
-            <img src={product.signed_image_url} loading="lazy" decoding="async" alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+          {image ? (
+            <img src={image} loading="lazy" decoding="async" alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{product.image_error ? t('Image temporarily unavailable', 'الصورة غير متاحة مؤقتاً') : t('Image unavailable', 'الصورة غير متاحة')}</span></div>
           )}

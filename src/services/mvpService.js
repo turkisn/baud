@@ -1,6 +1,7 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
 import { BUNDLED_CATALOG_PRODUCTS, getBundledCatalogProduct } from '../data/bundledCatalog';
 import { catalogFacets, mergeCatalogFacets, planCatalogPage } from '../utils/catalogPage';
+import { safeDownloadName } from '../utils/download';
 
 const PRIVATE_BUCKETS = Object.freeze({
   PRODUCT_IMAGES: 'product-images',
@@ -39,7 +40,7 @@ export const PUBLIC_PRODUCT_FILE_FIELDS = [
   'is_available', 'created_at',
 ].join(',');
 
-const PRIVATE_DOWNLOAD_FIELDS = 'id,product_id,file_type,file_path,storage_bucket,is_available';
+const PRIVATE_DOWNLOAD_FIELDS = 'id,product_id,file_type,file_path,storage_bucket,is_available,original_file_name';
 const READ_TTL_SECONDS = 60 * 5;
 const ANALYTICS_SESSION_KEY = 'buod_mvp_session_id';
 const ANALYTICS_DEDUP_WINDOW_MS = 5_000;
@@ -85,9 +86,10 @@ function withoutStoragePaths(row) {
   return safeRow;
 }
 
-async function signedPrivateUrl(bucket, path) {
+async function signedPrivateUrl(bucket, path, downloadName) {
   if (!Object.values(PRIVATE_BUCKETS).includes(bucket) || !isValidStoragePath(path)) return null;
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, READ_TTL_SECONDS);
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, READ_TTL_SECONDS,
+    downloadName ? { download: safeDownloadName(downloadName) } : undefined);
   if (error) return null;
   return data?.signedUrl || null;
 }
@@ -244,6 +246,9 @@ async function hydrateProductDetail(row) {
     product_images: images,
     product_specifications: specificationsSucceeded ? specificationsResult.data : [],
     product_files: filesSucceeded ? filesResult.data : [],
+    available_file_count: filesSucceeded ? filesResult.data.length : null,
+    available_formats: filesSucceeded ? [...new Set(filesResult.data.map((file) => file.file_format).filter(Boolean))] : [],
+    file_metadata_error: !filesSucceeded,
     product_materials: materialsSucceeded ? materialsResult.data : [],
     detail_errors: {
       images: !imagesSucceeded || imagePathsInvalid || imageSigningFailed,
@@ -439,7 +444,7 @@ export const mvpService = {
         ? PRIVATE_BUCKETS.PRODUCT_DATASHEETS
         : null;
     if (!expectedBucket || privateFile.storage_bucket !== expectedBucket) return null;
-    return signedPrivateUrl(expectedBucket, privateFile.file_path);
+    return signedPrivateUrl(expectedBucket, privateFile.file_path, privateFile.original_file_name || 'buod-product-file');
   },
 
   async recordEvent(eventName, metadata = {}) {

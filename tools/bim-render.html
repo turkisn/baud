@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><title>WALL-M source geometry render</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eeeae3}canvas{display:block;width:100%;height:100%}#status{position:absolute;inset:0;display:grid;place-items:center;font-family:system-ui;color:#443e34}#status:empty{display:none}</style>
+</head><body><div id="status" role="status">Rendering licensed source geometry…</div><canvas aria-label="Studio render of the original WALL-M geometry"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { WALL_M_PREVIEW } from '../src/data/product3dAssets.js';
+import { loadProductPreview } from '../src/utils/loadProductPreview.js';
+
+// Reproducible studio render. No geometry, scale or construction materials are invented.
+const canvas = document.querySelector('canvas');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(1);
+renderer.setSize(innerWidth,innerHeight,false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = .85;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#202522');
+const environment = new RoomEnvironment();
+const pmrem = new THREE.PMREMGenerator(renderer);
+const map = pmrem.fromScene(environment,.04);
+scene.environment = map.texture;
+scene.environmentIntensity = .3;
+environment.dispose();pmrem.dispose();
+const product = await loadProductPreview(WALL_M_PREVIEW);
+product.traverse(object => {
+  if (!object.isMesh) return;
+  // Neutral illustrative clay shading, not a certified material specification.
+  object.material.color.set('#b9a783');
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(object.geometry,35),new THREE.LineBasicMaterial({color:'#453f32',transparent:true,opacity:.18}));
+  object.add(edges);
+});
+scene.add(product);
+const key = new THREE.DirectionalLight('#fff7e8',2.2);
+key.position.set(-3,6,5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-2,right:2,top:3,bottom:-2,near:.1,far:15});
+key.shadow.normalBias=.002;key.shadow.bias=-.00005;
+key.target.position.set(0,1,0);scene.add(key,key.target);
+scene.add(new THREE.HemisphereLight('#eaf0ff','#74624a',.55));
+const fill=new THREE.DirectionalLight('#dce9ff',.65);fill.position.set(3,2,-3);scene.add(fill);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:'#252925',roughness:1}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-.006;floor.receiveShadow=true;scene.add(floor);
+const aspect=innerWidth/innerHeight;
+const camera=new THREE.OrthographicCamera(-1.52*aspect,1.52*aspect,1.52,-1.52,.1,100);
+camera.position.set(3.4,2.7,4.8);camera.lookAt(0,1.12,0);
+renderer.render(scene,camera);
+document.querySelector('#status').textContent='';
+canvas.dataset.ready='true';
+</script></body></html>

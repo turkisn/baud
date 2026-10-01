@@ -5,6 +5,9 @@ import assert from 'node:assert/strict';
 import process from 'node:process';
 import { execFileSync } from 'node:child_process';
 import { randomUUID, randomBytes } from 'node:crypto';
+import { mkdtemp, writeFile, unlink, rmdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { loadEnv } from 'vite';
 
@@ -149,6 +152,27 @@ try {
   if (process.env.BUOD_LIVE_BROWSER === '1') {
     const { runBrowserAcceptance } = await import('./live-staging-browser.js');
     await runBrowserAcceptance({ a, b, admin, client, fixture, ok, step, run });
+  }
+
+  // Optional manual/CUA browser acceptance: existing disposable credentials only.
+  // No browser automation here. Close stdin or press Enter to revoke and clean up.
+  if (process.env.BUOD_LIVE_UI_HOLD === '1') {
+    const directory = await mkdtemp(join(tmpdir(), 'buod-ui-fixture-'));
+    const file = join(directory, 'credentials.json');
+    try {
+      await writeFile(file, JSON.stringify({ email: a.email, password: a.password }), { mode: 0o600 });
+      console.log(`UI_FIXTURE ${file}`);
+      await new Promise(resolve => {
+        const done = () => { clearTimeout(timer); process.stdin.pause(); resolve(); };
+        const timer = setTimeout(done, 15 * 60_000);
+        process.stdin.once('data', done);
+        process.stdin.once('end', done);
+        process.stdin.resume();
+      });
+    } finally {
+      await unlink(file).catch(() => {});
+      await rmdir(directory).catch(() => {});
+    }
   }
 
   console.log(JSON.stringify({ result: 'PASS', scope: 'accounts-and-workspace', checks: passed.length, run }));

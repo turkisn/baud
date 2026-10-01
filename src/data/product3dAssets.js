@@ -4,6 +4,7 @@ export const WALL_M_PREVIEW = Object.freeze({
   productId: 'ed04b350-a567-4477-b763-0d4cc63e94d1',
   slug: 'open-bim-skylark250-wall-m',
   url: '/open-bim/skylark250/WALL-M.glb',
+  imageUrl: '/open-bim/skylark250/WALL-M-render.jpg',
   bytes: 491716,
   sha256: '26202dc48cf59951b19959ea574a28831ca6b8ebdb7a3a248a26b48bbcc28fc7',
   attributionUrl: '/open-bim/skylark250/ATTRIBUTION.txt',

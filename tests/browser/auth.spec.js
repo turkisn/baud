@@ -1,5 +1,47 @@
 import { test, expect } from '@playwright/test';
 
+test('signup validates required fields before contacting Auth', async ({ page }) => {
+  let requests = 0;
+  await page.addInitScript(() => localStorage.setItem('buod_language', 'en'));
+  await page.route('https://*.supabase.co/**', route => { requests++; return route.fulfill({ json: [] }); });
+  await page.goto('/login?mode=signup');
+  await page.locator('form').getByRole('button', { name: 'Create Account', exact: true }).click();
+  await expect(page.getByText('Name is required.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Valid email required.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Password is required.', { exact: true })).toBeVisible();
+  await expect(page.locator('#full-name')).toBeFocused();
+  expect(requests).toBe(0);
+});
+
+test('duplicate-obscured signup response does not promise account creation or delivery', async ({ page }) => {
+  let submitted;
+  await page.addInitScript(() => localStorage.setItem('buod_language', 'en'));
+  await page.route('https://*.supabase.co/**', route => {
+    if (new URL(route.request().url()).pathname === '/auth/v1/signup') {
+      submitted = route.request().postDataJSON();
+      return route.fulfill({ json: { id: 'fixture', identities: [], email: 'fixture@example.invalid' } });
+    }
+    return route.fulfill({ json: [] });
+  });
+  await page.goto('/login?mode=signup');
+  await page.locator('#full-name').fill('Fixture Designer');
+  await page.locator('#email').fill('fixture@example.invalid');
+  await page.locator('#password').fill('Fixture-only-not-a-real-password');
+  await page.locator('form').getByRole('button', { name: 'Create Account', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Check your email', exact: true })).toBeVisible();
+  await expect(page.getByText('Account created!', { exact: true })).toHaveCount(0);
+  expect(submitted.email).toBe('fixture@example.invalid');
+});
+
+test('reset route without a session provides a working new-link path', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('buod_language', 'en'));
+  await page.route('https://*.supabase.co/**', route => route.fulfill({ json: [] }));
+  await page.goto('/reset-password');
+  await expect(page.getByRole('heading', { name: 'Reset link unavailable' })).toBeVisible();
+  await page.getByRole('link', { name: 'Request a new link' }).click();
+  await expect(page.getByRole('textbox', { name: 'Email Address' })).toBeVisible();
+});
+
 // Deterministic UI contract checks. These do not replace live Auth account tests.
 const cases = [
   { code: 'invalid_credentials', message: 'Invalid login credentials', status: 400, expected: 'Email or password is incorrect.' },

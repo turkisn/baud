@@ -223,3 +223,23 @@ test('materials service failure remains distinct from missing material data', as
   await expect(page.getByText('Materials could not be loaded.', { exact: true })).toBeVisible();
   await expect(page.getByText('No material information is available yet.', { exact: true })).toHaveCount(0);
 });
+
+test('real render and current comparison rows survive reload without stale values', async ({ page }) => {
+  await realBimFixture(page);
+  await expect(page.locator(`img[src="${WALL_M_PREVIEW.imageUrl}"]`).first()).toBeVisible();
+  expect(await page.locator(`img[src="${WALL_M_PREVIEW.imageUrl}"]`).first().evaluate(image => image.naturalWidth)).toBe(1600);
+  await page.getByRole('button', { name: 'Compare', exact: true }).click();
+  await page.goto('/compare');
+  await expect(page.getByRole('rowheader', { name: 'Price', exact: true })).toBeVisible();
+  await expect(page.getByRole('rowheader', { name: 'File formats', exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'CC BY-SA 4.0', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('cell', { name: 'CC BY-SA 4.0', exact: true })).toBeVisible();
+  await page.route('**/rest/v1/rpc/get_mvp_product', route => route.fulfill({ status: 503, json: { message: 'Fixture outage' } }));
+  await page.reload();
+  await expect(page.getByText('Could not update product', { exact: true })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'CC BY-SA 4.0', exact: true })).toHaveCount(0);
+  await page.route('**/rest/v1/rpc/get_mvp_product', route => route.fulfill({ json: null }));
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect(page.getByText('No longer published', { exact: true })).toBeVisible();
+});

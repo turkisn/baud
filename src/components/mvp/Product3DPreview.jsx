@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { hasDemo3DModel } from '../../data/demo3dCatalog';
 import { getProduct3DAsset } from '../../data/product3dAssets';
+import { productImage } from '../../utils/productImage';
 
 const Product3DViewer = lazy(() => import('./Product3DViewer'));
 
@@ -106,7 +107,7 @@ export default function Product3DPreview({ product, variant = 'card', className 
               </div>
             </header>
             <div className="product-3d-canvas-wrap">
-              {product.signed_image_url && <aside className="product-3d-reference"><img src={product.signed_image_url} alt="" loading="eager" decoding="async"/><span>{t('Reference image', 'الصورة المرجعية')}</span></aside>}
+              {productImage(product) && <aside className="product-3d-reference"><img src={productImage(product)} alt="" loading="eager" decoding="async"/><span>{t('Reference image', 'الصورة المرجعية')}</span></aside>}
               <Suspense fallback={<div className="product-3d-loading"><span/><p>{t('Preparing 3D model…', 'جارٍ تجهيز المجسم…')}</p></div>}>
                 <Product3DViewer
                   asset={asset}

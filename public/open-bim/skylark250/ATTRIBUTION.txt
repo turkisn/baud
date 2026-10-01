@@ -20,6 +20,7 @@ BUOD modifications to derived files:
 - The IFC geometry, GUID, properties and original IfcColumn classification were retained; we did not assert that this classification is correct for a wall.
 - Preview display colours are not a verified physical material specification.
 - The interactive viewer translates the preview to its studio origin without changing scale or geometry, and applies studio lighting.
+- WALL-M-render.jpg is a studio render of that same GLB, with illustrative neutral clay shading, edge emphasis and lighting. It is not a verified material or finish. Reproducible render: tools/bim-render.html in BUOD source.
 Derived model and preview files are distributed under the same CC BY-SA 4.0 licence.
 
 Original IFC SHA256: c8851e5ec0e914db4d6a5a9c54968de0dfde5f6fa61d8f22e303539a569a55b4
