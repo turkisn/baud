@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import process from 'node:process';
+import { WALL_M_PREVIEW } from '../../src/data/product3dAssets.js';
 
 // Filmstrip capture calls ReadPixels on every frame and can stall a CPU-only
 // CI renderer. Keep DOM/network/source traces, with explicit screenshots below.
@@ -160,4 +161,65 @@ test('3D rotation respects its frame budget and stops after pause and close', as
   await page.getByRole('button', { name: 'Close 3D view', exact: true }).click();
   expect((await sample()).draws).toBe(0);
   console.log('3D frame budget', JSON.stringify(rotating));
+});
+
+async function realBimFixture(page, { materialsFail = false } = {}) {
+  const product = { id: WALL_M_PREVIEW.productId, slug: WALL_M_PREVIEW.slug,
+    product_name_en: 'Open BIM Wall — WALL-M 250', product_name_ar: 'بلوك جدار مفتوح — WALL-M 250',
+    license_type: 'CC BY-SA 4.0' };
+  await page.route('**/rest/v1/rpc/get_mvp_product', route => route.fulfill({ json: product }));
+  await page.route('**/rest/v1/products?*', route => route.fulfill({ json: { id: product.id } }));
+  await page.route('**/rest/v1/product_materials?*', route => {
+    expect(new URL(route.request().url()).searchParams.get('order')).toBe('id.asc');
+    return route.fulfill(materialsFail ? { status: 503, json: { message: 'Temporary test outage' } } : { json: [] });
+  });
+  await page.goto(`/blocks/${product.slug}`);
+}
+
+test('real IFC preview loads lazily, fits mobile, and preserves attribution and modal cleanup', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  let assetRequests = 0;
+  page.on('request', request => { if (new URL(request.url()).pathname === WALL_M_PREVIEW.url) assetRequests++; });
+  await realBimFixture(page);
+  await expect(page.getByText('No material information is available yet.', { exact: true })).toBeVisible();
+  expect(assetRequests).toBe(0);
+  const trigger = page.getByRole('button', { name: 'View interactive 3D', exact: true });
+  await trigger.click();
+  await expect(page.locator('[data-model-source="ifc"][data-ready="true"]')).toBeVisible();
+  expect(assetRequests).toBeGreaterThan(0);
+  await expect(page.getByRole('button', { name: 'Resume rotation' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'CC BY-SA 4.0' })).toHaveAttribute('href', WALL_M_PREVIEW.licenseUrl);
+  await expect(page.getByText('BUOD demonstration model', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Front', exact: true }).click();
+  await page.getByRole('button', { name: 'Show model structure' }).click();
+  await expect(page.getByRole('button', { name: 'Show model structure' })).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+  await page.getByRole('button', { name: 'Close 3D view' }).click();
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await expect(page.locator('[data-model-source="ifc"][data-ready="true"]')).toBeVisible();
+  await page.locator('canvas').evaluate(canvas => canvas.dispatchEvent(new Event('webglcontextlost', { cancelable: true })));
+  await expect(page.getByRole('alert')).toContainText('could not start');
+  await expect(page.getByText('Compatibility view', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close 3D view' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('broken real preview stays honest and closable, then recovers after reopening', async ({ page }) => {
+  await realBimFixture(page);
+  await page.route('**/open-bim/skylark250/WALL-M.glb', route => route.fulfill({ status: 404, body: 'Unavailable' }));
+  await page.getByRole('button', { name: 'View interactive 3D', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('could not start');
+  await expect(page.getByText('Compatibility view', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close 3D view' }).click();
+  await page.unroute('**/open-bim/skylark250/WALL-M.glb');
+  await page.getByRole('button', { name: 'View interactive 3D', exact: true }).click();
+  await expect(page.locator('[data-model-source="ifc"][data-ready="true"]')).toBeVisible();
+});
+
+test('materials service failure remains distinct from missing material data', async ({ page }) => {
+  await realBimFixture(page, { materialsFail: true });
+  await expect(page.getByText('Materials could not be loaded.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No material information is available yet.', { exact: true })).toHaveCount(0);
 });

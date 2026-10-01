@@ -207,7 +207,7 @@ async function hydrateProductDetail(row) {
     settleQuery(supabase.from('products').select(PUBLIC_PRODUCT_ENRICHMENT_FIELDS)
       .eq('id', id).maybeSingle()),
     settleQuery(supabase.from('product_materials').select(PUBLIC_MATERIAL_FIELDS)
-      .eq('product_id', id).order('created_at')),
+      .eq('product_id', id).order('id')),
   ]);
 
   const imagesSucceeded = !imagesResult.error && Array.isArray(imagesResult.data);

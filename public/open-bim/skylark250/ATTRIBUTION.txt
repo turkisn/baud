@@ -1,0 +1,38 @@
+SKYLARK250 WALL-M — open construction component / local evaluation sample
+
+Original creators: WikiHouse team at Open Systems Lab and contributors.
+Source: https://github.com/wikihouseproject/Skylark/tree/skylark_v0.2.2
+Pinned source commit: 4b5616d33004565e0264c64b5561441f43e01dc3
+Licence: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+Terms and warranty notices: https://www.wikihouse.cc/terms
+Retrieved: 2026-10-01
+
+This website directory distributes the derived WALL-M.glb preview and rights notices.
+Original files are retained without changes in the downloadable product package,
+available from /blocks/open-bim-skylark250-wall-m, and at the upstream source above.
+This is an older library release, not the latest Skylark 150 system.
+
+BUOD modifications to derived files:
+- Extracted the WALL-M element, GUID 1moQZArJLBpxzAuCd9xIcx, from the original IFC4 library using IfcOpenShell 0.9.0.
+- Removed an empty presentation-layer assignment produced by subset extraction.
+- Produced a GLB geometry preview and an orthographic raster preview from the extracted IFC geometry.
+- The IFC geometry, GUID, properties and original IfcColumn classification were retained; we did not assert that this classification is correct for a wall.
+- Preview display colours are not a verified physical material specification.
+- The interactive viewer translates the preview to its studio origin without changing scale or geometry, and applies studio lighting.
+Derived model and preview files are distributed under the same CC BY-SA 4.0 licence.
+
+Original IFC SHA256: c8851e5ec0e914db4d6a5a9c54968de0dfde5f6fa61d8f22e303539a569a55b4
+Verified against the Git LFS object ID in the upstream pinned commit.
+
+Not endorsed by, affiliated with, or an approved manufacturer of WikiHouse / Open Systems Lab.
+The source name is used only for attribution and traceability. No brand logo is used.
+No Saudi supplier, product price, availability, engineering certification or local-code compliance is asserted.
+Retain this attribution, the complete licence, and the upstream notices when redistributing.
+Do not place additional restrictions on rights granted by the licence.
+
+Engineering limitations:
+The source contains actual geometry but no IfcMaterial definitions. Metadata is sparse.
+This extracted wall is classified as IfcColumn in the source. Review classification before BIM coordination.
+IFC validation only checks schema structure, not structural safety, fabrication tolerances or building-code compliance.
+Files are shared as-is, without warranties or guarantees. Each real project needs qualified engineering review.

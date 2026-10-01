@@ -1856,6 +1856,10 @@ body.product-3d-open .public-shell *::after {
   border-radius: 50%;
   animation: product3dSpin .75s linear infinite;
 }
+.product-3d-loading-overlay { position: absolute; inset: 0; z-index: 5; }
+.product-3d-dialog-footer:has(.product-3d-attribution) { flex-wrap: wrap; }
+.product-3d-dialog-footer .product-3d-attribution { display: block; line-height: 1.7; letter-spacing: normal; text-transform: none; }
+.product-3d-attribution a { text-decoration: underline; text-underline-offset: 3px; }
 @keyframes product3dBackdropIn { from { opacity: 0; } }
 @keyframes product3dPanelIn { from { opacity: 0; transform: translateY(18px) scale(.975); } }
 @keyframes product3dSpin { to { transform: rotate(360deg); } }

@@ -7,12 +7,13 @@ import { getDemo3DModel } from '../../data/demo3dCatalog';
 import { canvasRenderSize } from '../../utils/canvas';
 import { setOrbitRotation } from '../../utils/orbitMotion';
 import { buildProductScene, cameraFitDistance, disposeProductScene } from '../../utils/productScene';
+import { loadProductPreview } from '../../utils/loadProductPreview';
 
 const FallbackViewer = lazy(() => import('./Product3DFallback'));
 const FRAME_INTERVAL = 1000 / 30;
 
 function Product3DViewer(props) {
-  const { slug, label, pauseLabel, resumeLabel, resetLabel, errorLabel, lang = 'en' } = props;
+  const { slug, asset, label, pauseLabel, resumeLabel, resetLabel, errorLabel, lang = 'en' } = props;
   const canvasRef = useRef(null);
   const apiRef = useRef(null);
   const [fallback, setFallback] = useState(false);
@@ -24,10 +25,12 @@ function Product3DViewer(props) {
   const t = (en, ar) => lang === 'ar' ? ar : en;
 
   useEffect(() => {
-    const model = getDemo3DModel(slug);
+    const model = asset || getDemo3DModel(slug);
     const canvas = canvasRef.current;
     if (!model || !canvas || fallback) return undefined;
     let renderer, environment, controls, observer;
+    const abortController = new AbortController();
+    setReady(false);
     let disposed = false, failed = false, frame = null, previous = 0;
     let rotating = false, dirty = true;
     let resetCamera = () => {};
@@ -56,11 +59,14 @@ function Product3DViewer(props) {
     const visibility = () => { if (document.hidden) stop(); else { previous = performance.now(); invalidate(); } };
     const lost = (event) => { event.preventDefault(); fail(); };
     const reset = () => { resetCamera(); invalidate(); };
-    try {
+    const initialize = async () => { try {
+      const product = asset ? await loadProductPreview(asset, abortController.signal) : buildProductScene(model, slug);
+      if (disposed) { disposeProductScene(product); return; }
+      scene.add(product);
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' });
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
+      renderer.toneMappingExposure = asset ? .8 : 1.2;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFShadowMap;
       renderer.shadowMap.autoUpdate = false;
@@ -70,9 +76,7 @@ function Product3DViewer(props) {
       environment = pmrem.fromScene(room, .04);
       room.dispose(); pmrem.dispose();
       scene.environment = environment.texture;
-      scene.environmentIntensity = .8;
-      const product = buildProductScene(model, slug);
-      scene.add(product);
+      scene.environmentIntensity = asset ? .35 : .8;
       const bounds = new THREE.Box3().setFromObject(product);
       const size = bounds.getSize(new THREE.Vector3());
       const center = bounds.getCenter(new THREE.Vector3());
@@ -83,7 +87,7 @@ function Product3DViewer(props) {
       floor.position.y = -.025;
       floor.receiveShadow = true;
       scene.add(floor);
-      const key = new THREE.DirectionalLight('#fff0dc', 3.5);
+      const key = new THREE.DirectionalLight('#fff0dc', asset ? 1.8 : 3.5);
       key.position.set(-3, 7, 5);
       key.castShadow = true;
       key.shadow.mapSize.set(1024, 1024);
@@ -92,8 +96,8 @@ function Product3DViewer(props) {
       key.shadow.bias = -.0002;
       key.shadow.radius = 3;
       key.target.position.copy(center);
-      scene.add(key, key.target, new THREE.HemisphereLight('#dcecff', '#444039', 1.1));
-      const rim = new THREE.DirectionalLight('#bed8ff', 2);
+      scene.add(key, key.target, new THREE.HemisphereLight('#dcecff', '#444039', asset ? .5 : 1.1));
+      const rim = new THREE.DirectionalLight('#bed8ff', asset ? .8 : 2);
       rim.position.set(4, 4, -5);
       scene.add(rim);
       controls = new OrbitControls(camera, canvas);
@@ -147,7 +151,7 @@ function Product3DViewer(props) {
         studio(light) {
           scene.background.set(light ? '#e8e5df' : '#14191d');
           floor.material.color.set(light ? '#c5c0b7' : '#20272c');
-          renderer.toneMappingExposure = light ? 1.1 : 1.2;
+          renderer.toneMappingExposure = asset ? (light ? .75 : .8) : (light ? 1.1 : 1.2);
           invalidate();
         },
         wireframe(value) { product.traverse(o => { for (const m of [o.material].flat().filter(Boolean)) m.wireframe = value; }); invalidate(); },
@@ -166,8 +170,10 @@ function Product3DViewer(props) {
       renderer.shadowMap.needsUpdate = true;
       renderer.render(scene, camera);
       setReady(true);
-    } catch { fail(); }
+    } catch { if (!disposed) fail(); } };
+    void initialize();
     return () => {
+      abortController.abort();
       disposed = true; stop(); observer?.disconnect(); controls?.dispose();
       document.removeEventListener('visibilitychange', visibility);
       canvas.removeEventListener('webglcontextlost', lost);
@@ -180,12 +186,13 @@ function Product3DViewer(props) {
       queueMicrotask(() => { if (!canvas.isConnected) renderer?.forceContextLoss(); });
       apiRef.current = null;
     };
-  }, [slug, fallback]);
+  }, [slug, asset, fallback]);
 
   useEffect(() => { apiRef.current?.rotate(autoRotate); }, [autoRotate, ready]);
   useEffect(() => { apiRef.current?.studio(lightStudio); }, [lightStudio, ready]);
   useEffect(() => { apiRef.current?.wireframe(wireframe); }, [wireframe, ready]);
 
+  if (fallback && asset) return <div className="product-3d-error" role="alert">{errorLabel}</div>;
   if (fallback) return <Suspense fallback={<div className="product-3d-error">{errorLabel}</div>}><FallbackViewer {...props}/><span className="product-3d-mode-label">{t('Compatibility view', 'عرض متوافق مع الجهاز')}</span></Suspense>;
 
   const selectView = (value) => { setView(value); setAutoRotate(false); apiRef.current?.view(value); };
@@ -199,8 +206,9 @@ function Product3DViewer(props) {
     };
     if (actions[event.key]) { event.preventDefault(); actions[event.key](); }
   };
-  return <div className="product-3d-stage" data-renderer="webgl" data-ready={ready}>
+  return <div className="product-3d-stage" data-renderer="webgl" data-ready={ready} data-model-source={asset ? 'ifc' : 'demo'} aria-busy={!ready}>
     <canvas ref={canvasRef} role="img" aria-label={label} tabIndex={0} onKeyDown={keyboard} onDoubleClick={reset}/>
+    {!ready && <div className="product-3d-loading product-3d-loading-overlay" role="status"><span/><p>{t('Loading 3D model…', 'جارٍ تحميل المجسم…')}</p></div>}
     <div className="product-3d-views" role="group" aria-label={t('Camera views', 'زوايا المشاهدة')}>
       {[['perspective', t('Perspective', 'منظور')], ['front', t('Front', 'أمامي')], ['top', t('Top', 'علوي')]].map(([value, title]) =>
         <button key={value} type="button" aria-pressed={view === value} onClick={() => selectView(value)}>{title}</button>)}
