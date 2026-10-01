@@ -19,7 +19,7 @@ test('real preview is bound to the reviewed product ID and slug, never arbitrary
 test('verified IFC-derived GLB preserves dimensions, triangles and floor placement', async t => {
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(url, WALL_M_PREVIEW.url);
-    assert.equal(options.credentials, 'omit');
+    assert.equal(options.credentials, 'same-origin');
     return new Response(glb);
   });
   const product = await loadProductPreview(WALL_M_PREVIEW);

@@ -11,7 +11,9 @@ export async function loadProductPreview(asset, signal) {
   if (signal?.aborted) abort();
   let product;
   try {
-    const response = await fetch(asset.url, { signal: controller.signal, credentials: 'omit' });
+    // Same-origin preview protection requires its existing session cookie.
+    // The URL is a reviewed relative path, never supplied by product data.
+    const response = await fetch(asset.url, { signal: controller.signal, credentials: 'same-origin' });
     if (!response.ok || !response.body) throw new Error('Preview download failed');
     const reader = response.body.getReader();
     const bytes = new Uint8Array(asset.bytes);
