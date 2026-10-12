@@ -5,7 +5,9 @@ import { Buffer } from 'node:buffer';
 import { loadEnv } from 'vite';
 
 assert.equal(process.env.BUOD_LIVE_STAGING, '1', 'Explicit staging opt-in required');
-const env = loadEnv('development', process.cwd(), 'VITE_');
+// CI and isolated worktrees inject reviewed values through the process
+// environment; local development can still use Vite's ignored env files.
+const env = { ...loadEnv('development', process.cwd(), 'VITE_'), ...process.env };
 const base = 'https://uhcvfwajowdszxteanlx.supabase.co';
 assert.equal(env.VITE_SUPABASE_URL, base, 'Refusing a different backend');
 const key = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY;

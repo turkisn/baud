@@ -337,6 +337,12 @@
       "name": "workspace_conflict_http409",
       "file": "supabase/migrations/20260927233543_workspace_conflict_http409.sql",
       "sha256": "692d9e44d88a93b01473ab603f380bee985732f67c965392ade3d83b0a80c314"
+    },
+    {
+      "version": "20261012165202",
+      "name": "close_backend_security_contract",
+      "file": "supabase/migrations/20261012165202_close_backend_security_contract.sql",
+      "sha256": "23269ffaa6a9ebbbe378521fa6acea677e4d80a76b16d01a5c4634f31a91cfc0"
     }
   ]
 }
