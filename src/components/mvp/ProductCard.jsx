@@ -37,9 +37,9 @@ export default function ProductCard({ product }) {
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-light-brown"><ImageOff size={28} /><span className="text-xs">{product.image_error ? t('Image temporarily unavailable', 'الصورة غير متاحة مؤقتاً') : t('Image unavailable', 'الصورة غير متاحة')}</span></div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-          {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg border border-gold/20 bg-black/80 px-2.5 py-1 font-mono text-[9px] font-semibold tracking-wider text-light-gold backdrop-blur">{product.buod_reference}</span>}
-          {formats.length > 0 && <div className="absolute end-3 top-3 flex max-w-[55%] flex-wrap justify-end gap-1">{formats.map((format) => <span key={format} className="rounded-md border border-gold/25 bg-black/80 px-2 py-1 font-mono text-[9px] font-bold text-light-gold backdrop-blur">{format}</span>)}</div>}
+          <div className="pointer-events-none absolute inset-0 bg-linear-to-t/srgb from-black/45 via-transparent to-transparent" />
+          {product.buod_reference && <span className="absolute start-3 top-3 rounded-lg border border-gold/20 bg-black/80 px-2.5 py-1 font-mono text-[9px] font-semibold tracking-wider text-light-gold backdrop-blur-sm">{product.buod_reference}</span>}
+          {formats.length > 0 && <div className="absolute end-3 top-3 flex max-w-[55%] flex-wrap justify-end gap-1">{formats.map((format) => <span key={format} className="rounded-md border border-gold/25 bg-black/80 px-2 py-1 font-mono text-[9px] font-bold text-light-gold backdrop-blur-sm">{format}</span>)}</div>}
         </Link>
         <div className="absolute bottom-3 start-3 z-10"><Product3DPreview product={product}/></div>
         <div className="absolute bottom-3 end-3 z-10"><WorkspaceActions product={product} compact/></div>

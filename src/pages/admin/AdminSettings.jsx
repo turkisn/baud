@@ -10,7 +10,7 @@ const ALLOWED_IMAGE_FORMATS = ['JPG', 'JPEG', 'PNG', 'WEBP'];
 function InfoRow({ label, value }) {
   return (
     <div className="flex items-start justify-between py-3 border-b border-sand last:border-0 text-sm">
-      <span className="text-light-brown w-48 flex-shrink-0">{label}</span>
+      <span className="text-light-brown w-48 shrink-0">{label}</span>
       <span className="flex-1 text-end font-medium text-dark-brown">{value}</span>
     </div>
   );
@@ -100,7 +100,7 @@ export default function AdminSettings() {
         </section>
 
         <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-xs">
-          <Info size={16} className="flex-shrink-0 mt-0.5" />
+          <Info size={16} className="shrink-0 mt-0.5" />
           <p>
             {t(
               'This page is read-only. Backend authorization, storage, and environment configuration are managed outside this screen.',

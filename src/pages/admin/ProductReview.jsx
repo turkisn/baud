@@ -52,7 +52,7 @@ function RevisionModal({ product, onConfirm, onClose, lang }) {
         <textarea value={notes} onChange={e => setNotes(e.target.value)}
           placeholder={lang === 'ar' ? 'ملاحظات التعديل المطلوب…' : 'Revision notes (required)…'}
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border text-sm resize-none outline-none mb-4"
+          className="w-full px-4 py-3 rounded-xl border text-sm resize-none outline-hidden mb-4"
           style={{ background: '#1A1008', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
         <div className="flex gap-3">
           <button onClick={onClose}
@@ -88,7 +88,7 @@ function RejectModal({ product, onConfirm, onClose, lang }) {
         <textarea value={reason} onChange={e => setReason(e.target.value)}
           placeholder={lang === 'ar' ? 'سبب الرفض (مطلوب)…' : 'Rejection reason (required)…'}
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border text-sm resize-none outline-none mb-4"
+          className="w-full px-4 py-3 rounded-xl border text-sm resize-none outline-hidden mb-4"
           style={{ background: '#1A1008', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
         <div className="flex gap-3">
           <button onClick={onClose}
@@ -230,7 +230,7 @@ function ProductDetailPanel({ product, onClose, onApprove, onReject, onRevision,
               <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#6E5847' }}>Files</p>
               {product.files.filter(f => f.original_file_name).map((f, i) => (
                 <div key={i} className="flex items-center gap-3 py-2 border-b" style={{ borderColor: SAND }}>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono" style={{ background: GOLD + '20', color: DARK }}>.{f.file_format?.toLowerCase()}</span>
+                  <span className="px-2 py-0.5 rounded-sm text-[10px] font-bold font-mono" style={{ background: GOLD + '20', color: DARK }}>.{f.file_format?.toLowerCase()}</span>
                   <span className="text-xs flex-1 truncate" style={{ color: DARK }}>{f.original_file_name}</span>
                   <span className="text-[10px]" style={{ color: '#9CA3AF' }}>{f.software_name}</span>
                 </div>
@@ -456,7 +456,7 @@ export default function ProductReview() {
           <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3" style={{ color: '#6A5A48' }} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name or BUOD ref…"
-            className="w-full max-w-md pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-none"
+            className="w-full max-w-md pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-hidden"
             style={{ background: '#2B1B0E', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
         </div>
 

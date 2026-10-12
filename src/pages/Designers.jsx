@@ -143,7 +143,7 @@ export default function Designers() {
                   t('Free for students and small firms', 'مجاني للطلاب والشركات الصغيرة'),
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-sand text-sm">
-                    <CheckCircle size={16} className="text-gold flex-shrink-0" />
+                    <CheckCircle size={16} className="text-gold shrink-0" />
                     {item}
                   </li>
                 ))}
@@ -161,7 +161,7 @@ export default function Designers() {
                   { icon: Zap, v: t('Instant Download', 'تحميل فوري'), d: t('No waiting, no approval needed', 'لا انتظار، لا حاجة لموافقة') },
                 ].map((item, i) => (
                   <div key={i} className="bg-warm-white/8 border border-warm-white/10 rounded-2xl p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gold/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-gold/15 rounded-xl flex items-center justify-center shrink-0">
                       <item.icon size={22} className="text-gold" />
                     </div>
                     <div>

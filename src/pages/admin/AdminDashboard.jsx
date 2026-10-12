@@ -63,13 +63,13 @@ export default function AdminDashboard() {
     >
       {!SUPABASE_CONFIGURED && (
         <div role="status" className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-6">
-          <AlertCircle size={18} className="flex-shrink-0" />
+          <AlertCircle size={18} className="shrink-0" />
           {t('Supabase not configured — stats unavailable.', 'Supabase غير متصل.')}
         </div>
       )}
       {error && (
         <div role="alert" className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm mb-6">
-          <AlertCircle size={18} className="flex-shrink-0" />
+          <AlertCircle size={18} className="shrink-0" />
           {error}
         </div>
       )}
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
         {ACTIONS.map((a, i) => (
           <Link key={i} to={a.href}
             className="flex items-start gap-4 p-4 bg-white rounded-2xl border border-sand hover:border-dark-brown/30 transition-all group">
-            <div className="w-10 h-10 bg-warm-white rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-gold/10 transition-colors">
+            <div className="w-10 h-10 bg-warm-white rounded-xl flex items-center justify-center shrink-0 group-hover:bg-gold/10 transition-colors">
               <a.icon size={18} className="text-dark-brown" />
             </div>
             <div className="flex-1 min-w-0">
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
               </div>
               <p className="text-xs text-light-brown mt-0.5">{a.desc}</p>
             </div>
-            <ChevronRight size={16} className="text-light-brown flex-shrink-0 mt-1" />
+            <ChevronRight size={16} className="text-light-brown shrink-0 mt-1" />
           </Link>
         ))}
       </div>

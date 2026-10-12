@@ -393,7 +393,7 @@ export default function LibraryDetail() {
             <div className="sticky top-24 space-y-5">
 
               {/* Download card */}
-              <div className="bg-white rounded-2xl p-6 border border-sand shadow-sm">
+              <div className="bg-white rounded-2xl p-6 border border-sand shadow-xs">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="flex items-center gap-1.5 text-sm text-light-brown">
                     <Eye size={14} /> {(product.view_count || 0).toLocaleString()}
@@ -415,7 +415,7 @@ export default function LibraryDetail() {
                       {formats.map(f => {
                         const c = FORMAT_COLOR[f] || '#888';
                         return (
-                          <span key={f} className="text-[10px] font-bold px-2 py-1 rounded font-mono"
+                          <span key={f} className="text-[10px] font-bold px-2 py-1 rounded-sm font-mono"
                             style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>
                             .{f.toLowerCase()}
                           </span>
@@ -496,7 +496,7 @@ export default function LibraryDetail() {
                           {simFormats.slice(0, 3).map(f => {
                             const c = FORMAT_COLOR[f] || '#888';
                             return (
-                              <span key={f} className="text-[8px] font-bold px-1.5 py-0.5 rounded font-mono"
+                              <span key={f} className="text-[8px] font-bold px-1.5 py-0.5 rounded-sm font-mono"
                                 style={{ background: c + '18', color: c, border: `1px solid ${c}30` }}>
                                 {f}
                               </span>

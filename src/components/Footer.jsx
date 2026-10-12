@@ -8,7 +8,7 @@ export default function Footer() {
   return (
     <footer className="bg-dark-brown text-sand">
       {/* Pattern Bar */}
-      <div className="h-1.5 bg-gradient-to-r from-dark-brown via-gold to-saudi-green" />
+      <div className="h-1.5 bg-linear-to-r/srgb from-dark-brown via-gold to-saudi-green" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -84,15 +84,15 @@ export default function Footer() {
             <h4 className="text-warm-white font-semibold mb-4">{t('Contact', 'تواصل')}</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-2.5 text-sm text-light-brown">
-                <MapPin size={15} className="mt-0.5 text-gold flex-shrink-0" />
+                <MapPin size={15} className="mt-0.5 text-gold shrink-0" />
                 <span>{t('King Fahd Road, Riyadh 12211, Saudi Arabia', 'طريق الملك فهد، الرياض 12211، المملكة العربية السعودية')}</span>
               </li>
               <li className="flex items-center gap-2.5 text-sm text-light-brown">
-                <Phone size={15} className="text-gold flex-shrink-0" />
+                <Phone size={15} className="text-gold shrink-0" />
                 <span>+966 11 000 0000</span>
               </li>
               <li className="flex items-center gap-2.5 text-sm text-light-brown">
-                <Mail size={15} className="text-gold flex-shrink-0" />
+                <Mail size={15} className="text-gold shrink-0" />
                 <span>hello@buad.sa</span>
               </li>
             </ul>

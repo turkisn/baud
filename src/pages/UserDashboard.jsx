@@ -17,7 +17,7 @@ export default function UserDashboard() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-10">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold flex-shrink-0"
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
             style={{ background: '#B68D57', color: '#2B1B0E' }}
           >
             {initial}
@@ -62,7 +62,7 @@ export default function UserDashboard() {
               to={card.href}
               className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-sand hover:border-dark-brown/30 transition-all group"
             >
-              <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
+              <div className={`w-10 h-10 ${card.color} rounded-xl flex items-center justify-center shrink-0`}>
                 <card.icon size={18} />
               </div>
               <div>
@@ -88,16 +88,16 @@ export default function UserDashboard() {
           </p>
           <dl className="text-sm space-y-2">
             <div className="flex gap-2">
-              <dt className="text-light-brown w-24 flex-shrink-0">{t('Email', 'البريد')}</dt>
+              <dt className="text-light-brown w-24 shrink-0">{t('Email', 'البريد')}</dt>
               <dd className="text-dark-brown font-medium">{user?.email}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-light-brown w-24 flex-shrink-0">{t('Role', 'الدور')}</dt>
+              <dt className="text-light-brown w-24 shrink-0">{t('Role', 'الدور')}</dt>
               <dd className="text-dark-brown font-medium capitalize">{user?.role ?? '—'}</dd>
             </div>
             {user?.company_name && (
               <div className="flex gap-2">
-                <dt className="text-light-brown w-24 flex-shrink-0">{t('Company', 'الشركة')}</dt>
+                <dt className="text-light-brown w-24 shrink-0">{t('Company', 'الشركة')}</dt>
                 <dd className="text-dark-brown font-medium">{user.company_name}</dd>
               </div>
             )}

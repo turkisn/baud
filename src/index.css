@@ -1,11 +1,22 @@
 /* ─── Fonts: DM Sans (EN) + Cairo (AR) ─────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@import "./tailwind-compat.css";
+@config "../tailwind.config.cjs";
+@source "../index.html";
+@source "./";
+@source inline("{bg,text,border,from,via,to,fill,stroke,ring,placeholder,decoration}-{dark-brown,medium-brown,light-brown,gold,light-gold,warm-white,deep-brown,ivory,sand,beige,saudi-green,muted-green}");
+@source inline("shadow-{brand,brand-lg,gold,card,card-hover} bg-{hero-pattern,light-pattern,gradient-radial} animate-{pulse-slow,float,spin-slow}");
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* Keep the reset below components/utilities in the native cascade. */
+@layer base {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+}
+
+/* Existing custom rules share the utility layer, retaining specificity and
+   source-order relationships with generated utilities. */
+@layer utilities {
 
 html { scroll-behavior: smooth; scroll-padding-top: 70px; }
 
@@ -210,6 +221,8 @@ body {
   .buod-dimensional-face svg circle { animation: none; }
 }
 
+}
+
 @layer components {
   /* ─── Buttons ──────────────────────────────────────────── */
   .btn-primary {
@@ -239,17 +252,17 @@ body {
   }
   .admin-primary-button {
     @apply inline-flex items-center justify-center gap-2 rounded-xl bg-dark-brown px-4 py-2.5
-           text-sm font-semibold text-warm-white transition hover:bg-deep-brown focus:outline-none
+           text-sm font-semibold text-warm-white transition hover:bg-deep-brown focus:outline-hidden
            focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .admin-secondary-button {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border border-sand bg-white px-4 py-2.5
            text-sm font-semibold text-medium-brown transition hover:border-beige hover:bg-warm-white
-           focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+           focus:outline-hidden focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .admin-icon-button {
     @apply inline-flex h-9 w-9 items-center justify-center rounded-lg text-medium-brown transition
-           hover:bg-sand focus:outline-none focus:ring-2 focus:ring-gold disabled:cursor-not-allowed disabled:opacity-40;
+           hover:bg-sand focus:outline-hidden focus:ring-2 focus:ring-gold disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   /* ─── Cards ────────────────────────────────────────────── */
@@ -278,7 +291,7 @@ body {
   /* ─── Form ──────────────────────────────────────────────── */
   .input-field {
     @apply w-full border border-sand rounded-xl px-4 py-3 bg-white text-dark-brown
-           placeholder-light-brown/70 focus:outline-none focus:ring-2 focus:ring-dark-brown/20
+           placeholder:text-light-brown/70 focus:outline-hidden focus:ring-2 focus:ring-dark-brown/20
            focus:border-dark-brown transition-all duration-200;
   }
   .label {
@@ -295,7 +308,7 @@ body {
 
   /* ─── Dividers ──────────────────────────────────────────── */
   .gold-divider {
-    @apply h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent;
+    @apply h-px w-16 bg-linear-to-r/srgb from-transparent via-gold to-transparent;
   }
   .gold-line {
     @apply h-0.5 w-10 bg-gold rounded-full;
@@ -324,6 +337,7 @@ body {
   }
 }
 
+@layer utilities {
 /* ─── Scrollbar ──────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 5px; }
 ::-webkit-scrollbar-track  { background: #F8F5EF; }
@@ -1892,4 +1906,6 @@ body.product-3d-open .public-shell *::after {
   .product-3d-modal,
   .product-3d-dialog,
   .product-3d-loading span { animation: none; }
+}
+
 }

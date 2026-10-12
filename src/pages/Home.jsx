@@ -83,8 +83,8 @@ export default function Home() {
               <Sparkles size={14} />
               {t('The digital identity of construction products', 'الهوية الرقمية لمنتجات البناء')}
             </p>
-            <h1 className="text-4xl font-black leading-[1.18] sm:text-6xl lg:text-[72px]">
-              <span className="bg-gradient-to-b from-[#F5D98C] via-[#D2A24A] to-[#8E5F22] bg-clip-text text-transparent">
+            <h1 className="text-4xl font-black leading-[1.18] sm:text-6xl sm:leading-none lg:text-[72px]">
+              <span className="bg-linear-to-b/srgb from-[#F5D98C] via-[#D2A24A] to-[#8E5F22] bg-clip-text text-transparent">
                 {t('Every product…', 'كل منتج...')}
               </span>
               <span className="mt-1 block text-[#F8F3E9]">{t('has a digital identity.', 'له هوية رقمية.')}</span>
@@ -92,7 +92,7 @@ export default function Home() {
             <p className="mt-5 text-sm font-semibold tracking-wide text-[#D1A94E] sm:text-base">
               {t('Precise data · Smart classification · Direct supplier connection', 'بيانات دقيقة · تصنيف ذكي · ربط مباشر بالموردين')}
             </p>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-sand/55 sm:text-base">
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-sand/55 sm:text-base sm:leading-6">
               {t(
                 'A professional Saudi construction library connecting product information, supplier data and design resources in one living network.',
                 'مكتبة بناء سعودية احترافية تربط معلومات المنتج وبيانات المورد وموارد التصميم في شبكة رقمية واحدة.'
@@ -102,7 +102,7 @@ export default function Home() {
               <label className="relative flex-1">
                 <span className="sr-only">{t('Search the library', 'البحث في المكتبة')}</span>
                 <Search className={`absolute top-1/2 -translate-y-1/2 text-gold/65 ${lang === 'ar' ? 'right-4' : 'left-4'}`} size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} className={`h-14 w-full rounded-xl border border-gold/10 bg-black/65 text-warm-white outline-none transition placeholder:text-sand/30 focus:border-gold/50 ${lang === 'ar' ? 'pl-4 pr-12' : 'pl-12 pr-4'}`} placeholder={t('Product, BUOD reference or category…', 'منتج أو مرجع BUOD أو فئة…')} />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} className={`h-14 w-full rounded-xl border border-gold/10 bg-black/65 text-warm-white outline-hidden transition placeholder:text-sand/30 focus:border-gold/50 ${lang === 'ar' ? 'pl-4 pr-12' : 'pl-12 pr-4'}`} placeholder={t('Product, BUOD reference or category…', 'منتج أو مرجع BUOD أو فئة…')} />
               </label>
               <button type="submit" className="btn-gold h-14 justify-center px-7">
                 {t('Search library', 'ابحث في المكتبة')}

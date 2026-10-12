@@ -104,10 +104,10 @@ export default function AdminManufacturers() {
           <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-light-brown" />
           <input value={search} onChange={e => setSrch(e.target.value)}
             placeholder={t('Search name or email…', 'بحث…')}
-            className="w-full pl-9 pr-4 py-2.5 text-sm border border-sand rounded-xl outline-none focus:border-dark-brown bg-white" />
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-sand rounded-xl outline-hidden focus:border-dark-brown bg-white" />
         </div>
         <select value={vsFilter} onChange={e => setVsF(e.target.value)}
-          className="px-4 py-2.5 text-sm border border-sand rounded-xl outline-none focus:border-dark-brown bg-white">
+          className="px-4 py-2.5 text-sm border border-sand rounded-xl outline-hidden focus:border-dark-brown bg-white">
           <option value="">{t('All statuses', 'جميع الحالات')}</option>
           <option value="verified">{t('Verified', 'موثّق')}</option>
           <option value="pending">{t('Pending', 'قيد الانتظار')}</option>
@@ -121,7 +121,7 @@ export default function AdminManufacturers() {
 
       {!SUPABASE_CONFIGURED && (
         <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-4">
-          <AlertCircle size={18} className="flex-shrink-0" />
+          <AlertCircle size={18} className="shrink-0" />
           {t('Supabase not configured.', 'Supabase غير متصل.')}
         </div>
       )}

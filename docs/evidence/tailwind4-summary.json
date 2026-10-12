@@ -1,0 +1,12 @@
+{
+  "file": "buod-tailwind4-baseline.zip",
+  "bytes": 27668494,
+  "sha256": "88634ac621a0a723aa785e176b70c9bd70c8d9649b935c04cf4062c508cafcb2",
+  "baseline_pngs": 80,
+  "chrome": "154.0.8037.99",
+  "node": "24.19.0",
+  "visual_passed": 80,
+  "functional_browser_passed": 55,
+  "unit_passed": 71,
+  "audit_total": 0
+}

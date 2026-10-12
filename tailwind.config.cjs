@@ -1,17 +1,6 @@
-const path = require('path');
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    path.join(__dirname, 'index.html'),
-    path.join(__dirname, 'src/**/*.{js,ts,jsx,tsx}'),
-  ],
-  safelist: [
-    { pattern: /^(bg|text|border|from|via|to|fill|stroke|ring|placeholder|decoration)-(dark-brown|medium-brown|light-brown|gold|light-gold|warm-white|deep-brown|ivory|sand|beige|saudi-green|muted-green)/ },
-    { pattern: /^shadow-(brand|brand-lg|gold|card|card-hover)$/ },
-    { pattern: /^bg-(hero-pattern|light-pattern|gradient-radial)$/ },
-    { pattern: /^animate-(pulse-slow|float|spin-slow)$/ },
-  ],
+  // Brand theme retained through Tailwind 4’s official @config bridge.
   theme: {
     extend: {
       colors: {
@@ -51,7 +40,8 @@ module.exports = {
       boxShadow: {
         'brand':      '0 4px 24px rgba(74, 57, 45, 0.14)',
         'brand-lg':   '0 12px 48px rgba(74, 57, 45, 0.18)',
-        'gold':       '0 4px 24px rgba(201, 168, 76, 0.18)',
+        // v3's shadow-gold color utility made this shadow opaque. Preserve it.
+        'gold':       '0 4px 24px rgb(201, 168, 76)',
         'card':       '0 2px 20px rgba(74, 57, 45, 0.07)',
         'card-hover': '0 8px 40px rgba(74, 57, 45, 0.13)',
       },

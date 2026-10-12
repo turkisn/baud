@@ -66,7 +66,7 @@ export default function Contact() {
                 { Icon: Clock, title: t('Hours', 'ساعات العمل'), val: t('Sun–Thu: 8am–5pm KSA', 'الأحد–الخميس: 8ص–5م توقيت السعودية') },
               ].map(({ Icon, title, val }) => (
                 <div key={title} className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center shrink-0">
                     <Icon size={18} className="text-gold" />
                   </div>
                   <div>
