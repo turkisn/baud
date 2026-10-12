@@ -10,6 +10,7 @@ export default function ResetPassword() {
   const [checking, setChecking] = useState(true);
   const [hasSession, setHasSession] = useState(false);
   const [accountEmail, setAccountEmail] = useState('');
+  const [accountId, setAccountId] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +25,7 @@ export default function ResetPassword() {
       if (active) {
         setHasSession(!sessionError && isRecoverySession(data.session));
         setAccountEmail(data.session?.user?.email || '');
+        setAccountId(data.session?.user?.id || '');
         setChecking(false);
       }
     }).catch(() => {
@@ -33,6 +35,7 @@ export default function ResetPassword() {
       if (!active) return;
       setHasSession(isRecoverySession(session));
       setAccountEmail(session?.user?.email || '');
+      setAccountId(session?.user?.id || '');
       setChecking(false);
     });
     return () => { active = false; subscription.unsubscribe(); };
@@ -51,15 +54,26 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      const { data, error: identityError } = await supabase.auth.getUser();
       const { data: sessionData } = await supabase.auth.getSession();
-      if (identityError || !isRecoverySession(sessionData.session) || data.user?.id !== sessionData.session?.user?.id) {
+      const recoverySession = sessionData.session;
+      if (!isRecoverySession(recoverySession) || recoverySession.user.id !== accountId) {
         clearRecoveryIntent(); setHasSession(false); return;
       }
-      await authService.updatePassword(password);
-      clearRecoveryIntent();
-      try { await authService.signOut(); } catch { /* Password update already succeeded. */ }
+      const { data, error: identityError } = await supabase.auth.getUser(recoverySession.access_token);
+      if (identityError || !isRecoverySession(recoverySession) || data.user?.id !== accountId) {
+        clearRecoveryIntent(); setHasSession(false); return;
+      }
+      await authService.updatePassword(password, recoverySession);
       setUpdated(true);
+      setPassword(''); setConfirmPassword('');
+      // Cleanup failures must never turn a confirmed password update into an
+      // apparent failure, or sign out a different account after a tab switch.
+      try {
+        const { data: current } = await supabase.auth.getSession();
+        const stillSameSession = isRecoverySession(current.session) && current.session?.user?.id === accountId;
+        clearRecoveryIntent();
+        if (stillSameSession) await supabase.auth.signOut({ scope: 'local' });
+      } catch { clearRecoveryIntent(); }
     } catch (updateError) {
       setError(updateError.code === 'same_password'
         ? t('Choose a password different from your current password.', 'اختر كلمة مرور تختلف عن الحالية.')

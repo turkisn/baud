@@ -41,6 +41,9 @@ jobs:
       - name: Regression tests
         run: npm test
 
+      - name: Disposable PostgreSQL migration and RLS tests
+        run: npm run test:database
+
       - name: Build
         run: npm run build
 

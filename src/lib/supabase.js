@@ -44,6 +44,30 @@ export function clearRecoveryIntent() {
   try { sessionStorage.removeItem(RECOVERY_KEY); } catch { /* unavailable */ }
 }
 export function isRecoverySession(session) { return validRecoveryIntent(recoveryIntent, session); }
+export async function updateRecoveryPassword(password, session) {
+  if (!SUPABASE_CONFIGURED || !isRecoverySession(session)) throw new Error('Recovery session required');
+  // Pin the request to the identity verified by the reset form. Reading shared
+  // SDK storage again could target another account switched in a different tab.
+  // Public Auth API: https://github.com/supabase/auth/blob/master/openapi.yaml
+  const response = await fetch(new URL('/auth/v1/user', supabaseUrl), {
+    method: 'PUT',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+      'X-Supabase-Api-Version': '2024-01-01',
+    },
+    body: JSON.stringify({ password }),
+    signal: AbortSignal.timeout(20_000),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error('Password update failed');
+    error.code = data.code || data.error_code;
+    throw error;
+  }
+  return data;
+}
 supabase?.auth.onAuthStateChange((event, session) => {
   recoveryIntent = recoveryIntentForEvent(event, session, recoveryIntent);
   try {

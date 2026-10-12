@@ -157,7 +157,7 @@ export default function AdminLayout({ children, title, subtitle }) {
 
         {/* Content */}
         <div className="flex-1 p-4 sm:p-6">
-          {logoutError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{t('Sign out failed. You are still signed in; check your connection and try again.', 'تعذّر تسجيل الخروج. ما زلت مسجلاً؛ تحقق من الاتصال وحاول مجدداً.')}</p>}
+          {logoutError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{t('Sign out could not be completed. Check your connection and try again.', 'تعذّر إكمال تسجيل الخروج. تحقق من الاتصال وحاول مجدداً.')}</p>}
           {children}
         </div>
       </div>

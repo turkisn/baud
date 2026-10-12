@@ -105,7 +105,7 @@ function SpecificationsEditor({ items, onChange, disabled, t }) {
   </section>;
 }
 
-function ProductAssets({ product, onRefresh, disabled, t }) {
+function ProductAssets({ product, onRefresh, disabled, onBusyChange, t }) {
   const [imageFile, setImageFile] = useState(null);
   const [imageMeta, setImageMeta] = useState({ image_type: 'render', alt_text_ar: '', alt_text_en: '', sort_order: 0, is_primary: false });
   const [assetFile, setAssetFile] = useState(null);
@@ -117,27 +117,27 @@ function ProductAssets({ product, onRefresh, disabled, t }) {
   const uploadImage = async (event) => {
     event.preventDefault();
     if (!imageFile) return;
-    setUploading('image'); setError(''); setSuccess('');
+    setUploading('image'); onBusyChange(true); setError(''); setSuccess('');
     try {
       await mvpAdminService.uploadProductImage(product.id, imageFile, imageMeta);
       setImageFile(null);
       setSuccess(t('Image uploaded and registered.', 'تم رفع الصورة وتسجيلها.'));
       await onRefresh();
     } catch (uploadError) { setError(uploadError.message); }
-    finally { setUploading(''); }
+    finally { setUploading(''); onBusyChange(false); }
   };
 
   const uploadFile = async (event) => {
     event.preventDefault();
     if (!assetFile) return;
-    setUploading('file'); setError(''); setSuccess('');
+    setUploading('file'); onBusyChange(true); setError(''); setSuccess('');
     try {
       await mvpAdminService.uploadProductFile(product.id, assetFile, fileMeta);
       setAssetFile(null);
       setSuccess(t('File uploaded and registered.', 'تم رفع الملف وتسجيله.'));
       await onRefresh();
     } catch (uploadError) { setError(uploadError.message); }
-    finally { setUploading(''); }
+    finally { setUploading(''); onBusyChange(false); }
   };
 
   if (!product.id) return <section className="rounded-2xl border border-dashed border-beige bg-white p-8 text-center text-sm text-light-brown">{t('Save the product as a draft before uploading images or files.', 'احفظ المنتج كمسودة قبل رفع الصور أو الملفات.')}</section>;
@@ -181,10 +181,11 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
   const [supplierQuery, setSupplierQuery] = useState('');
   const [availableSuppliers, setAvailableSuppliers] = useState(supplierOptions);
   const [saving, setSaving] = useState('');
+  const [assetBusy, setAssetBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [savedState, setSavedState] = useState(() => editorSnapshot(productEditorState(initial)));
-  const closeEditor = useUnsavedEditor(editorSnapshot(product) !== savedState, Boolean(saving), onClose,
+  const closeEditor = useUnsavedEditor(editorSnapshot(product) !== savedState, (Boolean(saving) || assetBusy), onClose,
     t('Discard unsaved changes?', 'تجاهل التغييرات غير المحفوظة؟'));
   const { dialogRef, initialFocusRef } = useModalDialog(closeEditor);
 
@@ -319,15 +320,15 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
   );
 
   return <div ref={dialogRef} tabIndex="-1" className="fixed inset-0 z-50 overflow-y-auto bg-deep-brown/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={t('Block editor', 'محرر البلوك')}><div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-ivory shadow-2xl"><header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-sand bg-white px-5 py-4"><div><p className="text-xs font-bold uppercase tracking-wider text-gold">{product.id ? t('Edit block', 'تعديل البلوك') : t('New block', 'بلوك جديد')}</p><h2 className="mt-1 text-xl font-black text-dark-brown">{product.product_name_en || t('Untitled product', 'منتج بدون عنوان')}</h2>{product.buod_reference && <p className="mt-1 font-mono text-xs text-light-brown">{product.buod_reference}</p>}</div><button ref={initialFocusRef} type="button" onClick={closeEditor} aria-label={t('Close editor', 'إغلاق المحرر')} className="admin-icon-button"><X/></button></header>
-    <fieldset disabled={Boolean(saving)} className="space-y-6 p-5 sm:p-7">{error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}{success && <div role="status" className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"><CheckCircle2 size={17}/>{success}</div>}
+    <fieldset disabled={(Boolean(saving) || assetBusy)} className="space-y-6 p-5 sm:p-7">{error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}{success && <div role="status" className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"><CheckCircle2 size={17}/>{success}</div>}
       <section className="rounded-2xl border border-sand bg-white p-5"><h3 className="mb-4 font-bold text-dark-brown">{t('Identity and classification', 'الهوية والتصنيف')}</h3><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Field label="Product name (English)" required value={product.product_name_en} onChange={set('product_name_en')}/><Field label="اسم المنتج (العربية)" required dir="rtl" value={product.product_name_ar} onChange={set('product_name_ar')}/><Field label="Slug" value={product.slug} onChange={set('slug')}/><Field label={t('Brand', 'العلامة التجارية')} value={product.brand_name} onChange={set('brand_name')}/><SelectField label={t('Category', 'الفئة')} required={product.publication_state === 'published'} value={product.category_id} onChange={(event) => setProduct((current) => ({ ...current, category_id: event.target.value, subcategory_id: '' }))}><option value="">{t('Select category', 'اختر الفئة')}</option>{categoryOptions.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</SelectField><SelectField label={t('Subcategory', 'الفئة الفرعية')} value={product.subcategory_id} onChange={set('subcategory_id')} disabled={!product.category_id}><option value="">{t('No subcategory', 'بدون فئة فرعية')}</option>{subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.id}>{subcategory.name_en} · {subcategory.name_ar}</option>)}</SelectField><Field label={t('Find supplier', 'ابحث عن مورد')} value={supplierQuery} onChange={(event) => setSupplierQuery(event.target.value)}/><SelectField label={t('Supplier', 'المورد')} required={product.publication_state === 'published'} value={product.supplier_id} onChange={set('supplier_id')}><option value="">{t('Select supplier', 'اختر المورد')}</option>{supplierChoices.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.company_name_en} · {supplier.company_name_ar}</option>)}</SelectField><Field label={t('Model number', 'رقم الطراز')} value={product.model_number} onChange={set('model_number')}/><Field label={t('Country of origin', 'بلد المنشأ')} value={product.country_of_origin} onChange={set('country_of_origin')}/><Field label={t('Unit', 'الوحدة')} value={product.unit} onChange={set('unit')}/></div></section>
       <section className="rounded-2xl border border-sand bg-white p-5"><h3 className="mb-4 font-bold text-dark-brown">{t('Descriptions', 'الأوصاف')}</h3><div className="grid gap-4 md:grid-cols-2"><Textarea label="Short description (English)" value={product.short_description_en} onChange={set('short_description_en')}/><Textarea label="الوصف المختصر (العربية)" dir="rtl" value={product.short_description_ar} onChange={set('short_description_ar')}/><Textarea label="Full description (English)" value={product.full_description_en} onChange={set('full_description_en')}/><Textarea label="الوصف الكامل (العربية)" dir="rtl" value={product.full_description_ar} onChange={set('full_description_ar')}/></div></section>
       <section className="rounded-2xl border border-sand bg-white p-5"><h3 className="mb-4 font-bold text-dark-brown">{t('Commercial and display data', 'البيانات التجارية والعرض')}</h3><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Field label={t('Product price', 'سعر المنتج')} type="number" min="0" step="0.01" value={product.price} onChange={set('price')}/><Field label={t('Currency', 'العملة')} value={product.currency} maxLength={3} pattern="[A-Za-z]{3}" placeholder="SAR" onChange={(event) => setProduct((current) => ({ ...current, currency: event.target.value.toUpperCase().slice(0, 3) }))}/><Field label={t('Supplier product URL', 'رابط المنتج لدى المورد')} type="url" inputMode="url" placeholder="https://" value={product.supplier_product_url} onChange={set('supplier_product_url')} className="xl:col-span-2"/><Field label={t('Source URL', 'رابط المصدر')} type="url" inputMode="url" placeholder="https://" value={product.source_url} onChange={set('source_url')} className="xl:col-span-2"/><Field label={t('Sort order', 'ترتيب العرض')} type="number" value={product.sort_order} onChange={set('sort_order')}/><label className="flex items-end gap-2 pb-3 text-sm font-medium text-medium-brown"><input type="checkbox" checked={Boolean(product.is_featured)} onChange={set('is_featured')}/>{t('Featured product', 'منتج مميز')}</label></div><div className="mt-5 rounded-xl border border-gold/30 bg-gold/5 p-4"><label className="flex items-start gap-3 text-sm font-semibold text-dark-brown"><input type="checkbox" className="mt-1" checked={Boolean(product.rights_confirmed)} onChange={set('rights_confirmed')}/><span>{t('Rights are confirmed for this product data and its uploaded assets.', 'تم تأكيد حقوق بيانات هذا المنتج وملفاته المرفوعة.')}</span></label></div></section>
       <label className="flex gap-3 text-sm text-dark-brown"><input type="checkbox" checked={Boolean(product.license_download)} onChange={set('license_download')}/>{t('Downloads are explicitly permitted by the asset licence.', 'ترخيص الملفات يسمح بالتنزيل صراحةً.')}</label>
-      <SpecificationsEditor items={product.specifications || []} onChange={(items) => setProduct((current) => ({ ...current, specifications: items }))} disabled={Boolean(saving)} t={t}/>
-      <ProductAssets product={product} onRefresh={refresh} disabled={Boolean(saving)} t={t}/>
+      <SpecificationsEditor items={product.specifications || []} onChange={(items) => setProduct((current) => ({ ...current, specifications: items }))} disabled={(Boolean(saving) || assetBusy)} t={t}/>
+      <ProductAssets onBusyChange={setAssetBusy} product={product} onRefresh={refresh} disabled={(Boolean(saving) || assetBusy)} t={t}/>
     </fieldset>
-    <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-sand bg-white px-5 py-4"><div className="flex flex-wrap items-center gap-2"><StatusBadge status={product.publication_state}/>{product.updated_at && <span className="text-xs text-light-brown">{t('Updated', 'آخر تحديث')} <time dateTime={product.updated_at} dir="ltr">{formatAdminDateTime(product.updated_at)}</time></span>}{!canPublish && <span id="publish-requirements" className="text-xs text-amber-700">{t('Publishing requires both names, category, supplier, and confirmed rights.', 'يتطلب النشر الاسمين والفئة والمورد وتأكيد الحقوق.')}</span>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => save('draft')} disabled={Boolean(saving)} className="admin-secondary-button">{saving === 'draft' ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} {t('Save draft', 'حفظ كمسودة')}</button><button type="button" onClick={() => save('archived')} disabled={Boolean(saving) || !product.id} className="admin-secondary-button text-red-700"><Archive size={14}/>{t('Archive', 'أرشفة')}</button><button type="button" onClick={() => save('published')} disabled={Boolean(saving) || !canPublish} aria-describedby={!canPublish ? 'publish-requirements' : undefined} className="admin-primary-button disabled:cursor-not-allowed disabled:opacity-50">{saving === 'published' ? <Loader2 className="animate-spin" size={14}/> : <Send size={14}/>} {t('Publish', 'نشر')}</button></div></div>
+    <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-sand bg-white px-5 py-4"><div className="flex flex-wrap items-center gap-2"><StatusBadge status={product.publication_state}/>{product.updated_at && <span className="text-xs text-light-brown">{t('Updated', 'آخر تحديث')} <time dateTime={product.updated_at} dir="ltr">{formatAdminDateTime(product.updated_at)}</time></span>}{!canPublish && <span id="publish-requirements" className="text-xs text-amber-700">{t('Publishing requires both names, category, supplier, and confirmed rights.', 'يتطلب النشر الاسمين والفئة والمورد وتأكيد الحقوق.')}</span>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => save('draft')} disabled={(Boolean(saving) || assetBusy)} className="admin-secondary-button">{saving === 'draft' ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} {t('Save draft', 'حفظ كمسودة')}</button><button type="button" onClick={() => save('archived')} disabled={(Boolean(saving) || assetBusy) || !product.id} className="admin-secondary-button text-red-700"><Archive size={14}/>{t('Archive', 'أرشفة')}</button><button type="button" onClick={() => save('published')} disabled={(Boolean(saving) || assetBusy) || !canPublish} aria-describedby={!canPublish ? 'publish-requirements' : undefined} className="admin-primary-button disabled:cursor-not-allowed disabled:opacity-50">{saving === 'published' ? <Loader2 className="animate-spin" size={14}/> : <Send size={14}/>} {t('Publish', 'نشر')}</button></div></div>
   </div></div>;
 }
 

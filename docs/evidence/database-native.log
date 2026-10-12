@@ -1,0 +1,19 @@
+
+> buod@0.0.0 test:database:native
+> node scripts/test-database-native.js
+
+postgres (PostgreSQL) 18.6 (Postgres.app)
+PASS transport: loopback-only listener, TCP authentication rejected, owner-only Unix socket directory
+PASS 57 migrations on native PostgreSQL
+PASS native SQL suite admin_security.sql
+PASS native SQL suite workspace_security.sql
+PASS native SQL suite launch_security.sql
+PASS concurrent cross-demotion read-committed-a: loser Permission denied, one super-admin, one audit
+PASS concurrent cross-demotion read-committed-b: loser Permission denied, one super-admin, one audit
+PASS concurrent cross-demotion repeatable-read-a: loser 40001 serialization failure, one super-admin, one audit
+PASS concurrent cross-demotion repeatable-read-b: loser 40001 serialization failure, one super-admin, one audit
+PASS concurrent role updates: serialized old/new audit chain and final role
+PASS native regression: 57 migrations, 3 SQL suites, 5 real two-session concurrency scenarios
+LIMIT: platform Auth/Storage tables are test scaffolding; HTTP services and deployed-version parity remain external gates.
+PASS cleanup: PostgreSQL stopped; no persistent service
+PASS cleanup: disposable cluster removed

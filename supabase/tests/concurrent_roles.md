@@ -1,4 +1,14 @@
-# Local concurrency test — not executed yet
+# Local concurrency test — executed on native PostgreSQL 18.6
+
+On 12 October 2026, `scripts/test-database-native.js` passed five real two-session scenarios after replaying all 57 migrations and the three SQL suites. See `docs/evidence/database-native.log`. It creates its own disposable cluster and does not accept a database URL. Auth/Storage platform tables are fixture scaffolding; this does not test their HTTP services or deployed-version parity.
+
+Reproduce only with an approved native runtime:
+
+```sh
+BUOD_PG_BIN=/absolute/path/to/approved/PostgreSQL/bin npm run test:database:native
+```
+
+The runner asserts loopback-only listening, rejects TCP authentication, uses an owner-only Unix socket directory, and stops/removes its disposable cluster in `finally`. The manual sequence below describes the assertions automated by the runner.
 
 Requires a disposable PostgreSQL/Supabase instance with all migrations applied and two synthetic super_admin profiles A and B. Do not run against a live project.
 

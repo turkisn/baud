@@ -43,6 +43,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState(false);
   const [profileRetry, setProfileRetry] = useState(0);
+  const [logoutWarning, setLogoutWarning] = useState(false);
   const authVersion = useRef(0);
   const mounted = useRef(false);
 
@@ -66,6 +67,7 @@ export function AuthProvider({ children }) {
       let failed = false;
       try {
         profile = await fetchProfile(authUser.id);
+        failed = !profile;
       } catch {
         failed = true; // Authorization fails closed, with a visible recovery path.
       }
@@ -94,6 +96,7 @@ export function AuthProvider({ children }) {
       }
 
       const nextUserId = session.user.id;
+      setLogoutWarning(false);
       if (currentSessionUserId !== nextUserId) {
         currentSessionUserId = nextUserId;
         setUser(null);
@@ -157,7 +160,13 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     if (SUPABASE_CONFIGURED) {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        // Current Auth SDK removes the local session even when remote logout
+        // fails. Never restore credentials or claim the user remains signed in.
+        const { data } = await supabase.auth.getSession();
+        if (data.session) throw error;
+        setLogoutWarning(true);
+      }
     } else {
       try { localStorage.removeItem('buod_session'); } catch { /* Storage may be disabled. */ }
     }
@@ -185,6 +194,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
+      {logoutWarning && <div role="alert" className="relative z-[100] bg-amber-50 p-4 text-sm text-amber-900">Signed out on this device. Other sessions could not be revoked; sign in again to retry signing out everywhere. تم تسجيل الخروج من هذا الجهاز، لكن تعذّر إنهاء الجلسات الأخرى. سجّل الدخول مجدداً لإعادة المحاولة. <button type="button" className="underline" onClick={() => setLogoutWarning(false)}>Dismiss / إغلاق</button></div>}
       {loading ? <AuthLoadingScreen /> : <>{profileError && <div role="alert" className="fixed bottom-4 start-4 z-[100] max-w-sm rounded-xl bg-red-50 p-4 text-sm text-red-900">Account permissions could not be loaded. تعذّر تحميل صلاحيات الحساب. <button type="button" className="underline" onClick={() => setProfileRetry(v => v + 1)}>Retry profile / إعادة المحاولة</button></div>}{children}</>}
     </AuthContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { Buffer } from 'node:buffer';
 const owner='22222222-2222-4222-8222-222222222222';
 const session={access_token:'eyJ.'+btoa(JSON.stringify({session_id:'synthetic-session'}))+'.signature',refresh_token:'isolated-refresh',token_type:'bearer',expires_at:4102444800,
  user:{id:owner,email:'isolated@example.invalid',aud:'authenticated',role:'authenticated',user_metadata:{}}};
@@ -93,7 +94,7 @@ test('public routes and demo disclosure work in Arabic on mobile',async({page})=
  await expect(page.getByRole('note')).toBeVisible();
  await page.getByRole('button',{name:'عرض 3D تفاعلي',exact:true}).first().click();
  await expect(page.getByText('نموذج بُعد تجريبي',{exact:true})).toBeVisible();
- await page.screenshot({path:'test-results/launch-arabic-mobile.png'});
+ await page.screenshot({path:'test-results/launch-arabic-mobile.png',animations:'disabled'});
 });
 
 test('profile failures fail closed visibly and retry restores current permissions',async({page})=>{
@@ -216,3 +217,140 @@ test('malformed admin list responses show retry without exposing a runtime stack
  await page.getByRole('button',{name:/Retry|Try again/}).click();
  await expect(page.getByText('Isolated User',{exact:true}).last()).toBeVisible();
 });
+
+test('missing profile fails closed and offers recovery',async({page})=>{
+ await fixture(page,'admin');
+ await page.route('**/rest/v1/profiles*',route=>route.fulfill({json:null}));
+ await page.goto('/admin/settings');
+ await expect(page.getByRole('alert')).toContainText('Account permissions could not be loaded');
+ await expect(page.getByRole('button',{name:'Retry profile / إعادة المحاولة'})).toBeVisible();
+ await expect(page).toHaveURL('http://127.0.0.1:4173/');
+});
+
+test('logout outage clears this device and explains unconfirmed remote revocation',async({page})=>{
+ await fixture(page,'admin');
+ await page.route('**/auth/v1/logout*',route=>route.fulfill({status:503,json:{message:'synthetic outage'}}));
+ await page.goto('/admin/settings');
+ await page.getByRole('button',{name:'Sign Out',exact:true}).first().click();
+ await expect(page.getByRole('alert')).toContainText('Signed out on this device. Other sessions could not be revoked');
+ await expect(page).toHaveURL('http://127.0.0.1:4173/login');
+ await expect.poll(()=>page.evaluate(()=>localStorage.getItem('sb-workspace-fixture-auth-token'))).toBeNull();
+});
+
+test('reset verifies displayed identity and never writes after an account mismatch',async({page})=>{
+ await fixture(page);
+ await page.addInitScript(({owner})=>sessionStorage.setItem('buod-password-recovery',JSON.stringify({userId:owner,sessionId:'synthetic-session',startedAt:Date.now()})),{owner});
+ let writes=0;
+ await page.route('**/auth/v1/user',route=>{
+   if(route.request().method()==='PUT') writes++;
+   return route.fulfill({json:{...session.user,id:'different-account'}});
+ });
+ await page.goto('/reset-password');
+ await page.locator('#new-password').fill('Synthetic-new-pass-only');
+ await page.locator('#confirm-password').fill('Synthetic-new-pass-only');
+ await page.getByRole('button',{name:'Update password',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Reset link unavailable'})).toBeVisible();
+ expect(writes).toBe(0);
+});
+
+test('reset update pins authorization to the verified recovery token',async({page})=>{
+ await fixture(page);
+ await page.addInitScript(({owner})=>sessionStorage.setItem('buod-password-recovery',JSON.stringify({userId:owner,sessionId:'synthetic-session',startedAt:Date.now()})),{owner});
+ let token;
+ await page.route('**/auth/v1/user',async route=>{
+   if(route.request().method()!=='PUT') return route.fallback();
+   token=route.request().headers().authorization;
+   // Simulate a different account appearing while the response is in flight.
+   await page.evaluate(({session})=>localStorage.setItem('sb-workspace-fixture-auth-token',JSON.stringify({...session,user:{...session.user,id:'another-synthetic-account'}})),{session});
+   return route.fulfill({json:session.user});
+ });
+ await page.goto('/reset-password');
+ await page.locator('#new-password').fill('Synthetic-new-pass-only');
+ await page.locator('#confirm-password').fill('Synthetic-new-pass-only');
+ await page.getByRole('button',{name:'Update password',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Password updated'})).toBeVisible();
+ expect(token).toBe(`Bearer ${session.access_token}`);
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('sb-workspace-fixture-auth-token')).user.id)).toBe('another-synthetic-account');
+});
+
+test('unlicensed catalog files do not offer a signing request',async({page})=>{
+ await fixture(page);
+ const product={id:'33333333-3333-4333-8333-333333333333',slug:'licensed-fixture',product_name_en:'Licence fixture',product_name_ar:'اختبار',rights_confirmed:true,license_download:false};
+ let signing=0;
+ await page.route('**/rpc/get_mvp_product',route=>route.fulfill({json:product}));
+ await page.route('**/rest/v1/products*',route=>route.fulfill({json:product}));
+ await page.route('**/rest/v1/product_files*',route=>route.fulfill({json:[{id:owner,product_id:product.id,file_type:'block',file_format:'IFC',is_available:true}]}));
+ await page.route('**/storage/v1/**',route=>{signing++;return route.fulfill({status:403,json:{message:'denied'}});});
+ await page.goto('/blocks/licensed-fixture');
+ await expect(page.getByRole('button',{name:'Download not permitted',exact:true})).toBeDisabled();
+ expect(signing).toBe(0);
+});
+
+test('product upload blocks save and closing until registration and refresh finish',async({page})=>{
+ await fixture(page,'admin');
+ const product={id:'33333333-3333-4333-8333-333333333333',product_name_en:'Asset fixture',product_name_ar:'اختبار',publication_state:'draft'};
+ await page.route('**/rest/v1/products*',route=>route.fulfill({json:new URL(route.request().url()).searchParams.has('id')?product:[product],headers:{'content-range':'0-0/1'}}));
+ let release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ let uploading=false;
+ await page.route('**/storage/v1/object/product-images/**',async route=>{
+   uploading=true;await gate;return route.fulfill({json:{Key:'synthetic-image'}});
+ });
+ await page.route('**/rpc/admin_register_mvp_product_image',route=>route.fulfill({json:{id:owner}}));
+ await page.goto('/admin/products');
+ await page.getByRole('button',{name:'Edit',exact:true}).click();
+ await page.getByLabel('Choose a product image, up to 20 MB').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aGtkAAAAASUVORK5CYII=','base64')});
+ await page.getByRole('button',{name:'Upload image',exact:true}).click();
+ await expect.poll(()=>uploading).toBe(true);
+ await expect(page.getByRole('button',{name:'Save draft',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'Close editor',exact:true}).click();
+ await expect(page.getByRole('dialog')).toBeVisible();
+ release();
+ await expect(page.getByText('Image uploaded and registered.',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Save draft',exact:true})).toBeEnabled();
+ await page.getByRole('button',{name:'Close editor',exact:true}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('licensed download retries signing failure and requests a fresh bounded URL',async({page})=>{
+ await fixture(page);
+ const product={id:'33333333-3333-4333-8333-333333333333',slug:'download-fixture',product_name_en:'Download fixture',product_name_ar:'اختبار',rights_confirmed:true,license_download:true};
+ const file={id:owner,product_id:product.id,file_type:'block',file_format:'IFC',is_available:true,original_file_name:'synthetic.ifc',storage_bucket:'product-files',file_path:`${product.id}/synthetic.ifc`};
+ await page.route('**/rpc/get_mvp_product',route=>route.fulfill({json:product}));
+ await page.route('**/rest/v1/products*',route=>route.fulfill({json:product}));
+ await page.route('**/rest/v1/product_files*',route=>route.fulfill({json:new URL(route.request().url()).searchParams.has('id')?file:[file]}));
+ const signing=[];
+ await page.route('**/storage/v1/object/sign/product-files/**',route=>{
+   if(route.request().method()==='GET') return route.fulfill({body:'Synthetic IFC test bytes',contentType:'application/octet-stream',headers:{'content-disposition':'attachment; filename="synthetic.ifc"'}});
+   signing.push(route.request().postDataJSON());
+   return signing.length===1 ? route.fulfill({status:403,json:{message:'synthetic denied/expired session'}})
+     : route.fulfill({json:{signedURL:`/object/sign/product-files/${file.file_path}?token=synthetic-${signing.length}`}});
+ });
+ await page.goto('/blocks/download-fixture');
+ await page.getByRole('button',{name:'Download',exact:true}).click();
+ await expect(page.getByRole('alert')).toContainText('This file is unavailable or your session has expired');
+ const downloaded=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Download',exact:true}).click();
+ expect((await downloaded).suggestedFilename()).toBe('synthetic.ifc');
+ expect(signing).toHaveLength(2);
+ expect(signing.every(body=>body.expiresIn===300)).toBe(true);
+});
+
+for(const [role,assignedRole] of [['admin','Reviewer'],['super_admin','Admin']]) {
+ test(`${role} role-change denial remains visible without changing the displayed role`,async({page})=>{
+   await fixture(page,role);
+   await page.route('**/rest/v1/profiles*',route=>{
+     if(new URL(route.request().url()).searchParams.has('id')) return route.fallback();
+     return route.fulfill({json:[{id:'33333333-3333-4333-8333-333333333333',full_name:'Synthetic target',role:'user',user_type:'general_user'}],headers:{'content-range':'0-0/1'}});
+   });
+   let mutations=0;
+   await page.route('**/rpc/admin_set_user_role',route=>{mutations++;return route.fulfill({status:403,json:{message:'Permission denied'}});});
+   await page.goto('/admin/users');
+   const row=page.getByRole('row').filter({hasText:'Synthetic target'});
+   await row.getByRole('button',{name:'User',exact:true}).click();
+   await page.getByRole('menuitem',{name:assignedRole,exact:true}).click();
+   await expect(row.getByText('Permission denied',{exact:true})).toBeVisible();
+   await expect(row.getByRole('button',{name:'User',exact:true})).toBeEnabled();
+   expect(mutations).toBe(1);
+ });
+}

@@ -40,9 +40,23 @@ do $$ begin
 end $$;
 select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
 set local role authenticated;
-do $$ begin
+do $$ declare command text; rejected boolean; begin
  assert (select count(*) from public.profiles)=1,'Reviewer may only read own profile';
  perform pg_temp.denied($q$select public.admin_log_action('forged',null,null,'{}')$q$);
+ foreach command in array array[
+  'select public.admin_save_mvp_product_bundle(null,''{}'',''[]'')',
+  'select public.admin_save_mvp_supplier(null,''{}'')',
+  'select public.admin_set_user_role(gen_random_uuid(),''user'')',
+  'select public.admin_verify_entity(''supplier'',gen_random_uuid(),''verified'',null)'
+ ] loop
+  rejected:=false;
+  begin execute command;
+  exception when insufficient_privilege then rejected:=true;
+  when raise_exception then
+   if sqlerrm ~ '^(Admin access required|Permission denied)' then rejected:=true; else raise; end if;
+  end;
+  assert rejected,'Reviewer administrative RPC was accepted';
+ end loop;
 end $$;
 reset role;
 select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
@@ -66,6 +80,38 @@ begin
    '[{"specification_name_en":"Width","value":"12","data_type":"number"}]');
  assert (select count(*)=1 from public.product_specifications where product_id=p.id);
  assert (select count(*)>before_audit from public.admin_audit_log),'Trusted mutation must append audit';
+ -- Fail AFTER the product UPDATE and specification DELETE, proving rollback
+ -- across the complete transaction rather than only preflight validation.
+ select count(*) into before_audit from public.admin_audit_log;
+ rejected:=false;
+ begin
+  perform public.admin_save_mvp_product_bundle(p.id,'{"product_name_en":"Must not persist"}',
+    jsonb_build_array(jsonb_build_object('specification_name_en',repeat('x',201),'value','12','data_type','text')));
+ exception when string_data_right_truncation then rejected:=true; end;
+ assert rejected,'Oversize specification must fail after product mutation';
+ assert (select product_name_en='Updated' from public.products where id=p.id),'Late failure changed product';
+ assert (select count(*)=1 and min(value)='12' from public.product_specifications where product_id=p.id),'Late failure deleted specifications';
+ assert (select count(*)=before_audit from public.admin_audit_log),'Late failure retained audit claims';
+end $$;
+reset role;
+-- Super-admin paths remain guarded; successful changes have trusted audit.
+select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000004","role":"authenticated"}',true);
+set local role authenticated;
+do $$ declare rejected boolean:=false;
+begin
+ perform pg_temp.denied($q$update public.profiles set role='user' where id=auth.uid()$q$);
+ begin perform public.admin_set_user_role(auth.uid(),'user');
+ exception when raise_exception then rejected:=sqlerrm='Cannot change own role'; end;
+ assert rejected,'Self demotion must be denied';
+ rejected:=false;
+ begin perform public.admin_set_user_role('b0000000-0000-4000-8000-000000000002',null);
+ exception when raise_exception then rejected:=sqlerrm='Invalid authorization role'; end;
+ assert rejected,'Null role must be denied';
+ perform public.admin_set_user_role('b0000000-0000-4000-8000-000000000003','admin');
+ assert (select role='admin' from public.profiles where id='b0000000-0000-4000-8000-000000000003');
+ perform public.admin_set_user_role('b0000000-0000-4000-8000-000000000003','reviewer');
+ assert (select count(*)=1 from public.profiles where role='super_admin'),'Last super-admin retained';
+ assert exists(select from public.admin_audit_log where action='user.role_change' and actor_user_id=auth.uid());
 end $$;
 reset role;
 select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
@@ -84,7 +130,9 @@ begin
 end $$;
 reset role;
 -- Verify actual storage visibility with a synthetic published licensed/unlicensed file.
-select set_config('request.jwt.claims','{}',true);
+-- Publication trigger also runs for postgres, so provision with the synthetic
+-- admin identity instead of accidentally creating a draft with empty claims.
+select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 insert into public.categories(id,code,name_ar,name_en) values
  ('b1000000-0000-4000-8000-000000000001','QALCH','اختبار','Launch test');
 insert into public.suppliers(id,company_name_ar,company_name_en,slug,is_published) values
