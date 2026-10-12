@@ -1,0 +1,33 @@
+{
+  "unit": {
+    "passed": 71,
+    "failed": 0
+  },
+  "compiled_browser": {
+    "passed": 59,
+    "failed": 0
+  },
+  "additional_acceptance": {
+    "passed": 5,
+    "failed": 0
+  },
+  "unchanged_visual_baselines": 80,
+  "changed_admin_visual_recheck": {
+    "passed": 12,
+    "failed": 0
+  },
+  "full_audit_vulnerabilities": 0,
+  "production_audit_vulnerabilities": 0,
+  "read_only_preflight": {
+    "migrations_replayed": 57,
+    "statements_passed": 12,
+    "live_run": false
+  },
+  "native_SQL_previous": {
+    "migrations": 57,
+    "suites": 3,
+    "two_session_cases": 5,
+    "rerun_this_followup": false
+  },
+  "remaining_browser_gate": "Safari remote automation disabled; Firefox/WebKit runtimes absent"
+}

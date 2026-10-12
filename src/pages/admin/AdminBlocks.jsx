@@ -357,22 +357,28 @@ export default function AdminBlocks() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    mvpAdminService.listCategories().then(setCategories).catch((loadError) => setError(loadError.message));
+  const [categoryError, setCategoryError] = useState('');
+  const loadCategories = useCallback(async () => {
+    setCategoryError('');
+    try { setCategories(await mvpAdminService.listCategories()); }
+    catch (loadError) { setCategoryError(loadError.message); }
   }, []);
+  useEffect(() => { void loadCategories(); }, [loadCategories]);
 
   useEffect(() => {
+    let active = true;
     const timer = window.setTimeout(() => {
-      mvpAdminService.searchSupplierOptions(supplierSearch).then(setSupplierOptions).catch(() => setSupplierOptions([]));
+      mvpAdminService.searchSupplierOptions(supplierSearch).then(rows => { if (active) setSupplierOptions(rows); })
+        .catch(() => { if (active) setSupplierOptions([]); });
     }, 350);
-    return () => window.clearTimeout(timer);
+    return () => { active = false; window.clearTimeout(timer); };
   }, [supplierSearch]);
 
   const listVersion = useRef(0);
   const [failedEditor, setFailedEditor] = useState(null);
   const load = useCallback(async () => {
     const version = ++listVersion.current;
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setFailedEditor(null);
     try {
       const result = await mvpAdminService.listProducts({
         search: debouncedSearch, publicationState, categoryId, supplierId, page,
@@ -412,6 +418,7 @@ export default function AdminBlocks() {
   if (!['admin', 'super_admin'].includes(user?.role)) return <AdminLayout title={t('Access denied', 'الوصول مرفوض')}><p className="text-light-brown">{t('Strict administrator access is required.', 'مطلوب وصول مدير صارم.')}</p></AdminLayout>;
 
   return <AdminLayout title={t('Blocks', 'البلوكات')} subtitle={`${count} ${t('database records', 'سجلات قاعدة البيانات')}`}><div className="mb-5 flex flex-wrap items-center gap-3"><div className="relative min-w-64 flex-1"><Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-light-brown"/><input aria-label={t('Search blocks', 'البحث في البلوكات')} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search name, slug or BUOD reference…', 'ابحث بالاسم أو الرابط أو مرجع BUOD…')} className="input-field bg-white ps-9"/></div><select aria-label={t('Filter by publication state', 'تصفية حسب حالة النشر')} value={publicationState} onChange={(event) => setPublicationState(event.target.value)} className="input-field w-auto min-w-36 bg-white"><option value="">{t('All states', 'كل الحالات')}</option><option value="draft">{t('Draft', 'مسودة')}</option><option value="published">{t('Published', 'منشور')}</option><option value="archived">{t('Archived', 'مؤرشف')}</option></select><select aria-label={t('Filter by category', 'تصفية حسب الفئة')} value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="input-field w-auto min-w-44 bg-white"><option value="">{t('All categories', 'كل الفئات')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</select><input aria-label={t('Find a supplier to filter by', 'ابحث عن مورد للتصفية')} value={supplierSearch} onChange={(event) => setSupplierSearch(event.target.value)} placeholder={t('Find supplier…', 'ابحث عن مورد…')} className="input-field w-40 bg-white"/><select aria-label={t('Filter by supplier', 'تصفية حسب المورد')} value={supplierId} onChange={(event) => setSupplierId(event.target.value)} className="input-field w-auto max-w-56 bg-white"><option value="">{t('All suppliers', 'كل الموردين')}</option>{supplierOptions.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.company_name_en} · {supplier.company_name_ar}</option>)}</select><button type="button" onClick={load} className="admin-secondary-button"><RefreshCw size={14}/>{t('Refresh', 'تحديث')}</button><button type="button" onClick={() => openProduct(null)} className="admin-primary-button"><Plus size={15}/>{t('Create block', 'إنشاء بلوك')}</button></div>
+    {categoryError && <div className="mb-4"><AdminErrorState message={categoryError} onRetry={loadCategories}/></div>}
     {error && <div className="mb-4"><AdminErrorState message={error} onRetry={failedEditor ? () => openProduct(failedEditor) : load}/></div>}
     {!error && !loading && items.length === 0 ? <AdminEmptyState icon={Box} message={t('No blocks match these filters.', 'لا توجد بلوكات تطابق هذه المرشحات.')}/> : <AdminTable loading={loading} headers={[t('Product', 'المنتج'), t('Supplier', 'المورد'), t('Category', 'الفئة'), t('State', 'الحالة'), t('Rights', 'الحقوق'), t('Updated', 'التحديث'), t('Action', 'الإجراء')]}>{items.map((item) => { const supplier = supplierLabels[item.supplier_id]; const category = categoryLabels[item.category_id]; return <tr key={item.id} className="hover:bg-warm-white"><td className="px-4 py-3"><p className="font-semibold text-dark-brown">{item.product_name_en}</p><p className="text-xs text-light-brown">{item.product_name_ar}</p>{item.buod_reference && <p className="mt-1 font-mono text-[10px] text-gold">{item.buod_reference}</p>}</td><td className="px-4 py-3 text-xs text-medium-brown">{supplier ? `${supplier.company_name_en} · ${supplier.company_name_ar}` : '—'}</td><td className="px-4 py-3 text-xs text-medium-brown">{category ? `${category.name_en} · ${category.name_ar}` : '—'}</td><td className="px-4 py-3"><StatusBadge status={item.publication_state}/></td><td className="px-4 py-3 text-xs">{item.rights_confirmed ? <span className="text-green-700">{t('Confirmed', 'مؤكدة')}</span> : <span className="text-amber-700">{t('Pending', 'غير مؤكدة')}</span>}</td><td className="px-4 py-3 text-xs text-light-brown">{item.updated_at ? <time dateTime={item.updated_at} dir="ltr">{formatAdminDate(item.updated_at)}</time> : '—'}</td><td className="px-4 py-3"><button type="button" onClick={() => openProduct(item.id)} className="admin-secondary-button"><Pencil size={13}/>{t('Edit', 'تعديل')}</button></td></tr>; })}</AdminTable>}
     <Pagination page={page} totalPages={Math.ceil(count / ADMIN_PAGE_SIZE)} onPage={setPage}/>

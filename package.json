@@ -19,7 +19,8 @@
     "preview": "vite preview",
     "release:check": "node scripts/validate-release-config.js",
     "test:database": "node scripts/test-database.js",
-    "test:database:native": "node scripts/test-database-native.js"
+    "test:database:native": "node scripts/test-database-native.js",
+    "test:acceptance": "playwright test --config=playwright.acceptance.config.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.3",

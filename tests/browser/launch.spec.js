@@ -354,3 +354,81 @@ for(const [role,assignedRole] of [['admin','Reviewer'],['super_admin','Admin']])
    expect(mutations).toBe(1);
  });
 }
+
+for (const resource of ['products', 'suppliers']) test(`${resource} list retry does not reuse an earlier editor failure`, async ({ page }) => {
+  await fixture(page, 'admin');
+  let listFail = false, listCalls = 0, editorCalls = 0;
+  await page.route(`**/rest/v1/${resource}*`, route => {
+    const url = new URL(route.request().url());
+    // Supplier option/label lookups are independent of the paginated list.
+    if (resource === 'suppliers' && !url.searchParams.has('id') && !url.searchParams.get('select')?.includes('updated_at')) return route.fallback();
+    if (url.searchParams.has('id')) {
+      editorCalls++;
+      return route.fulfill({ status: 503, json: { message: 'Editor fixture unavailable' } });
+    }
+    listCalls++;
+    if (listFail) return route.fulfill({ status: 503, json: { message: 'List fixture unavailable' } });
+    const row = resource === 'products'
+      ? { id: owner, product_name_en: 'Synthetic record', product_name_ar: 'اختبار', publication_state: 'draft' }
+      : { id: owner, company_name_en: 'Synthetic record', company_name_ar: 'اختبار', verification_status: 'unverified' };
+    return route.fulfill({ json: [row], headers: { 'content-range': '0-0/1' } });
+  });
+  await page.goto(`/admin/${resource}`);
+  await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+  await expect(page.getByText('Editor fixture unavailable', { exact: true })).toBeVisible();
+  const beforeEditors = editorCalls;
+  listFail = true;
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+  await expect(page.getByText('List fixture unavailable', { exact: true })).toBeVisible();
+  const beforeLists = listCalls;
+  listFail = false;
+  await page.getByRole('button', { name: /Retry|Try again/ }).click();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  expect(listCalls).toBeGreaterThan(beforeLists);
+  expect(editorCalls).toBe(beforeEditors);
+});
+
+test('category lookup failure retries that lookup without reloading the product list', async ({ page }) => {
+  await fixture(page, 'admin');
+  let categoryCalls = 0, listCalls = 0, categoriesFail = true;
+  await page.route('**/rest/v1/categories*', route => {
+    categoryCalls++;
+    return route.fulfill(categoriesFail
+      ? { status: 503, json: { message: 'Category fixture unavailable' } }
+      : { json: [{ id: owner, code: 'FIX', name_en: 'Recovered category', name_ar: 'فئة اختبار', is_active: true }] });
+  });
+  await page.route('**/rest/v1/products*', route => { listCalls++; return route.fallback(); });
+  await page.goto('/admin/products');
+  await expect(page.getByText('Category fixture unavailable', { exact: true })).toBeVisible();
+  const before = listCalls;
+  const beforeCategories = categoryCalls;
+  categoriesFail = false;
+  await page.getByRole('button', { name: /Retry|Try again/ }).click();
+  await expect(page.getByRole('combobox', { name: 'Filter by category', exact: true })).toContainText('Recovered category');
+  await expect(page.getByText('Category fixture unavailable', { exact: true })).toHaveCount(0);
+  expect(categoryCalls).toBe(beforeCategories + 1);
+  expect(listCalls).toBe(before);
+});
+
+test('older supplier option searches cannot overwrite the latest filter choices', async ({ page }) => {
+  await fixture(page, 'admin');
+  let release, oldStarted = false;
+  const gate = new Promise(resolve => { release = resolve; });
+  await page.route('**/rest/v1/suppliers*', async route => {
+    const query = new URL(route.request().url()).searchParams.get('or') || '';
+    if (query.includes('old')) { oldStarted = true; await gate; }
+    return route.fulfill({ json: [{ id: owner, company_name_en: query.includes('new') ? 'Newest supplier' : 'Old supplier', company_name_ar: 'اختبار' }] });
+  });
+  await page.goto('/admin/products');
+  const search = page.getByRole('textbox', { name: 'Find a supplier to filter by', exact: true });
+  await search.fill('old');
+  await expect.poll(() => oldStarted).toBe(true);
+  await search.fill('new');
+  const select = page.getByRole('combobox', { name: 'Filter by supplier', exact: true });
+  await expect(select).toContainText('Newest supplier');
+  const oldResponse = page.waitForResponse(response => new URL(response.url()).searchParams.get('or')?.includes('old'));
+  release();
+  await oldResponse;
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(select).not.toContainText('Old supplier');
+});

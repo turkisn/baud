@@ -173,7 +173,7 @@ export default function AdminSuppliers() {
   const [failedEditor, setFailedEditor] = useState(null);
   const load = useCallback(async () => {
     const version = ++listVersion.current;
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setFailedEditor(null);
     try {
       const result = await mvpAdminService.listSuppliers({ search: debouncedSearch, verificationStatus, publication, page });
       if (version !== listVersion.current) return;

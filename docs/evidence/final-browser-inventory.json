@@ -1,0 +1,17 @@
+{
+  "chrome": "154.0.8037.99",
+  "safari": "27.0.1",
+  "safari_webdriver": {
+    "error": "session not created",
+    "reason": "Allow remote automation is disabled in Safari Settings"
+  },
+  "playwright_bundled_engines": {
+    "chromium": false,
+    "firefox": false,
+    "webkit": false
+  },
+  "settings_changed": false,
+  "browsers_installed": false,
+  "remote_staging_sha": "3c6cd6310e783d66746b8ff9f3ad7576059c8059",
+  "remote_only_commits_at_fetch": 0
+}

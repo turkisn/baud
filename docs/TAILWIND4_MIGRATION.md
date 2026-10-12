@@ -63,3 +63,6 @@ External/operator gates (unchanged): approve and run synthetic staging Auth/Stor
 - [Official Vite installation](https://tailwindcss.com/docs/installation/using-vite)
 - [Source detection and inline safelists](https://tailwindcss.com/docs/detecting-classes-in-source-files)
 - [Browser compatibility](https://tailwindcss.com/docs/compatibility)
+
+
+Follow-up: targeted Chrome forced-colors/keyboard and actual Cairo-loaded Arabic acceptance now pass, as recorded in [STAGING_RELEASE_HANDOFF.md](STAGING_RELEASE_HANDOFF.md). The 80-view migration comparison remains a deterministic fallback-font baseline. Safari WebDriver is confirmed blocked by disabled Remote Automation; Firefox/WebKit runtimes are absent. These follow-up results do not claim minimum-version, cross-engine or screen-reader certification.
