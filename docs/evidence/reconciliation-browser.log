@@ -1,0 +1,86 @@
+
+> buod@0.0.0 test:browser
+> playwright test
+
+[WebServer] (node:21989) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:22019) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:22042) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 59 tests using 1 worker
+
+(node:22050) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/browser/3d.spec.js:36:1 › WebGL studio renders, responds to controls, and releases modal state (1.9s)
+  ✓   2 tests/browser/3d.spec.js:66:1 › mobile 3D fits and supports keyboard controls and reduced motion (1.1s)
+  ✓   3 tests/browser/3d.spec.js:84:1 › WebGL context loss switches to a working compatibility view (1.3s)
+  ✓   4 tests/browser/3d.spec.js:101:1 › compatibility render failure stops retries and leaves the dialog closable (1.6s)
+3D frame budget {"draws":25,"ms":1201.8999999985099}
+  ✓   5 tests/browser/3d.spec.js:128:1 › 3D rotation respects its frame budget and stops after pause and close (7.2s)
+  ✓   6 tests/browser/3d.spec.js:179:1 › real IFC preview loads lazily, fits mobile, and preserves attribution and modal cleanup (1.2s)
+  ✓   7 tests/browser/3d.spec.js:209:1 › broken real preview stays honest and closable, then recovers after reopening (1.3s)
+  ✓   8 tests/browser/3d.spec.js:221:1 › materials service failure remains distinct from missing material data (8.0s)
+  ✓   9 tests/browser/3d.spec.js:227:1 › real render and current comparison rows survive reload without stale values (1.5s)
+(node:22144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  10 tests/browser/auth.spec.js:3:1 › signup validates required fields before contacting Auth (1.0s)
+  ✓  11 tests/browser/auth.spec.js:16:1 › duplicate-obscured signup response does not promise account creation or delivery (953ms)
+  ✓  12 tests/browser/auth.spec.js:36:1 › reset route without a session provides a working new-link path (913ms)
+  ✓  13 tests/browser/auth.spec.js:46:3 › signup sends interior_designer only as profile classification (940ms)
+  ✓  14 tests/browser/auth.spec.js:46:3 › signup sends supplier_representative only as profile classification (774ms)
+  ✓  15 tests/browser/auth.spec.js:46:3 › signup sends manufacturer_representative only as profile classification (971ms)
+  ✓  16 tests/browser/auth.spec.js:81:3 › login explains invalid_credentials without exposing diagnostics (942ms)
+  ✓  17 tests/browser/auth.spec.js:81:3 › login explains email_not_confirmed without exposing diagnostics (854ms)
+  ✓  18 tests/browser/auth.spec.js:81:3 › login explains over_request_rate_limit without exposing diagnostics (862ms)
+  ✓  19 tests/browser/auth.spec.js:81:3 › login explains unexpected_failure without exposing diagnostics (891ms)
+  ✓  20 tests/browser/launch.spec.js:23:2 › user/general_user is denied all six admin routes (2.0s)
+  ✓  21 tests/browser/launch.spec.js:23:2 › user/interior_designer is denied all six admin routes (1.9s)
+  ✓  22 tests/browser/launch.spec.js:23:2 › user/supplier_representative is denied all six admin routes (1.8s)
+  ✓  23 tests/browser/launch.spec.js:23:2 › reviewer/general_user is denied all six admin routes (1.9s)
+  ✓  24 tests/browser/launch.spec.js:32:2 › admin can reach all mounted admin pages (1.7s)
+  ✓  25 tests/browser/launch.spec.js:32:2 › super_admin can reach all mounted admin pages (1.6s)
+  ✓  26 tests/browser/launch.spec.js:43:1 › normal signed-in account cannot use the reset form (867ms)
+  ✓  27 tests/browser/launch.spec.js:52:1 › admin atomic save sends one RPC and preserves draft after rejection (889ms)
+  ✓  28 tests/browser/launch.spec.js:75:1 › supplier publishing requires a slug (920ms)
+  ✓  29 tests/browser/launch.spec.js:85:1 › public routes and demo disclosure work in Arabic on mobile (2.9s)
+  ✓  30 tests/browser/launch.spec.js:100:1 › profile failures fail closed visibly and retry restores current permissions (8.5s)
+  ✓  31 tests/browser/launch.spec.js:114:1 › role downgrade on focus removes admin access (998ms)
+  ✓  32 tests/browser/launch.spec.js:125:1 › fresh recovery intent shows account identity and preserves actionable error (864ms)
+  ✓  33 tests/browser/launch.spec.js:142:1 › older admin search responses cannot replace the newest result (2.4s)
+  ✓  34 tests/browser/launch.spec.js:162:1 › recovery callback survives reload and cannot follow an account switch (1.2s)
+  ✓  35 tests/browser/launch.spec.js:176:1 › browser back cannot discard an unsaved admin draft without confirmation (939ms)
+  ✓  36 tests/browser/launch.spec.js:191:1 › supplier details recover from request failure without a full reload (1.0s)
+  ✓  37 tests/browser/launch.spec.js:205:1 › malformed admin list responses show retry without exposing a runtime stack (896ms)
+  ✓  38 tests/browser/launch.spec.js:221:1 › missing profile fails closed and offers recovery (1.0s)
+  ✓  39 tests/browser/launch.spec.js:230:1 › logout outage clears this device and explains unconfirmed remote revocation (978ms)
+  ✓  40 tests/browser/launch.spec.js:240:1 › reset verifies displayed identity and never writes after an account mismatch (823ms)
+  ✓  41 tests/browser/launch.spec.js:256:1 › reset update pins authorization to the verified recovery token (1.1s)
+  ✓  42 tests/browser/launch.spec.js:276:1 › unlicensed catalog files do not offer a signing request (1.1s)
+  ✓  43 tests/browser/launch.spec.js:289:1 › product upload blocks save and closing until registration and refresh finish (963ms)
+  ✓  44 tests/browser/launch.spec.js:315:1 › licensed download retries signing failure and requests a fresh bounded URL (1.2s)
+  ✓  45 tests/browser/launch.spec.js:340:2 › admin role-change denial remains visible without changing the displayed role (923ms)
+  ✓  46 tests/browser/launch.spec.js:340:2 › super_admin role-change denial remains visible without changing the displayed role (946ms)
+  ✓  47 tests/browser/launch.spec.js:358:51 › products list retry does not reuse an earlier editor failure (15.5s)
+  ✓  48 tests/browser/launch.spec.js:358:51 › suppliers list retry does not reuse an earlier editor failure (15.6s)
+  ✓  49 tests/browser/launch.spec.js:391:1 › category lookup failure retries that lookup without reloading the product list (8.1s)
+  ✓  50 tests/browser/launch.spec.js:413:1 › older supplier option searches cannot overwrite the latest filter choices (1.8s)
+  ✓  51 tests/browser/quality.spec.js:20:1 › home shows the actual combined total and only eight featured cards (1.1s)
+  ✓  52 tests/browser/quality.spec.js:25:1 › catalog pagination, unique rows, search, reload and return context (2.1s)
+  ✓  53 tests/browser/quality.spec.js:45:1 › catalog outage and retry recover (1.2s)
+  ✓  54 tests/browser/workspace.spec.js:44:1 › account projects save, survive reload and can be exported (1.9s)
+  ✓  55 tests/browser/workspace.spec.js:59:1 › failed saves remain visible and retry without losing the draft (3.6s)
+  ✓  56 tests/browser/workspace.spec.js:75:1 › concurrent cloud edits show a conflict and preserve both copies (2.4s)
+  ✓  57 tests/browser/workspace.spec.js:90:1 › guest projects stay local and deleting a project requires confirmation (2.4s)
+  ✓  58 tests/browser/workspace.spec.js:106:1 › choosing cloud requires confirmation and keeps an exportable conflict backup (1.6s)
+  ✓  59 tests/browser/workspace.spec.js:125:1 › Arabic mobile projects have usable controls and no horizontal overflow (1.1s)
+
+  59 passed (2.3m)

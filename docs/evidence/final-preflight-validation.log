@@ -1,0 +1,2 @@
+PASS read-only staging preflight syntax/schema after 57 migration replays on local PGlite
+PASS 12 SQL statement results; no live connection accepted or used

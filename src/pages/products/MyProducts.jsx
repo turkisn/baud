@@ -165,12 +165,12 @@ export default function MyProducts() {
             <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3" style={{ color: '#9CA3AF' }} />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder={t('Search by name or BUOD ref…', 'ابحث بالاسم أو الرقم المرجعي…')}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-none"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-hidden"
               style={{ background: 'white', borderColor: SAND, fontFamily: 'Cairo, sans-serif' }} />
           </div>
           <div className="relative">
             <select value={statusF} onChange={e => setStatusF(e.target.value)}
-              className="appearance-none pl-4 pr-8 py-2.5 rounded-xl border text-sm outline-none cursor-pointer"
+              className="appearance-none pl-4 pr-8 py-2.5 rounded-xl border text-sm outline-hidden cursor-pointer"
               style={{ background: 'white', borderColor: SAND }}>
               <option value="all">{t('All Statuses', 'كل الحالات')}</option>
               {Object.entries(STATUS_CONFIG).map(([k, v]) => (
@@ -181,7 +181,7 @@ export default function MyProducts() {
           </div>
           <div className="relative">
             <select value={catF} onChange={e => setCatF(e.target.value)}
-              className="appearance-none pl-4 pr-8 py-2.5 rounded-xl border text-sm outline-none cursor-pointer"
+              className="appearance-none pl-4 pr-8 py-2.5 rounded-xl border text-sm outline-hidden cursor-pointer"
               style={{ background: 'white', borderColor: SAND }}>
               <option value="all">{t('All Categories', 'كل التصنيفات')}</option>
               {usedCats.map(id => {
@@ -193,7 +193,7 @@ export default function MyProducts() {
           </div>
           <div className="relative">
             <select value={sort} onChange={e => setSort(e.target.value)}
-              className="appearance-none pl-4 pr-8 py-2.5 rounded-xl border text-sm outline-none cursor-pointer"
+              className="appearance-none pl-4 pr-8 py-2.5 rounded-xl border text-sm outline-hidden cursor-pointer"
               style={{ background: 'white', borderColor: SAND }}>
               <option value="created_at">{t('Newest First', 'الأحدث أولاً')}</option>
               <option value="name">{t('Name A–Z', 'الاسم أ–ي')}</option>

@@ -33,6 +33,7 @@ export default function Home() {
   const { lang, t } = useLanguage();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState([]);
   const [productTotal, setProductTotal] = useState(0);
@@ -44,6 +45,9 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
+    setProductState({ loading: true, error: '' });
+    setCategoryState({ loading: true, error: '' });
+    setSupplierState({ loading: true, error: '' });
     const controller = new AbortController();
     mvpService.recordEvent('catalog_view', { page: 'home' });
 
@@ -63,7 +67,7 @@ export default function Home() {
       .finally(() => { if (active) setSupplierState((state) => ({ ...state, loading: false })); });
 
     return () => { active = false; controller.abort(); };
-  }, []);
+  }, [retry]);
 
   const submit = (event) => {
     event.preventDefault();
@@ -79,8 +83,8 @@ export default function Home() {
               <Sparkles size={14} />
               {t('The digital identity of construction products', 'الهوية الرقمية لمنتجات البناء')}
             </p>
-            <h1 className="text-4xl font-black leading-[1.18] sm:text-6xl lg:text-[72px]">
-              <span className="bg-gradient-to-b from-[#F5D98C] via-[#D2A24A] to-[#8E5F22] bg-clip-text text-transparent">
+            <h1 className="text-4xl font-black leading-[1.18] sm:text-6xl sm:leading-none lg:text-[72px]">
+              <span className="bg-linear-to-b/srgb from-[#F5D98C] via-[#D2A24A] to-[#8E5F22] bg-clip-text text-transparent">
                 {t('Every product…', 'كل منتج...')}
               </span>
               <span className="mt-1 block text-[#F8F3E9]">{t('has a digital identity.', 'له هوية رقمية.')}</span>
@@ -88,17 +92,17 @@ export default function Home() {
             <p className="mt-5 text-sm font-semibold tracking-wide text-[#D1A94E] sm:text-base">
               {t('Precise data · Smart classification · Direct supplier connection', 'بيانات دقيقة · تصنيف ذكي · ربط مباشر بالموردين')}
             </p>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-sand/55 sm:text-base">
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-sand/55 sm:text-base sm:leading-6">
               {t(
-                'A professional Saudi construction library connecting verified product information, supplier data and design resources in one living network.',
-                'مكتبة بناء سعودية احترافية تربط معلومات المنتج الموثقة وبيانات المورد وموارد التصميم في شبكة رقمية واحدة.'
+                'A professional Saudi construction library connecting product information, supplier data and design resources in one living network.',
+                'مكتبة بناء سعودية احترافية تربط معلومات المنتج وبيانات المورد وموارد التصميم في شبكة رقمية واحدة.'
               )}
             </p>
             <form onSubmit={submit} className="digital-panel mx-auto mt-7 flex max-w-2xl flex-col gap-2 rounded-2xl p-2 sm:flex-row">
               <label className="relative flex-1">
                 <span className="sr-only">{t('Search the library', 'البحث في المكتبة')}</span>
                 <Search className={`absolute top-1/2 -translate-y-1/2 text-gold/65 ${lang === 'ar' ? 'right-4' : 'left-4'}`} size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} className={`h-14 w-full rounded-xl border border-gold/10 bg-black/65 text-warm-white outline-none transition placeholder:text-sand/30 focus:border-gold/50 ${lang === 'ar' ? 'pl-4 pr-12' : 'pl-12 pr-4'}`} placeholder={t('Product, BUOD reference or category…', 'منتج أو مرجع BUOD أو فئة…')} />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} className={`h-14 w-full rounded-xl border border-gold/10 bg-black/65 text-warm-white outline-hidden transition placeholder:text-sand/30 focus:border-gold/50 ${lang === 'ar' ? 'pl-4 pr-12' : 'pl-12 pr-4'}`} placeholder={t('Product, BUOD reference or category…', 'منتج أو مرجع BUOD أو فئة…')} />
               </label>
               <button type="submit" className="btn-gold h-14 justify-center px-7">
                 {t('Search library', 'ابحث في المكتبة')}
@@ -123,7 +127,7 @@ export default function Home() {
           <div className="digital-panel relative z-10 grid overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-5">
             <DigitalMetric icon={<Box />} title={t('Unified identity', 'هوية رقمية موحدة')} text={t('One record per market product', 'لكل منتج في السوق')} />
             <DigitalMetric icon={<Boxes />} title={t('Smart classification', 'تصنيف ذكي')} text={t('Built around professional standards', 'وفق المعايير المهنية')} />
-            <DigitalMetric icon={<GitBranch />} title={t('Direct connection', 'ربط مباشر')} text={t('With verified suppliers', 'بالموردين المعتمدين')} />
+            <DigitalMetric icon={<GitBranch />} title={t('Direct connection', 'ربط مباشر')} text={t('With listed suppliers', 'بالموردين المدرجين')} />
             <DigitalMetric icon={<Database />} title={t('Precise data', 'بيانات دقيقة')} text={t('Structured and continuously updated', 'تحديث مستمر وآلي')} />
             <DigitalMetric icon={<ShieldCheck />} title={t('Project ready', 'جاهز للمشاريع')} text={t('From design to delivery', 'من التصميم إلى التنفيذ')} />
           </div>
@@ -133,7 +137,7 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
         <SectionHeading eyebrow={t('Navigate the data network', 'تصفح شبكة البيانات')} title={t('Product categories', 'فئات المنتجات')} link="/blocks" t={t} lang={lang} />
-        {categoryState.loading ? <LoadingState /> : categoryState.error ? <ErrorState /> : categories.length ? (
+        {categoryState.loading ? <LoadingState /> : categoryState.error ? <ErrorState onRetry={() => setRetry(v => v + 1)} /> : categories.length ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {categories.slice(0, 8).map((category, index) => <Link key={category.id} to={`/blocks?category=${category.id}`} className="digital-panel group flex min-h-32 items-end justify-between rounded-2xl p-5 transition hover:-translate-y-1 hover:border-gold/55"><div><span className="font-mono text-[10px] text-gold/70">NODE / {String(index + 1).padStart(2, '0')}</span><h3 className="mt-3 font-bold text-warm-white">{lang === 'ar' ? category.name_ar : category.name_en}</h3></div><span className="text-2xl text-gold transition group-hover:scale-110">{category.icon || '◇'}</span></Link>)}
           </div>
@@ -143,18 +147,18 @@ export default function Home() {
       <section className="border-y border-gold/10 bg-black/35 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading eyebrow={t('Connected product records', 'سجلات المنتجات المترابطة')} title={t('Featured / latest products', 'المنتجات المميزة / الأحدث')} link="/blocks" t={t} lang={lang} />
-          {productState.loading ? <LoadingState /> : productState.error ? <ErrorState /> : products.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.slice(0, 8).map((product) => <ProductCard key={product.id || product.slug} product={product} />)}</div> : <EmptyState title={t('No published products yet', 'لا توجد منتجات منشورة حالياً')} description={t('Published database records will appear here when available.', 'ستظهر سجلات قاعدة البيانات المنشورة هنا عند توفرها.')} />}
+          {productState.loading ? <LoadingState /> : productState.error ? <ErrorState onRetry={() => setRetry(v => v + 1)} /> : products.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{products.slice(0, 8).map((product) => <ProductCard key={product.id || product.slug} product={product} />)}</div> : <EmptyState title={t('No published products yet', 'لا توجد منتجات منشورة حالياً')} description={t('Published database records will appear here when available.', 'ستظهر سجلات قاعدة البيانات المنشورة هنا عند توفرها.')} />}
         </div>
       </section>
 
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading eyebrow={t('Connected to the source', 'مرتبط بالمصدر')} title={t('Supplier network', 'شبكة الموردين')} link="/suppliers" t={t} lang={lang} />
-          {supplierState.loading ? <LoadingState /> : supplierState.error ? <ErrorState /> : suppliers.length ? (
+          {supplierState.loading ? <LoadingState /> : supplierState.error ? <ErrorState onRetry={() => setRetry(v => v + 1)} /> : suppliers.length ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {suppliers.slice(0, 4).map((supplier) => {
                 const name = lang === 'ar' ? pick(supplier, 'company_name_ar', 'name_ar', 'company_name_en') : pick(supplier, 'company_name_en', 'name_en', 'company_name_ar');
-                return <Link key={supplier.id || supplier.slug} to={`/suppliers/${supplier.slug}`} className="digital-panel group rounded-2xl p-5 transition hover:-translate-y-1 hover:border-gold/55"><div className="mb-5 flex h-20 items-center justify-center overflow-hidden rounded-xl border border-gold/15 bg-[#11100d] p-2">{supplier.signed_logo_url ? <img src={supplier.signed_logo_url} alt={`${name || t('Supplier', 'المورد')} logo`} className="h-full w-full object-contain" /> : <Building2 className="text-gold/40" />}</div><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-gold"><BadgeCheck size={13} />{t('Verified supplier node', 'مورد مرتبط بالمنصة')}</p><h3 className="mt-2 font-bold text-warm-white transition group-hover:text-light-gold">{name || t('Supplier name unavailable', 'اسم المورد غير متاح')}</h3></Link>;
+                return <Link key={supplier.id || supplier.slug} to={`/suppliers/${supplier.slug}`} className="digital-panel group rounded-2xl p-5 transition hover:-translate-y-1 hover:border-gold/55"><div className="mb-5 flex h-20 items-center justify-center overflow-hidden rounded-xl border border-gold/15 bg-[#11100d] p-2">{supplier.signed_logo_url ? <img src={supplier.signed_logo_url} alt={`${name || t('Supplier', 'المورد')} logo`} className="h-full w-full object-contain" /> : <Building2 className="text-gold/40" />}</div><p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-gold">{supplier.verification_status === 'verified' && <BadgeCheck size={13} />}{supplier.verification_status === 'verified' ? t('Verified supplier', 'مورد موثق') : t('Supplier profile', 'ملف المورد')}</p><h3 className="mt-2 font-bold text-warm-white transition group-hover:text-light-gold">{name || t('Supplier name unavailable', 'اسم المورد غير متاح')}</h3></Link>;
               })}
             </div>
           ) : <EmptyState title={t('No supplier windows are available yet', 'لا توجد نوافذ موردين متاحة حالياً')} description={t('Published supplier database records will appear here.', 'ستظهر سجلات الموردين المنشورة في قاعدة البيانات هنا.')} />}

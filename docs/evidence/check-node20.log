@@ -1,0 +1,451 @@
+
+> buod@0.0.0 check
+> npm run lint && npm test && npm run build && npm run test:budget
+
+
+> buod@0.0.0 lint
+> eslint .
+
+
+> buod@0.0.0 test
+> node --test tests/*.test.js
+
+TAP version 13
+# Subtest: caps high-density 3D canvases to the render pixel budget
+ok 1 - caps high-density 3D canvases to the render pixel budget
+  ---
+  duration_ms: 0.467916
+  ...
+# Subtest: keeps ordinary canvases sharp without exceeding the density cap
+ok 2 - keeps ordinary canvases sharp without exceeding the density cap
+  ---
+  duration_ms: 0.227833
+  ...
+# Subtest: normalizes invalid dimensions and density
+ok 3 - normalizes invalid dimensions and density
+  ---
+  duration_ms: 0.046625
+  ...
+# Subtest: honors the pixel budget even for unusually large canvas dimensions
+ok 4 - honors the pixel budget even for unusually large canvas dimensions
+  ---
+  duration_ms: 0.037833
+  ...
+# Subtest: collects all 0 catalog records across RPC pages
+ok 5 - collects all 0 catalog records across RPC pages
+  ---
+  duration_ms: 0.74325
+  ...
+# Subtest: collects all 24 catalog records across RPC pages
+ok 6 - collects all 24 catalog records across RPC pages
+  ---
+  duration_ms: 0.090041
+  ...
+# Subtest: collects all 100 catalog records across RPC pages
+ok 7 - collects all 100 catalog records across RPC pages
+  ---
+  duration_ms: 0.449875
+  ...
+# Subtest: collects all 200 catalog records across RPC pages
+ok 8 - collects all 200 catalog records across RPC pages
+  ---
+  duration_ms: 0.170667
+  ...
+# Subtest: collects all 205 catalog records across RPC pages
+ok 9 - collects all 205 catalog records across RPC pages
+  ---
+  duration_ms: 0.208042
+  ...
+# Subtest: does not return partial results when a later page fails
+ok 10 - does not return partial results when a later page fails
+  ---
+  duration_ms: 0.272875
+  ...
+# Subtest: rejects malformed catalog responses and page sizes
+ok 11 - rejects malformed catalog responses and page sizes
+  ---
+  duration_ms: 0.069167
+  ...
+# Subtest: facets find matching products beyond the first visible page
+ok 12 - facets find matching products beyond the first visible page
+  ---
+  duration_ms: 0.285667
+  ...
+# Subtest: facets do not match unrelated specification values
+ok 13 - facets do not match unrelated specification values
+  ---
+  duration_ms: 0.172625
+  ...
+# Subtest: empty facets preserve products without optional details
+ok 14 - empty facets preserve products without optional details
+  ---
+  duration_ms: 0.098541
+  ...
+# Subtest: catalog pages cross local and remote boundaries without repeats or gaps
+ok 15 - catalog pages cross local and remote boundaries without repeats or gaps
+  ---
+  duration_ms: 0.746458
+  ...
+# Subtest: local city filtering happens before computing the remote offset
+ok 16 - local city filtering happens before computing the remote offset
+  ---
+  duration_ms: 0.056958
+  ...
+# Subtest: empty catalogs and invalid pages are handled explicitly
+ok 17 - empty catalogs and invalid pages are handled explicitly
+  ---
+  duration_ms: 0.108583
+  ...
+# Subtest: facet options retain both languages, exclude unrelated specifications, and deduplicate
+ok 18 - facet options retain both languages, exclude unrelated specifications, and deduplicate
+  ---
+  duration_ms: 0.547125
+  ...
+# Subtest: download names preserve original names without paths or control characters
+ok 19 - download names preserve original names without paths or control characters
+  ---
+  duration_ms: 1.051958
+  ...
+# Subtest: real render is bound to both reviewed product identity fields
+ok 20 - real render is bound to both reviewed product identity fields
+  ---
+  duration_ms: 4.700209
+  ...
+# Subtest: saved products deduplicate requests and refresh after cache expiry
+ok 21 - saved products deduplicate requests and refresh after cache expiry
+  ---
+  duration_ms: 0.638375
+  ...
+# Subtest: saved product loader caps concurrent requests and rejects identity changes
+ok 22 - saved product loader caps concurrent requests and rejects identity changes
+  ---
+  duration_ms: 3.192125
+  ...
+# Subtest: failed saved product fetches can be retried
+ok 23 - failed saved product fetches can be retried
+  ---
+  duration_ms: 0.866584
+  ...
+# Subtest: production cannot enable demo data; staging requires explicit opt-in
+ok 24 - production cannot enable demo data; staging requires explicit opt-in
+  ---
+  duration_ms: 0.464834
+  ...
+# Subtest: demos do not claim product verification, rights, stock or downloads
+ok 25 - demos do not claim product verification, rights, stock or downloads
+  ---
+  duration_ms: 0.424917
+  ...
+# Subtest: ordinary sessions never establish password recovery intent
+ok 26 - ordinary sessions never establish password recovery intent
+  ---
+  duration_ms: 0.337208
+  ...
+# Subtest: recovery intent is bound to identity, expires and clears on a new session/sign-out
+ok 27 - recovery intent is bound to identity, expires and clears on a new session/sign-out
+  ---
+  duration_ms: 0.222542
+  ...
+# Subtest: release gate rejects staging backend, demos and privileged browser keys
+ok 28 - release gate rejects staging backend, demos and privileged browser keys
+  ---
+  duration_ms: 0.211083
+  ...
+# Subtest: migration history uses unique Supabase timestamp versions
+ok 29 - migration history uses unique Supabase timestamp versions
+  ---
+  duration_ms: 5.605291
+  ...
+# Subtest: migration manifest covers every SQL migration
+ok 30 - migration manifest covers every SQL migration
+  ---
+  duration_ms: 3.241667
+  ...
+# Subtest: reconciled migration checksums have not drifted
+ok 31 - reconciled migration checksums have not drifted
+  ---
+  duration_ms: 21.189667
+  ...
+# Subtest: missing and invalid prices do not appear as free products
+ok 32 - missing and invalid prices do not appear as free products
+  ---
+  duration_ms: 6.673709
+  ...
+# Subtest: malformed currency codes safely fall back to SAR
+ok 33 - malformed currency codes safely fall back to SAR
+  ---
+  duration_ms: 0.439625
+  ...
+# Subtest: invalid and negative counters safely display zero
+ok 34 - invalid and negative counters safely display zero
+  ---
+  duration_ms: 0.138667
+  ...
+# Subtest: pause settles real OrbitControls inertia without disabling later interaction
+ok 35 - pause settles real OrbitControls inertia without disabling later interaction
+  ---
+  duration_ms: 2.597208
+  ...
+# Subtest: pause preserves a caller that already disabled damping
+ok 36 - pause preserves a caller that already disabled damping
+  ---
+  duration_ms: 0.103417
+  ...
+# Subtest: real preview is bound to the reviewed product ID and slug, never arbitrary URLs
+ok 37 - real preview is bound to the reviewed product ID and slug, never arbitrary URLs
+  ---
+  duration_ms: 0.724542
+  ...
+# Subtest: verified IFC-derived GLB preserves dimensions, triangles and floor placement
+ok 38 - verified IFC-derived GLB preserves dimensions, triangles and floor placement
+  ---
+  duration_ms: 20.039208
+  ...
+# Subtest: preview rejects HTTP failure
+ok 39 - preview rejects HTTP failure
+  ---
+  duration_ms: 0.266875
+  ...
+# Subtest: preview rejects truncated data
+ok 40 - preview rejects truncated data
+  ---
+  duration_ms: 0.193375
+  ...
+# Subtest: preview rejects oversized data
+ok 41 - preview rejects oversized data
+  ---
+  duration_ms: 0.297625
+  ...
+# Subtest: preview rejects tampered data
+ok 42 - preview rejects tampered data
+  ---
+  duration_ms: 0.811167
+  ...
+# Subtest: closing the viewer aborts its pending asset request
+ok 43 - closing the viewer aborts its pending asset request
+  ---
+  duration_ms: 0.293666
+  ...
+# Subtest: the distributed preview is self-contained and accompanied by rights notices
+ok 44 - the distributed preview is self-contained and accompanied by rights notices
+  ---
+  duration_ms: 1.19375
+  ...
+# Subtest: public materials query sorts only by a publicly readable column
+ok 45 - public materials query sorts only by a publicly readable column
+  ---
+  duration_ms: 0.68225
+  ...
+# Subtest: 3D model catalog-basalt-reception-counter has valid geometry and sits on the floor
+ok 46 - 3D model catalog-basalt-reception-counter has valid geometry and sits on the floor
+  ---
+  duration_ms: 8.362125
+  ...
+# Subtest: 3D model catalog-rammed-earth-acoustic-module has valid geometry and sits on the floor
+ok 47 - 3D model catalog-rammed-earth-acoustic-module has valid geometry and sits on the floor
+  ---
+  duration_ms: 13.7425
+  ...
+# Subtest: 3D model catalog-stainless-shower-channel has valid geometry and sits on the floor
+ok 48 - 3D model catalog-stainless-shower-channel has valid geometry and sits on the floor
+  ---
+  duration_ms: 7.024041
+  ...
+# Subtest: 3D model catalog-bronze-security-screen has valid geometry and sits on the floor
+ok 49 - 3D model catalog-bronze-security-screen has valid geometry and sits on the floor
+  ---
+  duration_ms: 6.061667
+  ...
+# Subtest: 3D model catalog-terrazzo-seat-planter has valid geometry and sits on the floor
+ok 50 - 3D model catalog-terrazzo-seat-planter has valid geometry and sits on the floor
+  ---
+  duration_ms: 2.876208
+  ...
+# Subtest: 3D model catalog-photovoltaic-skylight has valid geometry and sits on the floor
+ok 51 - 3D model catalog-photovoltaic-skylight has valid geometry and sits on the floor
+  ---
+  duration_ms: 7.257375
+  ...
+# Subtest: 3D model catalog-porcelain-facade-panel has valid geometry and sits on the floor
+ok 52 - 3D model catalog-porcelain-facade-panel has valid geometry and sits on the floor
+  ---
+  duration_ms: 2.160041
+  ...
+# Subtest: 3D model catalog-copper-waterfall-spout has valid geometry and sits on the floor
+ok 53 - 3D model catalog-copper-waterfall-spout has valid geometry and sits on the floor
+  ---
+  duration_ms: 2.902333
+  ...
+# Subtest: 3D model catalog-raised-access-floor has valid geometry and sits on the floor
+ok 54 - 3D model catalog-raised-access-floor has valid geometry and sits on the floor
+  ---
+  duration_ms: 2.582416
+  ...
+# Subtest: 3D model catalog-switchable-smart-glass has valid geometry and sits on the floor
+ok 55 - 3D model catalog-switchable-smart-glass has valid geometry and sits on the floor
+  ---
+  duration_ms: 1.749417
+  ...
+# Subtest: portrait camera fit keeps the model inside the narrow horizontal field of view
+ok 56 - portrait camera fit keeps the model inside the narrow horizontal field of view
+  ---
+  duration_ms: 0.07925
+  ...
+# Subtest: projects are read-only until the cloud baseline is known
+ok 57 - projects are read-only until the cloud baseline is known
+  ---
+  duration_ms: 2.214792
+  ...
+# Subtest: saves private drafts and persists an acknowledged revision
+ok 58 - saves private drafts and persists an acknowledged revision
+  ---
+  duration_ms: 0.289875
+  ...
+# Subtest: edits made during a save are acknowledged separately, without losing the newer draft
+ok 59 - edits made during a save are acknowledged separately, without losing the newer draft
+  ---
+  duration_ms: 0.417
+  ...
+# Subtest: a lost save response is reconciled after reload without applying the write twice
+ok 60 - a lost save response is reconciled after reload without applying the write twice
+  ---
+  duration_ms: 0.373541
+  ...
+# Subtest: stale revisions retain both the local draft and remote data
+ok 61 - stale revisions retain both the local draft and remote data
+  ---
+  duration_ms: 0.49475
+  ...
+# Subtest: legacy server conflicts preserve the pending draft without retrying
+ok 62 - legacy server conflicts preserve the pending draft without retrying
+  ---
+  duration_ms: 0.5555
+  ...
+# Subtest: legacy local drafts cannot overwrite an existing cloud workspace
+ok 63 - legacy local drafts cannot overwrite an existing cloud workspace
+  ---
+  duration_ms: 0.218125
+  ...
+# Subtest: choosing cloud preserves a recoverable local backup, including at workspace limits
+ok 64 - choosing cloud preserves a recoverable local backup, including at workspace limits
+  ---
+  duration_ms: 0.409416
+  ...
+# Subtest: a failed backup cannot discard a conflicting local draft
+ok 65 - a failed backup cannot discard a conflicting local draft
+  ---
+  duration_ms: 0.284375
+  ...
+# Subtest: offline retry sends the durable outbox, not a false empty baseline
+ok 66 - offline retry sends the durable outbox, not a false empty baseline
+  ---
+  duration_ms: 0.31075
+  ...
+# Subtest: late responses after logout cannot replace another owner state
+ok 67 - late responses after logout cannot replace another owner state
+  ---
+  duration_ms: 0.355041
+  ...
+# Subtest: owner cache and guest data stay isolated
+ok 68 - owner cache and guest data stay isolated
+  ---
+  duration_ms: 0.07875
+  ...
+# Subtest: storage failures are visible instead of claiming a durable local save
+ok 69 - storage failures are visible instead of claiming a durable local save
+  ---
+  duration_ms: 0.103666
+  ...
+# Subtest: workspace limits reject a change atomically
+ok 70 - workspace limits reject a change atomically
+  ---
+  duration_ms: 0.550666
+  ...
+# Subtest: normalization removes duplicates, malformed records and expiring signed URLs
+ok 71 - normalization removes duplicates, malformed records and expiring signed URLs
+  ---
+  duration_ms: 0.098458
+  ...
+1..71
+# tests 71
+# suites 0
+# pass 71
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 169.511541
+
+> buod@0.0.0 build
+> vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 2270 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                              1.76 kB │ gzip:   0.60 kB
+dist/assets/index-DymBGhGP.css             369.46 kB │ gzip:  44.29 kB
+dist/assets/check-CTim7AyE.js                0.29 kB │ gzip:   0.24 kB
+dist/assets/chevron-down-B8xhuzKO.js         0.30 kB │ gzip:   0.25 kB
+dist/assets/chevron-right-CXnwbOq6.js        0.30 kB │ gzip:   0.25 kB
+dist/assets/loader-circle-B-o7e0cD.js        0.31 kB │ gzip:   0.26 kB
+dist/assets/plus-eBCBg2Al.js                 0.33 kB │ gzip:   0.25 kB
+dist/assets/arrow-right-CdjPQTHe.js          0.34 kB │ gzip:   0.26 kB
+dist/assets/arrow-left-D5C8fsUy.js           0.34 kB │ gzip:   0.27 kB
+dist/assets/search-Dle5Uk05.js               0.34 kB │ gzip:   0.27 kB
+dist/assets/circle-check-BB7Jc4Y8.js         0.35 kB │ gzip:   0.27 kB
+dist/assets/mail--vD6bbNN.js                 0.39 kB │ gzip:   0.31 kB
+dist/assets/circle-alert-BFHHKpfr.js         0.42 kB │ gzip:   0.29 kB
+dist/assets/external-link-BIS8kPYn.js        0.42 kB │ gzip:   0.30 kB
+dist/assets/eye-Dc_wcGD_.js                  0.42 kB │ gzip:   0.30 kB
+dist/assets/map-pin-YLCDtxFn.js              0.43 kB │ gzip:   0.33 kB
+dist/assets/pencil-CcQchlIi.js               0.45 kB │ gzip:   0.33 kB
+dist/assets/refresh-cw-Cm98sSsf.js           0.49 kB │ gzip:   0.33 kB
+dist/assets/trash-2-T3k_CO3_.js              0.50 kB │ gzip:   0.32 kB
+dist/assets/package-B7c3Bw4j.js              0.54 kB │ gzip:   0.36 kB
+dist/assets/file-text-BFMZNoF-.js            0.56 kB │ gzip:   0.35 kB
+dist/assets/date-CD4wIVZc.js                 0.69 kB │ gzip:   0.35 kB
+dist/assets/NotFound-YNYGw_Wu.js             0.92 kB │ gzip:   0.59 kB
+dist/assets/lock-7-8h1LCB.js                 0.93 kB │ gzip:   0.46 kB
+dist/assets/States-D-CmM_X7.js               1.73 kB │ gzip:   0.94 kB
+dist/assets/productImage-BrkwGEl7.js         1.80 kB │ gzip:   1.04 kB
+dist/assets/authService-BGakkksU.js          2.16 kB │ gzip:   0.78 kB
+dist/assets/Terms-DZ9Q5QZk.js                3.06 kB │ gzip:   1.59 kB
+dist/assets/adminService-BNjHesGg.js         4.00 kB │ gzip:   1.25 kB
+dist/assets/ForgotPassword-IZMA3EEF.js       4.04 kB │ gzip:   1.91 kB
+dist/assets/Privacy-C4-1ItnR.js              4.64 kB │ gzip:   2.18 kB
+dist/assets/AdminDashboard-B49yGciz.js       5.12 kB │ gzip:   1.97 kB
+dist/assets/AdminSettings-CE0uGKOF.js        5.46 kB │ gzip:   2.26 kB
+dist/assets/ResetPassword-tiTXfQnb.js        6.15 kB │ gzip:   2.44 kB
+dist/assets/Suppliers-Bju03Jza.js            6.48 kB │ gzip:   2.72 kB
+dist/assets/Compare-BfI-pbdh.js              6.67 kB │ gzip:   2.77 kB
+dist/assets/SupplierDetail-CweLyFd4.js       7.03 kB │ gzip:   2.78 kB
+dist/assets/Product3DFallback-DGpuTYK5.js    7.25 kB │ gzip:   3.25 kB
+dist/assets/Projects-B408togz.js             7.69 kB │ gzip:   3.33 kB
+dist/assets/AdminUsers-DOtOwjmX.js           8.04 kB │ gzip:   3.34 kB
+dist/assets/Blocks-xRJ92Tj-.js              12.92 kB │ gzip:   4.37 kB
+dist/assets/AdminLayout-DUOy82Lw.js         13.08 kB │ gzip:   4.05 kB
+dist/assets/AdminCategories-BwB9JJOJ.js     13.13 kB │ gzip:   4.05 kB
+dist/assets/mvpAdminService-CDJ3qo0x.js     13.68 kB │ gzip:   4.72 kB
+dist/assets/AdminSuppliers-Dt0emiYL.js      17.39 kB │ gzip:   5.67 kB
+dist/assets/BlockDetail-BZS2CwGm.js         18.75 kB │ gzip:   6.30 kB
+dist/assets/Home-CVbzaeES.js                20.23 kB │ gzip:   6.75 kB
+dist/assets/ProductCard-D5F0XsBC.js         26.77 kB │ gzip:  10.04 kB
+dist/assets/AdminBlocks-CnxN9WLn.js         35.46 kB │ gzip:  10.20 kB
+dist/assets/mvpService-CxcxXG-s.js          41.43 kB │ gzip:  16.42 kB
+dist/assets/GLTFLoader-BwKKTobN.js          46.00 kB │ gzip:  13.95 kB
+dist/assets/Login-DNZ2yCia.js              140.80 kB │ gzip:  46.39 kB
+dist/assets/index-B6yfS7U6.js              508.51 kB │ gzip: 151.25 kB
+dist/assets/Product3DViewer-BNpvLBvC.js    619.25 kB │ gzip: 157.75 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.51s
+
+> buod@0.0.0 test:budget
+> node scripts/build-budget.js
+
+{"unit":"gzip-bytes","entry":151245,"viewer":157745,"allJavaScript":483354}

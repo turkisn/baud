@@ -5,7 +5,7 @@ export default function WorkspaceSyncStatus({ compact = false }) {
   const { t } = useLanguage();
   const { sync, retrySync, keepBoth, chooseCloud, exportProjects } = useWorkspace();
   const messages = {
-    local: t('Saved on this browser only. Sign in to use private cloud projects.', 'الحفظ في هذا المتصفح فقط. سجّل الدخول لاستخدام مشاريع حسابك السحابية.'),
+    local: t('Saved on this browser only. Signing in opens separate account projects; guest projects stay in this browser and are not imported automatically.', 'الحفظ في هذا المتصفح فقط. تسجيل الدخول يفتح مشاريع الحساب المنفصلة؛ تبقى مشاريع الزائر في هذا المتصفح ولا تُنقل تلقائياً.'),
     loading: t('Checking your cloud projects…', 'جارٍ التحقق من مشاريع حسابك…'),
     queued: t('Changes waiting to sync. Keep this page open.', 'تعديلات بانتظار المزامنة. أبقِ الصفحة مفتوحة.'),
     saving: t('Saving to your account…', 'جارٍ الحفظ في حسابك…'),

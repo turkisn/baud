@@ -1,0 +1,32 @@
+[WebServer] (node:14519) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:14543) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer]
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:14546) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:14570) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 12 tests using 1 worker
+
+(node:14581) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/visual/routes.spec.js:13:3 › en desktop /admin/products (1.3s)
+  ✓   2 tests/visual/routes.spec.js:13:3 › en desktop /admin/suppliers (871ms)
+  ✓   3 tests/visual/routes.spec.js:13:3 › en desktop /admin/products interaction-editor (1.3s)
+  ✓   4 tests/visual/routes.spec.js:13:3 › en mobile /admin/products (1.1s)
+  ✓   5 tests/visual/routes.spec.js:13:3 › en mobile /admin/suppliers (800ms)
+  ✓   6 tests/visual/routes.spec.js:13:3 › en mobile /admin/products interaction-editor (1.2s)
+  ✓   7 tests/visual/routes.spec.js:13:3 › ar desktop /admin/products (1.2s)
+  ✓   8 tests/visual/routes.spec.js:13:3 › ar desktop /admin/suppliers (828ms)
+  ✓   9 tests/visual/routes.spec.js:13:3 › ar desktop /admin/products interaction-editor (1.2s)
+  ✓  10 tests/visual/routes.spec.js:13:3 › ar mobile /admin/products (1.1s)
+  ✓  11 tests/visual/routes.spec.js:13:3 › ar mobile /admin/suppliers (754ms)
+  ✓  12 tests/visual/routes.spec.js:13:3 › ar mobile /admin/products interaction-editor (1.2s)
+
+  12 passed (16.5s)

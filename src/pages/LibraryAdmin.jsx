@@ -15,7 +15,7 @@ const FORMAT_COLOR = {
 
 function Badge({ label, color }) {
   return (
-    <span className="inline-flex text-[9px] font-bold px-2 py-0.5 rounded font-mono"
+    <span className="inline-flex text-[9px] font-bold px-2 py-0.5 rounded-sm font-mono"
       style={{ background: color + '18', color, border: `1px solid ${color}30` }}>
       {label}
     </span>
@@ -146,13 +146,13 @@ export default function LibraryAdmin() {
           <div className="flex-1 min-w-[200px] relative">
             <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3" style={{ color: '#6A5A48' }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search models…"
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm font-medium border outline-none transition-all focus:border-gold/40"
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm font-medium border outline-hidden transition-all focus:border-gold/40"
               style={{ background: '#2B1B0E', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
           </div>
 
           <div className="relative">
             <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-medium border outline-none cursor-pointer"
+              className="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-medium border outline-hidden cursor-pointer"
               style={{ background: '#2B1B0E', borderColor: '#3A2A18', color: '#C4A882' }}>
               {libraryCategories.map(c => (
                 <option key={c.id} value={c.id}>{c.icon} {c.labelEn}</option>
@@ -163,7 +163,7 @@ export default function LibraryAdmin() {
 
           <div className="relative">
             <select value={sort} onChange={e => setSort(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-medium border outline-none cursor-pointer"
+              className="appearance-none pl-4 pr-10 py-2.5 rounded-xl text-sm font-medium border outline-hidden cursor-pointer"
               style={{ background: '#2B1B0E', borderColor: '#3A2A18', color: '#C4A882' }}>
               <option value="dateAdded">Sort: Newest</option>
               <option value="views">Sort: Most Viewed</option>
@@ -283,7 +283,7 @@ export default function LibraryAdmin() {
                   <label className="text-[10px] uppercase tracking-widest mb-1.5 block" style={{ color: '#6A5A48' }}>{f.label}</label>
                   <input value={newModel[f.key]} onChange={e => setNewM(p => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm border outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl text-sm border outline-hidden"
                     style={{ background: '#1A1008', borderColor: '#3A2A18', color: 'white', fontFamily: 'Cairo, sans-serif' }} />
                 </div>
               ))}
@@ -291,7 +291,7 @@ export default function LibraryAdmin() {
                 <div>
                   <label className="text-[10px] uppercase tracking-widest mb-1.5 block" style={{ color: '#6A5A48' }}>Category</label>
                   <select value={newModel.category} onChange={e => setNewM(p => ({ ...p, category: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm border outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl text-sm border outline-hidden"
                     style={{ background: '#1A1008', borderColor: '#3A2A18', color: '#C4A882' }}>
                     {libraryCategories.filter(c => c.id !== 'all').map(c => (
                       <option key={c.id} value={c.id}>{c.icon} {c.labelEn}</option>
@@ -301,7 +301,7 @@ export default function LibraryAdmin() {
                 <div>
                   <label className="text-[10px] uppercase tracking-widest mb-1.5 block" style={{ color: '#6A5A48' }}>Format</label>
                   <select value={newModel.format} onChange={e => setNewM(p => ({ ...p, format: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-xl text-sm border outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl text-sm border outline-hidden"
                     style={{ background: '#1A1008', borderColor: '#3A2A18', color: '#C4A882' }}>
                     {Object.keys(FORMAT_COLOR).map(f => <option key={f} value={f}>{f}</option>)}
                   </select>

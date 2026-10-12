@@ -1,4 +1,4 @@
-import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
+import { supabase, SUPABASE_CONFIGURED, updateRecoveryPassword } from '../lib/supabase';
 
 const SELF_PROFILE_FIELDS = 'id,full_name,email,role,avatar_url,user_type,company_name,phone,created_at,updated_at';
 const SELF_PROFILE_UPDATE_FIELDS = new Set(['full_name', 'avatar_url', 'user_type', 'company_name', 'phone']);
@@ -45,11 +45,8 @@ export const authService = {
     if (error) throw error;
   },
 
-  async updatePassword(password) {
-    if (!SUPABASE_CONFIGURED) throw new Error('Supabase not configured');
-    const { data, error } = await supabase.auth.updateUser({ password });
-    if (error) throw error;
-    return data;
+  async updatePassword(password, recoverySession) {
+    return updateRecoveryPassword(password, recoverySession);
   },
 
   async getCurrentUser() {

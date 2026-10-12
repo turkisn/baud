@@ -62,9 +62,9 @@ begin
   ), 'All BUOD storage buckets must remain private';
 
   foreach required_function in array array[
-    'admin_log_action(text,text,uuid,jsonb)',
     'admin_register_mvp_product_file(uuid,jsonb)',
     'admin_save_mvp_product(uuid,jsonb)',
+    'admin_save_mvp_product_bundle(uuid,jsonb,jsonb)',
     'admin_save_mvp_supplier(uuid,jsonb)',
     'admin_set_user_role(uuid,text)',
     'admin_verify_entity(text,uuid,text,text)'
@@ -90,14 +90,33 @@ begin
     ), 'Missing isolated privileged implementation: ' || required_function;
   end loop;
 
+  -- Audit claims are internal only, even for administrative API identities.
+  assert not (select prosecdef from pg_proc where oid='public.admin_log_action(text,text,uuid,jsonb)'::regprocedure);
+  assert not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname in ('public','private') and p.proname='admin_log_action'
+      and (has_function_privilege('authenticated',p.oid,'EXECUTE')
+        or has_function_privilege('anon',p.oid,'EXECUTE')
+        or has_function_privilege('service_role',p.oid,'EXECUTE'))
+  ), 'Only trusted internal operations may append audit claims';
+
+  -- Per-schema REVOKE does not subtract PostgreSQL global PUBLIC EXECUTE.
+  assert not exists (
+    select 1 from aclexplode(coalesce(
+      (select defaclacl from pg_default_acl where defaclrole='postgres'::regrole
+        and defaclnamespace=0 and defaclobjtype='f'),
+      acldefault('f','postgres'::regrole))) a
+    where a.privilege_type='EXECUTE' and a.grantee in
+      (0,'anon'::regrole::oid,'authenticated'::regrole::oid,'service_role'::regrole::oid)
+  ), 'Global future function defaults must deny PUBLIC and API roles';
+
   assert not exists (
     select 1
     from pg_default_acl d
     cross join lateral aclexplode(d.defaclacl) a
-    join pg_roles r on r.oid = a.grantee
     where d.defaclrole = 'postgres'::regrole
-      and d.defaclnamespace = 'public'::regnamespace
-      and r.rolname in ('anon', 'authenticated', 'service_role')
+      and d.defaclnamespace in ('public'::regnamespace, 'private'::regnamespace)
+      and a.grantee in (0,'anon'::regrole::oid,'authenticated'::regrole::oid,'service_role'::regrole::oid)
       and (
         (d.defaclobjtype = 'r' and a.privilege_type in ('SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN'))
         or (d.defaclobjtype = 'S' and a.privilege_type in ('USAGE','SELECT','UPDATE'))

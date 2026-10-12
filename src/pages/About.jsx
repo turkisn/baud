@@ -78,7 +78,7 @@ export default function About() {
             </motion.div>
 
             <motion.div variants={slideInRight} initial="hidden" whileInView="visible" viewport={viewport}>
-              <div className="relative h-80 lg:h-96 bg-gradient-to-br from-sand to-beige rounded-3xl flex items-center justify-center overflow-hidden">
+              <div className="relative h-80 lg:h-96 bg-linear-to-br/srgb from-sand to-beige rounded-3xl flex items-center justify-center overflow-hidden">
                 <svg className="w-full h-full opacity-20 absolute" viewBox="0 0 400 400">
                   {[...Array(5)].map((_, i) => (
                     <polygon key={i} points="200,0 400,200 200,400 0,200"
@@ -146,7 +146,7 @@ export default function About() {
                 className="flex gap-6"
               >
                 <div className="flex flex-col items-center">
-                  <div className="w-10 h-10 bg-dark-brown rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">{m.year.slice(2)}</div>
+                  <div className="w-10 h-10 bg-dark-brown rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0">{m.year.slice(2)}</div>
                   {i < milestones.length - 1 && <div className="w-0.5 flex-1 bg-sand my-2" />}
                 </div>
                 <div className={`pb-8 ${i === milestones.length - 1 ? '' : ''}`}>
@@ -186,7 +186,7 @@ export default function About() {
       </section>
 
       {/* Vision 2030 */}
-      <section className="py-24 bg-gradient-to-br from-dark-brown to-deep-brown relative overflow-hidden">
+      <section className="py-24 bg-linear-to-br/srgb from-dark-brown to-deep-brown relative overflow-hidden">
         <div className="absolute inset-0 bg-hero-pattern opacity-20" />
         <div className="relative max-w-4xl mx-auto px-4 text-center">
           <motion.div variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport}>

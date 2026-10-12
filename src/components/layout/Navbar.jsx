@@ -86,7 +86,7 @@ export default function Navbar() {
           {user ? <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center justify-center gap-2 rounded-xl border border-gold/20 px-4 py-3 font-semibold text-sand disabled:opacity-50"><LogOut size={16} />{t('Sign out', 'تسجيل الخروج')}</button> : <><Link to="/login" className="rounded-xl border border-gold/25 px-4 py-3 text-center font-semibold text-sand">{t('Sign In', 'تسجيل الدخول')}</Link><Link to="/login?mode=signup" className="btn-gold justify-center">{t('Create account', 'إنشاء حساب')}</Link></>}
         </div>
       </div>}
-      {logoutError && <p role="alert" className="border border-red-300 bg-red-50 px-6 py-3 text-sm text-red-800">{t('Sign out failed. You are still signed in; check your connection and try again.', 'تعذّر تسجيل الخروج. ما زلت مسجلاً؛ تحقق من الاتصال وحاول مجدداً.')}</p>}
+      {logoutError && <p role="alert" className="border border-red-300 bg-red-50 px-6 py-3 text-sm text-red-800">{t('Sign out could not be completed. Check your connection and try again.', 'تعذّر إكمال تسجيل الخروج. تحقق من الاتصال وحاول مجدداً.')}</p>}
     </nav>
   );
 }

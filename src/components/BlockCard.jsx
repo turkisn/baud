@@ -64,7 +64,7 @@ const FORMAT_COLOR = { RVT: '#0696D7', SKP: '#D73A0A', MAX: '#00A3E0', FBX: '#5A
 function FormatBadge({ fmt }) {
   const c = FORMAT_COLOR[fmt] || '#888';
   return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded leading-none"
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm leading-none"
       style={{ background: c + '20', color: c, border: `1px solid ${c}40` }}>
       {fmt}
     </span>
@@ -110,7 +110,7 @@ export default function BlockCard({ block, index = 0, compact = false }) {
       <div className="bg-white rounded-2xl overflow-hidden border border-sand shadow-card group-hover:shadow-card-hover transition-shadow duration-300 flex flex-col h-full">
 
         {/* ─── Preview / Render area ────────────────────── */}
-        <div className="relative overflow-hidden flex-shrink-0" style={{ paddingBottom: compact ? '50%' : '55%' }}>
+        <div className="relative overflow-hidden shrink-0" style={{ paddingBottom: compact ? '50%' : '55%' }}>
 
           {/* Material gradient */}
           <div className="absolute inset-0"
@@ -123,19 +123,19 @@ export default function BlockCard({ block, index = 0, compact = false }) {
           {/* Product SVG render */}
           <ProductRender block={block} />
           {/* Depth vignette */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
+          <div className="absolute inset-0 bg-linear-to-t/srgb from-black/50 via-transparent to-black/10" />
           {/* Glare on mouse */}
           <motion.div className="absolute inset-0 pointer-events-none" style={{ background: glare }} />
 
           {/* Status badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
             {block.isNew && (
-              <span className="bg-dark-brown/90 text-warm-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">
+              <span className="bg-dark-brown/90 text-warm-white text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-xs">
                 {t('New', 'جديد')}
               </span>
             )}
             {block.isEditorChoice && (
-              <span className="flex items-center gap-1 bg-gold/90 text-dark-brown text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+              <span className="flex items-center gap-1 bg-gold/90 text-dark-brown text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">
                 <Sparkles size={7} />{t("Editor's Pick", 'اختيار')}
               </span>
             )}
@@ -144,7 +144,7 @@ export default function BlockCard({ block, index = 0, compact = false }) {
           {/* Save heart */}
           <button
             onClick={() => setSaved(!saved)}
-            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-lg bg-black/30 backdrop-blur-sm flex items-center justify-center
+            className="absolute top-3 right-3 z-10 w-7 h-7 rounded-lg bg-black/30 backdrop-blur-xs flex items-center justify-center
                        hover:bg-black/50 transition-all duration-200 opacity-0 group-hover:opacity-100"
           >
             <Heart size={12} className={saved ? 'fill-red-400 text-red-400' : 'text-white'} />
@@ -152,7 +152,7 @@ export default function BlockCard({ block, index = 0, compact = false }) {
 
           {/* BIM badge bottom-left */}
           <div className="absolute bottom-3 left-3 z-10">
-            <span className="bg-black/50 backdrop-blur-sm text-white/90 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+            <span className="bg-black/50 backdrop-blur-xs text-white/90 text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest">
               {block.bimLevel}
             </span>
           </div>
@@ -160,12 +160,12 @@ export default function BlockCard({ block, index = 0, compact = false }) {
           {/* Format mini-badges bottom-right */}
           <div className="absolute bottom-3 right-3 z-10 flex gap-1">
             {block.formats.slice(0, 3).map(f => (
-              <span key={f} className="bg-black/60 backdrop-blur-sm text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
+              <span key={f} className="bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm">
                 {f}
               </span>
             ))}
             {block.formats.length > 3 && (
-              <span className="bg-black/60 backdrop-blur-sm text-white/70 text-[8px] px-1.5 py-0.5 rounded">
+              <span className="bg-black/60 backdrop-blur-xs text-white/70 text-[8px] px-1.5 py-0.5 rounded-sm">
                 +{block.formats.length - 3}
               </span>
             )}
@@ -174,7 +174,7 @@ export default function BlockCard({ block, index = 0, compact = false }) {
           {/* View 3D hover overlay */}
           <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <Link to={`/block/${block.id}`}
-              className="flex items-center gap-1.5 bg-white/95 text-dark-brown text-[11px] font-bold px-4 py-2 rounded-xl shadow-lg hover:bg-white transition-colors backdrop-blur-sm">
+              className="flex items-center gap-1.5 bg-white/95 text-dark-brown text-[11px] font-bold px-4 py-2 rounded-xl shadow-lg hover:bg-white transition-colors backdrop-blur-xs">
               <Box size={12} />
               {t('View in 3D', 'عرض ثلاثي الأبعاد')}
             </Link>
@@ -199,9 +199,9 @@ export default function BlockCard({ block, index = 0, compact = false }) {
 
           {/* Supplier */}
           <div className="flex items-center gap-1.5 text-[11px]">
-            {block.supplierVerified && <BadgeCheck size={11} className="text-gold flex-shrink-0" />}
+            {block.supplierVerified && <BadgeCheck size={11} className="text-gold shrink-0" />}
             <span className="text-medium-brown truncate">{supplier}</span>
-            <span className="text-light-brown/50 flex-shrink-0">· {block.supplierCity}</span>
+            <span className="text-light-brown/50 shrink-0">· {block.supplierCity}</span>
           </div>
 
           {/* Dimensions + Primary material */}

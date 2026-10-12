@@ -290,7 +290,7 @@ export default function SupplierDashboard() {
               {lang === 'ar' ? 'بُعد' : 'Buad'}
             </Link>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-dark-brown flex-shrink-0"
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-dark-brown shrink-0"
                 style={{ background: '#B68D57' }}>
                 {initial}
               </div>
@@ -494,7 +494,7 @@ export default function SupplierDashboard() {
                                 <span className="font-semibold text-dark-brown text-sm truncate">
                                   {lang === 'ar' ? (product.product_name_ar || product.product_name_en) : (product.product_name_en || product.product_name_ar)}
                                 </span>
-                                <span className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full flex-shrink-0 ${stCfg.bg} ${stCfg.text}`}>
+                                <span className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0 ${stCfg.bg} ${stCfg.text}`}>
                                   {stCfg.label}
                                 </span>
                               </div>
@@ -509,7 +509,7 @@ export default function SupplierDashboard() {
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 shrink-0">
                               {canEdit && (
                                 <button
                                   onClick={() => handleEditProduct(product)}
@@ -546,7 +546,7 @@ export default function SupplierDashboard() {
                 <div className="space-y-3">
                   {mockLeads.map((lead, i) => (
                     <div key={i} className="bg-white rounded-2xl border border-sand p-5 flex items-center gap-4">
-                      <div className="w-11 h-11 bg-gradient-to-br from-sand to-beige rounded-xl flex items-center justify-center text-lg font-bold text-dark-brown flex-shrink-0">
+                      <div className="w-11 h-11 bg-linear-to-br/srgb from-sand to-beige rounded-xl flex items-center justify-center text-lg font-bold text-dark-brown shrink-0">
                         {lead.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -565,7 +565,7 @@ export default function SupplierDashboard() {
                           {t('Interested in:', 'مهتم بـ:')} <span className="font-medium">{lead.product}</span>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-right shrink-0">
                         <div className="text-xs text-light-brown mb-2">{lead.date}</div>
                         <button className="btn-primary text-xs py-2 px-3">
                           {t('Reply', 'رد')}
@@ -698,14 +698,14 @@ export default function SupplierDashboard() {
                       <ul className="mt-3 space-y-2">
                         {selectedFiles.map((f, i) => (
                           <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-xl bg-warm-white border border-sand text-sm">
-                            <FileText size={15} className="text-gold flex-shrink-0" />
+                            <FileText size={15} className="text-gold shrink-0" />
                             <span className="flex-1 truncate text-dark-brown font-medium">
                               {f.name}<span className="text-light-brown font-normal">{fmtSize(f.size)}</span>
                             </span>
                             <button
                               type="button"
                               onClick={() => removeFile(i)}
-                              className="text-light-brown hover:text-red-500 transition-colors flex-shrink-0"
+                              className="text-light-brown hover:text-red-500 transition-colors shrink-0"
                               aria-label="Remove file"
                             >
                               <X size={15} />
@@ -787,7 +787,7 @@ export default function SupplierDashboard() {
                   {/* Progress / error / success banners */}
                   {uploadProgress && (
                     <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-700">
-                      <Loader2 size={16} className="animate-spin flex-shrink-0" />
+                      <Loader2 size={16} className="animate-spin shrink-0" />
                       {uploadProgress}
                     </div>
                   )}

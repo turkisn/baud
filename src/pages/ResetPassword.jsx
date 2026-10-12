@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, Eye, EyeOff, Globe, Loader2, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { SUPABASE_CONFIGURED, supabase } from '../lib/supabase';
+import { SUPABASE_CONFIGURED, supabase, isRecoverySession, clearRecoveryIntent } from '../lib/supabase';
 import { authService } from '../services/authService';
 
 export default function ResetPassword() {
   const { lang, t, toggleLang } = useLanguage();
   const [checking, setChecking] = useState(true);
   const [hasSession, setHasSession] = useState(false);
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountId, setAccountId] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +23,9 @@ export default function ResetPassword() {
     let active = true;
     supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (active) {
-        setHasSession(!sessionError && Boolean(data.session));
+        setHasSession(!sessionError && isRecoverySession(data.session));
+        setAccountEmail(data.session?.user?.email || '');
+        setAccountId(data.session?.user?.id || '');
         setChecking(false);
       }
     }).catch(() => {
@@ -29,7 +33,9 @@ export default function ResetPassword() {
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
-      setHasSession(Boolean(session));
+      setHasSession(isRecoverySession(session));
+      setAccountEmail(session?.user?.email || '');
+      setAccountId(session?.user?.id || '');
       setChecking(false);
     });
     return () => { active = false; subscription.unsubscribe(); };
@@ -48,11 +54,30 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      await authService.updatePassword(password);
-      try { await authService.signOut(); } catch { /* Password update already succeeded. */ }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const recoverySession = sessionData.session;
+      if (!isRecoverySession(recoverySession) || recoverySession.user.id !== accountId) {
+        clearRecoveryIntent(); setHasSession(false); return;
+      }
+      const { data, error: identityError } = await supabase.auth.getUser(recoverySession.access_token);
+      if (identityError || !isRecoverySession(recoverySession) || data.user?.id !== accountId) {
+        clearRecoveryIntent(); setHasSession(false); return;
+      }
+      await authService.updatePassword(password, recoverySession);
       setUpdated(true);
-    } catch {
-      setError(t('This reset link is invalid or expired. Request a new one.', 'رابط الاستعادة غير صالح أو منتهي. اطلب رابطاً جديداً.'));
+      setPassword(''); setConfirmPassword('');
+      // Cleanup failures must never turn a confirmed password update into an
+      // apparent failure, or sign out a different account after a tab switch.
+      try {
+        const { data: current } = await supabase.auth.getSession();
+        const stillSameSession = isRecoverySession(current.session) && current.session?.user?.id === accountId;
+        clearRecoveryIntent();
+        if (stillSameSession) await supabase.auth.signOut({ scope: 'local' });
+      } catch { clearRecoveryIntent(); }
+    } catch (updateError) {
+      setError(updateError.code === 'same_password'
+        ? t('Choose a password different from your current password.', 'اختر كلمة مرور تختلف عن الحالية.')
+        : t('Password could not be updated. Check your connection and try again, or request a new recovery link.', 'تعذر تحديث كلمة المرور. تحقق من الاتصال وأعد المحاولة أو اطلب رابط استعادة جديداً.'));
     } finally {
       setLoading(false);
     }
@@ -73,7 +98,7 @@ export default function ResetPassword() {
           ) : (
             <>
               <h1 className="text-2xl font-bold text-dark-brown">{t('Choose a new password', 'اختر كلمة مرور جديدة')}</h1>
-              <p className="mt-2 text-sm text-light-brown">{t('Use at least 8 characters.', 'استخدم 8 أحرف على الأقل.')}</p>
+              <p className="mt-2 text-sm text-light-brown">{t('Use at least 8 characters.', 'استخدم 8 أحرف على الأقل.')} <span dir="ltr">{accountEmail}</span></p>
               <form onSubmit={submit} className="mt-7 space-y-4" noValidate>
                 <div><label htmlFor="new-password" className="label">{t('New password', 'كلمة المرور الجديدة')}</label><div className="relative"><Lock aria-hidden="true" size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-light-brown"/><input id="new-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} autoComplete="new-password" minLength={8} disabled={loading} aria-invalid={Boolean(error)} aria-describedby={error ? 'reset-error' : undefined} className="input-field ps-10 pe-10"/><button type="button" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? t('Hide password', 'إخفاء كلمة المرور') : t('Show password', 'إظهار كلمة المرور')} aria-pressed={showPassword} className="absolute end-3.5 top-1/2 -translate-y-1/2 text-light-brown hover:text-dark-brown">{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></div>
                 <div><label htmlFor="confirm-password" className="label">{t('Confirm password', 'تأكيد كلمة المرور')}</label><input id="confirm-password" type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setError(''); }} autoComplete="new-password" disabled={loading} aria-invalid={Boolean(error)} aria-describedby={error ? 'reset-error' : undefined} className="input-field"/></div>

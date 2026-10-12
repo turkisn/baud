@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BadgeCheck, Box, Boxes, Building2, Database, FileBox, GitBranch, Layers3, PackageCheck, ShieldCheck, Sparkles } from 'lucide-react';
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Footer from './components/layout/Footer';
@@ -167,4 +167,5 @@ function Layout() {
     <Route path="*" element={<NotFound/>}/>
   </Routes></Suspense></main>{!bare && <Footer/>}</div>;
 }
-export default function App() { return <AppErrorBoundary><BrowserRouter><LanguageProvider><AuthProvider><WorkspaceProvider><Layout/></WorkspaceProvider></AuthProvider></LanguageProvider></BrowserRouter></AppErrorBoundary>; }
+const router = createBrowserRouter([{ path: '*', element: <AppErrorBoundary><LanguageProvider><AuthProvider><WorkspaceProvider><Layout/></WorkspaceProvider></AuthProvider></LanguageProvider></AppErrorBoundary> }]);
+export default function App() { return <AppErrorBoundary><RouterProvider router={router}/></AppErrorBoundary>; }

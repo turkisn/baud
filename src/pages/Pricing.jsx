@@ -112,8 +112,8 @@ export default function Pricing() {
                     {plan.features.map((f, j) => (
                       <li key={j} className="flex items-center gap-3 text-sm">
                         {f.ok
-                          ? <Check size={15} className="text-gold flex-shrink-0" />
-                          : <X size={15} className={`flex-shrink-0 ${plan.highlighted ? 'text-light-brown/40' : 'text-sand'}`} />
+                          ? <Check size={15} className="text-gold shrink-0" />
+                          : <X size={15} className={`shrink-0 ${plan.highlighted ? 'text-light-brown/40' : 'text-sand'}`} />
                         }
                         <span className={f.ok ? (plan.highlighted ? 'text-sand' : 'text-medium-brown') : (plan.highlighted ? 'text-light-brown/40' : 'text-light-brown/60')}>
                           {lang === 'ar' ? f.text : f.textEn}
@@ -172,7 +172,7 @@ export default function Pricing() {
               <motion.div key={i} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport} transition={{ delay: i * 0.07 }} className="border border-sand rounded-2xl overflow-hidden bg-white">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-sand/30 transition-colors">
                   <span className="font-semibold text-dark-brown text-sm">{lang === 'ar' ? item.q : item.qEn}</span>
-                  {openFaq === i ? <ChevronUp size={18} className="text-light-brown flex-shrink-0" /> : <ChevronDown size={18} className="text-light-brown flex-shrink-0" />}
+                  {openFaq === i ? <ChevronUp size={18} className="text-light-brown shrink-0" /> : <ChevronDown size={18} className="text-light-brown shrink-0" />}
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (

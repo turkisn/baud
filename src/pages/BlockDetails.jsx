@@ -46,11 +46,11 @@ export default function BlockDetails() {
           {/* Left: Preview + Info */}
           <div className="lg:col-span-2 space-y-8">
             {/* Preview */}
-            <div className="bg-gradient-to-br from-sand to-beige rounded-3xl h-72 sm:h-96 flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="bg-linear-to-br/srgb from-sand to-beige rounded-3xl h-72 sm:h-96 flex flex-col items-center justify-center relative overflow-hidden">
               <span className="text-8xl mb-4">{categoryIcons[block.category] || '📦'}</span>
               <div className="grid grid-cols-4 gap-1 opacity-15 absolute bottom-6">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="w-5 h-5 bg-dark-brown rounded" />
+                  <div key={i} className="w-5 h-5 bg-dark-brown rounded-sm" />
                 ))}
               </div>
               {/* SVG pattern */}
@@ -143,7 +143,7 @@ export default function BlockDetails() {
           {/* Right: Actions + Supplier */}
           <div className="space-y-6">
             {/* Price + Download CTA */}
-            <div className="bg-white rounded-2xl p-6 border border-sand shadow-sm sticky top-24">
+            <div className="bg-white rounded-2xl p-6 border border-sand shadow-xs sticky top-24">
               <div className="mb-4">
                 <div className="text-3xl font-bold text-dark-brown">
                   {block.price.toLocaleString()}
@@ -192,15 +192,15 @@ export default function BlockDetails() {
 
               <div className="space-y-2.5 text-sm">
                 <div className="flex items-center gap-2 text-light-brown">
-                  <Building size={14} className="flex-shrink-0" />
+                  <Building size={14} className="shrink-0" />
                   <span>{lang === 'ar' ? supplier.cityAr : supplier.city}, KSA</span>
                 </div>
                 <div className="flex items-center gap-2 text-light-brown">
-                  <Phone size={14} className="flex-shrink-0" />
+                  <Phone size={14} className="shrink-0" />
                   <span>{supplier.phone}</span>
                 </div>
                 <div className="flex items-center gap-2 text-light-brown">
-                  <Mail size={14} className="flex-shrink-0" />
+                  <Mail size={14} className="shrink-0" />
                   <span>{supplier.email}</span>
                 </div>
               </div>

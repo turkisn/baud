@@ -157,6 +157,8 @@ export default function AdminUsers() {
     try {
       const { data, count: c } = await userAdminService.list({ role: roleFilter || null, search: debouncedSearch, page });
       if (version !== requestVersion.current) return;
+      const lastPage = Math.max(0, Math.ceil(c / 25) - 1);
+      if (page > lastPage) { setPage(lastPage); return; }
       setUsers(data);
       setCount(c);
     } catch (e) {
@@ -179,6 +181,7 @@ export default function AdminUsers() {
 
   const handleRoleChanged = (userId, newRole) => {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    void load();
   };
 
   const totalPages = Math.ceil(count / PAGE_SIZE);
@@ -205,14 +208,14 @@ export default function AdminUsers() {
             value={search}
             onChange={e => setSrch(e.target.value)}
             placeholder={t('Search name, email, company…', 'بحث بالاسم أو البريد…')}
-            className="w-full rounded-xl border border-sand bg-white py-2.5 pe-4 ps-9 text-sm outline-none transition-colors focus:border-dark-brown"
+            className="w-full rounded-xl border border-sand bg-white py-2.5 pe-4 ps-9 text-sm outline-hidden transition-colors focus:border-dark-brown"
           />
         </div>
         <select
           aria-label={t('Filter by authorization role', 'تصفية حسب دور الصلاحية')}
           value={roleFilter}
           onChange={e => { setRF(e.target.value); setPage(0); }}
-          className="px-4 py-2.5 text-sm border border-sand rounded-xl outline-none focus:border-dark-brown bg-white transition-colors"
+          className="px-4 py-2.5 text-sm border border-sand rounded-xl outline-hidden focus:border-dark-brown bg-white transition-colors"
         >
           <option value="">{t('All roles', 'جميع الأدوار')}</option>
           {AUTHORIZATION_ROLES.map(role => (
@@ -231,7 +234,7 @@ export default function AdminUsers() {
 
       {!SUPABASE_CONFIGURED && (
         <div role="status" className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-4">
-          <AlertCircle size={18} className="flex-shrink-0" />
+          <AlertCircle size={18} className="shrink-0" />
           {t('Supabase not configured.', 'Supabase غير متصل.')}
         </div>
       )}
@@ -258,7 +261,7 @@ export default function AdminUsers() {
                 <tr key={u.id} className="hover:bg-warm-white transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-sm font-bold text-dark-brown flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-sand flex items-center justify-center text-sm font-bold text-dark-brown shrink-0">
                         {(u.full_name || u.email || '?')[0].toUpperCase()}
                       </div>
                       <span className="font-medium text-dark-brown truncate max-w-[160px]">

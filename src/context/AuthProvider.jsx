@@ -10,7 +10,7 @@ async function fetchProfile(userId) {
     .from('profiles')
     .select('id,full_name,role,avatar_url,user_type,company_name')
     .eq('id', userId)
-    .maybeSingle();
+    .maybeSingle().abortSignal(AbortSignal.timeout(10_000));
   if (error) throw error;
   return data ?? null;
 }
@@ -41,6 +41,9 @@ function AuthLoadingScreen() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState(false);
+  const [profileRetry, setProfileRetry] = useState(0);
+  const [logoutWarning, setLogoutWarning] = useState(false);
   const authVersion = useRef(0);
   const mounted = useRef(false);
 
@@ -61,13 +64,16 @@ export function AuthProvider({ children }) {
 
     const hydrateSession = async (authUser, version) => {
       let profile = null;
+      let failed = false;
       try {
         profile = await fetchProfile(authUser.id);
+        failed = !profile;
       } catch {
-        // Authentication succeeds, while authorization fails closed to role=user.
+        failed = true; // Authorization fails closed, with a visible recovery path.
       }
 
       if (!mounted.current || version !== authVersion.current) return;
+      setProfileError(failed);
       setUser(mergeProfile(authUser, profile));
       setLoading(false);
     };
@@ -83,12 +89,14 @@ export function AuthProvider({ children }) {
 
       if (!session?.user) {
         currentSessionUserId = null;
+        setProfileError(false);
         setUser(null);
         setLoading(false);
         return;
       }
 
       const nextUserId = session.user.id;
+      setLogoutWarning(false);
       if (currentSessionUserId !== nextUserId) {
         currentSessionUserId = nextUserId;
         setUser(null);
@@ -102,14 +110,24 @@ export function AuthProvider({ children }) {
       deferredHydrations.add(timer);
     });
 
+    const refreshOnFocus = () => {
+      const version = authVersion.current;
+      void supabase.auth.getSession().then(({ data }) => {
+        if (!mounted.current || version !== authVersion.current || !data.session?.user) return;
+        void hydrateSession(data.session.user, nextAuthVersion());
+      }).catch(() => {});
+    };
+    window.addEventListener('focus', refreshOnFocus);
+
     return () => {
       mounted.current = false;
       nextAuthVersion();
       for (const timer of deferredHydrations) window.clearTimeout(timer);
       deferredHydrations.clear();
       subscription.unsubscribe();
+      window.removeEventListener('focus', refreshOnFocus);
     };
-  }, [nextAuthVersion]);
+  }, [nextAuthVersion, profileRetry]);
 
   const login = useCallback(async (email, password) => {
     if (!SUPABASE_CONFIGURED) {
@@ -142,7 +160,13 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     if (SUPABASE_CONFIGURED) {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        // Current Auth SDK removes the local session even when remote logout
+        // fails. Never restore credentials or claim the user remains signed in.
+        const { data } = await supabase.auth.getSession();
+        if (data.session) throw error;
+        setLogoutWarning(true);
+      }
     } else {
       try { localStorage.removeItem('buod_session'); } catch { /* Storage may be disabled. */ }
     }
@@ -170,7 +194,8 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? <AuthLoadingScreen /> : children}
+      {logoutWarning && <div role="alert" className="relative z-[100] bg-amber-50 p-4 text-sm text-amber-900">Signed out on this device. Other sessions could not be revoked; sign in again to retry signing out everywhere. تم تسجيل الخروج من هذا الجهاز، لكن تعذّر إنهاء الجلسات الأخرى. سجّل الدخول مجدداً لإعادة المحاولة. <button type="button" className="underline" onClick={() => setLogoutWarning(false)}>Dismiss / إغلاق</button></div>}
+      {loading ? <AuthLoadingScreen /> : <>{profileError && <div role="alert" className="fixed bottom-4 start-4 z-[100] max-w-sm rounded-xl bg-red-50 p-4 text-sm text-red-900">Account permissions could not be loaded. تعذّر تحميل صلاحيات الحساب. <button type="button" className="underline" onClick={() => setProfileRetry(v => v + 1)}>Retry profile / إعادة المحاولة</button></div>}{children}</>}
     </AuthContext.Provider>
   );
 }

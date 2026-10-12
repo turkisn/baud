@@ -264,7 +264,7 @@ export default function Marketplace() {
                   <div className="text-[10px] font-bold text-dark-brown">Modern Najdi Sofa</div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-[9px] text-gold font-semibold">4,800 SAR</span>
-                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded text-medium-brown">RVT</span>
+                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded-sm text-medium-brown">RVT</span>
                   </div>
                 </div>
               </motion.div>
@@ -290,7 +290,7 @@ export default function Marketplace() {
                   <div className="text-[10px] font-bold text-dark-brown">Arabesque Pendant</div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-[9px] text-gold font-semibold">3,400 SAR</span>
-                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded text-medium-brown">SKP</span>
+                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded-sm text-medium-brown">SKP</span>
                   </div>
                 </div>
               </motion.div>
@@ -314,7 +314,7 @@ export default function Marketplace() {
                   <div className="text-[10px] font-bold text-dark-brown">Limestone Tile</div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-[9px] text-gold font-semibold">340 SAR</span>
-                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded text-medium-brown">MAX</span>
+                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded-sm text-medium-brown">MAX</span>
                   </div>
                 </div>
               </motion.div>
@@ -343,7 +343,7 @@ export default function Marketplace() {
                   <div className="text-[10px] font-bold text-dark-brown">Mashrabiya Screen</div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-[9px] text-gold font-semibold">4,800 SAR</span>
-                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded text-medium-brown">FBX</span>
+                    <span className="text-[8px] bg-sand px-1.5 py-0.5 rounded-sm text-medium-brown">FBX</span>
                   </div>
                 </div>
               </motion.div>

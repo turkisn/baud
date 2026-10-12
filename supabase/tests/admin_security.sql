@@ -15,6 +15,7 @@ begin
     'select public.admin_log_action(''qa.security'',null,null,''{}'')',
     'select public.admin_register_mvp_product_file(gen_random_uuid(),''{}'')',
     'select public.admin_save_mvp_product(null,''{}'')',
+    'select public.admin_save_mvp_product_bundle(null,''{}'',''[]'')',
     'select public.admin_save_mvp_supplier(null,''{}'')',
     'select public.admin_set_user_role(gen_random_uuid(),''super_admin'')',
     'select public.admin_verify_entity(''supplier'',gen_random_uuid(),''verified'',null)'
@@ -68,5 +69,5 @@ do $$ begin
     select from storage.buckets where id in ('product-files','product-datasheets','product-images','supplier-assets') and public
   ), 'Product storage buckets must remain private';
 end $$;
-select 'PASS: 18 admin-denial cases, forged role, missing profile, RLS and private buckets' as result;
+select 'PASS: 21 admin-denial cases, forged role, missing profile, RLS and private buckets' as result;
 rollback;

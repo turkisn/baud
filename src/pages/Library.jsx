@@ -65,7 +65,7 @@ function toLibraryCat(c) {
 function FormatBadge({ fmt }) {
   const c = FORMAT_COLOR[fmt] || '#888';
   return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded font-mono leading-none"
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm font-mono leading-none"
       style={{ background: c + '18', color: c, border: `1px solid ${c}35` }}>
       {fmt}
     </span>
@@ -104,17 +104,17 @@ function ModelCard({ model, index }) {
       viewport={viewport} transition={{ delay: (index % 6) * 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
       <Link to={`/library/${model.id}`} className="group block">
         <div className="bg-white rounded-2xl overflow-hidden border border-sand hover:border-gold/40 hover:shadow-card-hover transition-all duration-300 h-full flex flex-col">
-          <div className="relative overflow-hidden flex-shrink-0" style={{ paddingBottom: '60%' }}>
+          <div className="relative overflow-hidden shrink-0" style={{ paddingBottom: '60%' }}>
             <ModelPreview model={model} />
             <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
               {model.isFree && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider"
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider"
                   style={{ background: '#22c55e22', color: '#16a34a', border: '1px solid #22c55e40' }}>
                   {t('Free', 'مجاني')}
                 </span>
               )}
               {model.verified && (
-                <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
+                <span className="flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-sm"
                   style={{ background: '#B68D5722', color: '#B68D57', border: '1px solid #B68D5740' }}>
                   <BadgeCheck size={8} /> {t('Verified', 'موثق')}
                 </span>
@@ -152,11 +152,11 @@ function SkeletonCard() {
     <div className="bg-white rounded-2xl overflow-hidden border border-sand animate-pulse">
       <div className="bg-sand/60" style={{ paddingBottom: '60%' }} />
       <div className="p-4 space-y-2">
-        <div className="h-3 bg-sand/60 rounded w-3/4" />
-        <div className="h-3 bg-sand/40 rounded w-1/2" />
+        <div className="h-3 bg-sand/60 rounded-sm w-3/4" />
+        <div className="h-3 bg-sand/40 rounded-sm w-1/2" />
         <div className="flex gap-1 pt-1">
-          <div className="h-4 w-8 bg-sand/60 rounded" />
-          <div className="h-4 w-8 bg-sand/40 rounded" />
+          <div className="h-4 w-8 bg-sand/60 rounded-sm" />
+          <div className="h-4 w-8 bg-sand/40 rounded-sm" />
         </div>
       </div>
     </div>
@@ -286,7 +286,7 @@ export default function Library() {
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#B68D57' }} />
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder={t('Search by name, format, category, BUOD ref...', 'ابحث بالاسم أو الصيغة أو رقم BUOD...')}
-                className="w-full pl-12 pr-12 py-4 rounded-2xl text-dark-brown font-medium text-sm outline-none"
+                className="w-full pl-12 pr-12 py-4 rounded-2xl text-dark-brown font-medium text-sm outline-hidden"
                 style={{ background: 'rgba(247,244,239,0.97)', border: '1.5px solid rgba(182,141,87,0.3)' }}
               />
               {search && (
@@ -349,7 +349,7 @@ export default function Library() {
           </button>
 
           <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-            className="px-3 py-2.5 rounded-xl border border-sand bg-white text-sm text-dark-brown outline-none cursor-pointer">
+            className="px-3 py-2.5 rounded-xl border border-sand bg-white text-sm text-dark-brown outline-hidden cursor-pointer">
             <option value="downloads">{t('Most Downloaded', 'الأكثر تحميلاً')}</option>
             <option value="views">{t('Most Viewed', 'الأكثر مشاهدة')}</option>
             <option value="newest">{t('Newest', 'الأحدث')}</option>
@@ -410,12 +410,12 @@ export default function Library() {
                 <div className="space-y-3">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={freeOnly} onChange={e => setFreeOnly(e.target.checked)}
-                      className="w-4 h-4 rounded" style={{ accentColor: '#B68D57' }} />
+                      className="w-4 h-4 rounded-sm" style={{ accentColor: '#B68D57' }} />
                     <span className="text-sm text-medium-brown">{t('Free only', 'مجاني فقط')}</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" checked={verifiedOnly} onChange={e => setVerified(e.target.checked)}
-                      className="w-4 h-4 rounded" style={{ accentColor: '#B68D57' }} />
+                      className="w-4 h-4 rounded-sm" style={{ accentColor: '#B68D57' }} />
                     <span className="text-sm text-medium-brown">{t('Verified only', 'موثق فقط')}</span>
                   </label>
                 </div>
@@ -427,7 +427,7 @@ export default function Library() {
                 <div className="grid grid-cols-2 gap-1.5">
                   {Object.entries(FORMAT_LABELS).map(([k, v]) => (
                     <div key={k} className="flex items-center gap-1.5 text-xs text-light-brown">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: FORMAT_COLOR[k] || '#888' }} />
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ background: FORMAT_COLOR[k] || '#888' }} />
                       <span className="font-mono font-bold text-[10px]" style={{ color: FORMAT_COLOR[k] || '#888' }}>{k}</span>
                       <span>{v}</span>
                     </div>
@@ -492,27 +492,27 @@ export default function Library() {
                   whileInView="visible" viewport={viewport} transition={{ delay: i * 0.03 }}>
                   <Link to={`/library/${model.id}`}
                     className="flex items-center gap-4 bg-white border border-sand rounded-2xl p-4 hover:border-gold/40 hover:shadow-card transition-all group">
-                    <div className="relative flex-shrink-0 w-20 h-14 rounded-xl overflow-hidden">
+                    <div className="relative shrink-0 w-20 h-14 rounded-xl overflow-hidden">
                       <ModelPreview model={model} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
                         <h3 className="font-bold text-dark-brown text-sm leading-tight truncate">{name}</h3>
-                        {model.verified && <BadgeCheck size={13} style={{ color: '#B68D57' }} className="flex-shrink-0" />}
+                        {model.verified && <BadgeCheck size={13} style={{ color: '#B68D57' }} className="shrink-0" />}
                       </div>
                       <p className="text-xs text-light-brown line-clamp-1 mb-1.5">{desc}</p>
                       <div className="flex flex-wrap gap-1">
                         {model.formats.slice(0, 4).map(f => <FormatBadge key={f} fmt={f} />)}
                       </div>
                     </div>
-                    <div className="flex-shrink-0 text-right hidden sm:block">
+                    <div className="shrink-0 text-right hidden sm:block">
                       <div className="text-xs text-light-brown mb-1">{model.fileSize}</div>
                       <div className="flex items-center gap-2 text-[10px] text-light-brown">
                         <span className="flex items-center gap-0.5"><Download size={9} />{model.downloads.toLocaleString()}</span>
                         <span className="flex items-center gap-0.5"><Eye size={9} />{model.views.toLocaleString()}</span>
                       </div>
                       {model.isFree && (
-                        <span className="text-[9px] font-bold px-2 py-0.5 rounded mt-1 inline-block"
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-sm mt-1 inline-block"
                           style={{ background: '#22c55e22', color: '#16a34a' }}>
                           {t('Free', 'مجاني')}
                         </span>

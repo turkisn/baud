@@ -219,7 +219,7 @@ export default function Login() {
               t('Supplier windows and source links', 'نوافذ الموردين وروابط المصدر'),
             ].map((feat, i) => (
               <div key={i} className="flex items-center gap-3 text-sand/80 text-sm">
-                <CheckCircle size={15} className="text-gold flex-shrink-0" /> {feat}
+                <CheckCircle size={15} className="text-gold shrink-0" /> {feat}
               </div>
             ))}
           </div>
@@ -257,7 +257,7 @@ export default function Login() {
                 aria-pressed={mode === tab.id}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   mode === tab.id
-                    ? 'bg-white text-dark-brown shadow-sm'
+                    ? 'bg-white text-dark-brown shadow-xs'
                     : 'text-medium-brown hover:text-dark-brown'
                 }`}
               >
@@ -423,7 +423,7 @@ export default function Login() {
                 role="alert"
                 className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-sm text-red-700"
               >
-                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </motion.div>
             )}

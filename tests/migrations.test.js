@@ -32,7 +32,10 @@ test('migration manifest covers every SQL migration', async () => {
     .filter((file) => file.endsWith('.sql'))
     .map((file) => `supabase/migrations/${file}`)
     .sort();
-  const expected = migrations.map(({ file }) => file).sort();
+  const pending = JSON.parse(await readFile(path.join(root, 'supabase/pending-migrations.json'), 'utf8'));
+  assert.equal(pending.status, 'not_applied');
+  const expected = [...migrations.map(({ file }) => file), ...pending.migrations].sort();
+  assert.equal(new Set(actual.map(file => path.basename(file).slice(0, 14))).size, actual.length);
 
   assert.deepEqual(actual, expected);
 });

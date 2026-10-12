@@ -74,7 +74,7 @@ function Input({ value, onChange, placeholder, type = 'text', className = '', ..
   return (
     <input
       type={type} value={value} onChange={onChange} placeholder={placeholder}
-      className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all focus:ring-2 ${className}`}
+      className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-hidden transition-all focus:ring-2 ${className}`}
       style={{ background: IVORY, borderColor: SAND, fontFamily: 'Cairo, sans-serif',
         '--tw-ring-color': GOLD + '40' }}
       {...rest}
@@ -86,7 +86,7 @@ function Textarea({ value, onChange, placeholder, rows = 3 }) {
   return (
     <textarea
       value={value} onChange={onChange} placeholder={placeholder} rows={rows}
-      className="w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-all resize-none focus:ring-2"
+      className="w-full px-4 py-2.5 rounded-xl border text-sm outline-hidden transition-all resize-none focus:ring-2"
       style={{ background: IVORY, borderColor: SAND, fontFamily: 'Cairo, sans-serif',
         '--tw-ring-color': GOLD + '40' }}
     />
@@ -97,7 +97,7 @@ function Select({ value, onChange, children, className = '' }) {
   return (
     <select
       value={value} onChange={onChange}
-      className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-none appearance-none cursor-pointer ${className}`}
+      className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-hidden appearance-none cursor-pointer ${className}`}
       style={{ background: IVORY, borderColor: SAND, fontFamily: 'Cairo, sans-serif' }}
     >
       {children}
@@ -117,7 +117,7 @@ function Card({ children, className = '' }) {
 function IconBtn({ onClick, icon, danger }) {
   return (
     <button type="button" onClick={onClick}
-      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80 flex-shrink-0"
+      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80 shrink-0"
       style={{ background: danger ? '#fee2e2' : BEIGE, color: danger ? '#ef4444' : DARK }}>
       {icon}
     </button>
@@ -687,7 +687,7 @@ function Step8({ form, update, lang }) {
           {checks.map(c => (
             <label key={c.key} className="flex items-start gap-3 cursor-pointer">
               <input type="checkbox" checked={!!form[c.key]} onChange={e => update(c.key, e.target.checked)}
-                className="mt-0.5 flex-shrink-0" style={{ accentColor: GOLD }} />
+                className="mt-0.5 shrink-0" style={{ accentColor: GOLD }} />
               <span className="text-sm" style={{ color: DARK }}>
                 {lang === 'ar' ? c.labelAr : c.labelEn}
                 {c.required && <span style={{ color: '#ef4444' }}> *</span>}
@@ -786,7 +786,7 @@ function Stepper({ current, lang }) {
         const done    = s.id < current;
         const active  = s.id === current;
         return (
-          <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
+          <div key={s.id} className="flex items-center gap-1 shrink-0">
             <div className="flex flex-col items-center gap-1">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                 style={{
@@ -801,7 +801,7 @@ function Stepper({ current, lang }) {
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className="w-6 h-0.5 mb-4 flex-shrink-0" style={{ background: done ? GOLD : SAND }} />
+              <div className="w-6 h-0.5 mb-4 shrink-0" style={{ background: done ? GOLD : SAND }} />
             )}
           </div>
         );

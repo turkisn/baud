@@ -17,12 +17,12 @@ export default function Navbar() {
   const location = useLocation();
 
   return (
-    <nav className="sticky top-0 z-50 bg-warm-white/95 backdrop-blur-md border-b border-sand shadow-sm">
+    <nav className="sticky top-0 z-50 bg-warm-white/95 backdrop-blur-md border-b border-sand shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-dark-brown rounded-lg flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 bg-dark-brown rounded-lg flex items-center justify-center shadow-xs">
               <span className="text-white font-bold text-lg leading-none" style={{ fontFamily: 'Tajawal, sans-serif' }}>ب</span>
             </div>
             <div>

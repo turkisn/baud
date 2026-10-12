@@ -4,7 +4,7 @@ import {
   ImageOff, Layers3, LockKeyhole, PackageCheck, Share2, ShieldCheck, XCircle,
   ScanSearch,
 } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import ProductCard from '../components/mvp/ProductCard';
 import Product3DPreview from '../components/mvp/Product3DPreview';
 import WorkspaceActions from '../components/mvp/WorkspaceActions';
@@ -45,6 +45,10 @@ export default function BlockDetail() {
   const { user } = useAuth();
   const { lang, t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = /^\/blocks(?:\?|$)/.test(location.state?.returnTo || '') ? location.state.returnTo : '/blocks';
+  const [retry, setRetry] = useState(0);
+  const [failedImage, setFailedImage] = useState('');
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +77,7 @@ export default function BlockDetail() {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [slug]);
+  }, [slug, retry]);
 
   useEffect(() => {
     let active = true;
@@ -87,6 +91,7 @@ export default function BlockDetail() {
   }, [product?.category_id, product?.id]);
 
   async function download(file, eventName) {
+    if (product?.license_download !== true || product?.rights_confirmed !== true) return;
     if (!user) { navigate('/login', { state: { from: { pathname: `/blocks/${slug}` } } }); return; }
     if (downloadLock.current) return;
     downloadLock.current = true;
@@ -123,7 +128,7 @@ export default function BlockDetail() {
   }
 
   if (loading) return <div className="min-h-screen bg-ivory pt-[76px]"><div className="py-8"><LoadingState/></div></div>;
-  if (error) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState/></div>;
+  if (error) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState onRetry={() => setRetry(v => v + 1)}/></div>;
   if (!product) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState message={t('Block not found.', 'البلوك غير موجود.')}/></div>;
 
   const name = lang === 'ar' ? pick(product, 'product_name_ar', 'product_name_en') : pick(product, 'product_name_en', 'product_name_ar');
@@ -139,7 +144,7 @@ export default function BlockDetail() {
   const materials = product.product_materials || [];
   const formats = [...new Set(blocks.map((file) => file.file_format).filter(Boolean))];
   const software = [...new Set(blocks.map((file) => file.software_name).filter(Boolean))];
-  const displayImage = activeImage === 0 ? productImage(product) : images[activeImage]?.signed_url || productImage(product);
+  const displayImage = images[activeImage]?.signed_url || productImage(product);
   const productUrl = safeExternalUrl(product.supplier_product_url);
   const detailErrors = product.detail_errors || {};
   const price = product.price !== null && product.price !== undefined ? formatCurrency(product.price, product.currency, lang === 'ar' ? 'ar-SA' : 'en-SA') : null;
@@ -151,16 +156,16 @@ export default function BlockDetail() {
 
   return <div className="min-h-screen bg-ivory pb-20 pt-[76px]">
     <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-8">
-      <Link to="/blocks" className="inline-flex items-center gap-2 text-sm font-semibold text-medium-brown hover:text-gold"><ArrowLeft className={lang === 'ar' ? 'rotate-180' : ''} size={16}/>{t('Back to blocks', 'العودة إلى البلوكات')}</Link>
+      <Link to={returnTo} className="inline-flex items-center gap-2 text-sm font-semibold text-medium-brown hover:text-gold"><ArrowLeft className={lang === 'ar' ? 'rotate-180' : ''} size={16}/>{t('Back to blocks', 'العودة إلى البلوكات')}</Link>
       <div className="flex items-center gap-3"><span role="status" className="text-xs text-green-700">{shareNotice}</span><button type="button" onClick={sharePage} className="digital-panel inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-medium-brown transition hover:border-gold"><Share2 size={15}/>{t('Share', 'مشاركة')}</button></div>
     </div>
 
     <div className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1.1fr_.9fr]">
-      <section><div className="digital-panel group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl">{displayImage ? <img src={displayImage} alt={name} className="h-full w-full object-contain transition duration-700 group-hover:scale-110"/> : <div className="text-center text-light-brown"><ImageOff className="mx-auto mb-3" size={38}/>{t('Product image unavailable', 'صورة المنتج غير متاحة')}</div>}<span className="pointer-events-none absolute bottom-4 start-4 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-black/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-light-gold"><ScanSearch size={14}/>{t('Product visual inspection', 'معاينة المنتج')}</span>{files.length > 0 && <span className="absolute end-4 top-4 rounded-lg border border-gold/30 bg-black/80 px-3 py-1.5 text-xs text-light-gold">{files.length} {t('design files', 'ملفات تصميم')}</span>}</div>{detailErrors.images && <div className="mt-3"><SectionError>{t('Some product images could not be loaded.', 'تعذّر تحميل بعض صور المنتج.')}</SectionError></div>}{images.length > 1 && <div className="mt-3 flex gap-3 overflow-auto">{images.map((image, index) => <button type="button" key={image.id} onClick={() => setActiveImage(index)} className={`h-20 w-24 flex-none overflow-hidden rounded-xl border-2 bg-white ${activeImage === index ? 'border-gold' : 'border-transparent'}`} aria-label={t(`View image ${index + 1}`, `عرض الصورة ${index + 1}`)}><img src={image.signed_url} alt={lang === 'ar' ? image.alt_text_ar : image.alt_text_en} className="h-full w-full object-cover"/></button>)}</div>}</section>
+      <section><div className="digital-panel group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl">{displayImage && failedImage !== displayImage ? <img onError={() => setFailedImage(displayImage)} src={displayImage} alt={name} className="h-full w-full object-contain transition duration-700 group-hover:scale-110"/> : <div className="text-center text-light-brown"><ImageOff className="mx-auto mb-3" size={38}/>{t('Product image unavailable', 'صورة المنتج غير متاحة')}<button type="button" className="mt-3 block underline" onClick={() => { setFailedImage(''); setRetry(v => v + 1); }}>{t('Retry images', 'إعادة تحميل الصور')}</button></div>}<span className="pointer-events-none absolute bottom-4 start-4 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-black/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-light-gold"><ScanSearch size={14}/>{t('Product visual inspection', 'معاينة المنتج')}</span>{files.length > 0 && <span className="absolute end-4 top-4 rounded-lg border border-gold/30 bg-black/80 px-3 py-1.5 text-xs text-light-gold">{files.length} {t('design files', 'ملفات تصميم')}</span>}</div>{detailErrors.images && <div className="mt-3"><SectionError>{t('Some product images could not be loaded.', 'تعذّر تحميل بعض صور المنتج.')}</SectionError></div>}{images.length > 1 && <div className="mt-3 flex gap-3 overflow-auto">{images.map((image, index) => <button type="button" key={image.id} onClick={() => setActiveImage(index)} className={`h-20 w-24 flex-none overflow-hidden rounded-xl border-2 bg-white ${activeImage === index ? 'border-gold' : 'border-transparent'}`} aria-label={t(`View image ${index + 1}`, `عرض الصورة ${index + 1}`)}><img src={image.signed_url} alt={lang === 'ar' ? image.alt_text_ar : image.alt_text_en} className="h-full w-full object-cover"/></button>)}</div>}</section>
 
       <section>
         <div className="mb-4 flex flex-wrap gap-2">{product.buod_reference && <span className="badge-gold">{product.buod_reference}</span>}{category && <span className="badge-brown">{category}{subcategory ? ` / ${subcategory}` : ''}</span>}{verificationLabel && <span className="badge-green"><BadgeCheck size={14}/>{verificationLabel}</span>}{product.rights_confirmed && <span className="badge-green"><ShieldCheck size={14}/>{t('Rights confirmed', 'الحقوق مؤكدة')}</span>}</div>
-        <h1 className="text-4xl font-black leading-tight text-dark-brown">{name}</h1>{otherName && <p className="mt-2 text-lg text-light-brown" dir={lang === 'ar' ? 'ltr' : 'rtl'}>{otherName}</p>}
+        {product.is_demo && <p role="note" className="mb-3 text-amber-300">{t('Demonstration record: fictional specifications and prices; no product or rights verification.', 'سجل تجريبي: المواصفات والأسعار افتراضية؛ لم يتم التحقق من المنتج أو الحقوق.')}</p>}<h1 className="text-4xl font-black leading-tight text-dark-brown">{name}</h1>{otherName && <p className="mt-2 text-lg text-light-brown" dir={lang === 'ar' ? 'ltr' : 'rtl'}>{otherName}</p>}
         <p className="mt-6 whitespace-pre-line leading-8 text-medium-brown">{description || t('Description unavailable.', 'الوصف غير متاح.')}</p>
         <div className="mt-6 flex flex-wrap gap-3"><WorkspaceActions product={product}/><Product3DPreview product={product} variant="detail"/></div>
         {formats.length > 0 && <div className="mt-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wider text-light-brown">{t('Available formats', 'الصيغ المتاحة')}</p><div className="flex flex-wrap gap-2">{formats.map((format) => <span key={format} className="rounded-lg border border-gold/25 bg-gold/10 px-3 py-1.5 font-mono text-xs font-bold text-dark-brown">{format}</span>)}</div></div>}
@@ -170,7 +175,7 @@ export default function BlockDetail() {
 
     <div className="mx-auto mt-14 grid max-w-7xl gap-8 px-6 lg:grid-cols-2">
       <section className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown"><Box className="text-gold"/>{t('Specifications', 'المواصفات')}</h2>{detailErrors.specifications ? <SectionError>{t('Specifications could not be loaded.', 'تعذّر تحميل المواصفات.')}</SectionError> : product.product_specifications.length ? <dl>{product.product_specifications.map((spec) => <DataValue key={spec.id} label={lang === 'ar' ? spec.specification_name_ar || spec.specification_name_en : spec.specification_name_en || spec.specification_name_ar} value={[spec.value, spec.unit].filter(Boolean).join(' ')}/>)}</dl> : <p className="text-sm text-light-brown">{t('Specifications unavailable.', 'المواصفات غير متاحة.')}</p>}</section>
-      <section className="space-y-6">{downloadError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{downloadError}</div>}{detailErrors.files ? <SectionError>{t('Files could not be loaded. Please try again later.', 'تعذّر تحميل الملفات. يرجى المحاولة لاحقاً.')}</SectionError> : <><FileSection title={t('BIM & 3D files', 'ملفات BIM وثلاثية الأبعاد')} icon={<Layers3 className="text-gold"/>} files={blocks} user={user} pendingDownload={pendingDownload} onDownload={(file) => download(file, 'block_download')} t={t}/><FileSection title={t('Datasheet PDFs', 'ملفات PDF التعريفية')} icon={<FileText className="text-gold"/>} files={datasheets} user={user} pendingDownload={pendingDownload} onDownload={(file) => download(file, 'datasheet_download')} t={t}/></>}</section>
+      <section className="space-y-6">{downloadError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{downloadError}</div>}{detailErrors.files ? <SectionError>{t('Files could not be loaded.', 'تعذّر تحميل الملفات.')} <button type="button" className="underline" onClick={() => setRetry(value => value + 1)}>{t('Retry files', 'إعادة تحميل الملفات')}</button></SectionError> : <><FileSection title={t('BIM & 3D files', 'ملفات BIM وثلاثية الأبعاد')} icon={<Layers3 className="text-gold"/>} files={blocks} downloadAllowed={product.license_download === true && product.rights_confirmed === true} user={user} pendingDownload={pendingDownload} onDownload={(file) => download(file, 'block_download')} t={t}/><FileSection title={t('Datasheet PDFs', 'ملفات PDF التعريفية')} icon={<FileText className="text-gold"/>} files={datasheets} downloadAllowed={product.license_download === true && product.rights_confirmed === true} user={user} pendingDownload={pendingDownload} onDownload={(file) => download(file, 'datasheet_download')} t={t}/></>}</section>
     </div>
 
     <div className="mx-auto mt-8 grid max-w-7xl gap-8 px-6 lg:grid-cols-2">
@@ -182,6 +187,6 @@ export default function BlockDetail() {
   </div>;
 }
 
-function FileSection({ title, icon, files, user, pendingDownload, onDownload, t }) {
-  return <div className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown">{icon}{title}</h2>{files.length ? <div className="space-y-3">{files.map((file) => <div key={file.id} className="flex items-center justify-between gap-4 rounded-xl bg-ivory p-4"><div className="min-w-0"><p className="truncate text-sm font-semibold text-dark-brown">{file.original_file_name || file.file_format || t('File', 'ملف')}</p><p className="mt-1 text-xs text-light-brown">{[file.software_name, file.software_version, file.file_format, formatBytes(file.file_size)].filter(Boolean).join(' · ') || t('File details unavailable', 'تفاصيل الملف غير متاحة')}</p></div><button type="button" disabled={pendingDownload !== null} aria-busy={pendingDownload === file.id} onClick={() => onDownload(file)} className="btn-primary shrink-0 px-4 py-2 text-xs">{user ? <Download size={14}/> : <LockKeyhole size={14}/>} {pendingDownload === file.id ? t('Preparing…', 'جارٍ التجهيز…') : user ? t('Download', 'تحميل') : t('Sign in', 'تسجيل الدخول')}</button></div>)}</div> : <p className="text-sm text-light-brown">{t('No files are currently available.', 'لا توجد ملفات متاحة حالياً.')}</p>}</div>;
+function FileSection({ title, icon, files, downloadAllowed, user, pendingDownload, onDownload, t }) {
+  return <div className="digital-panel rounded-3xl p-7"><h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-dark-brown">{icon}{title}</h2>{files.length ? <div className="space-y-3">{files.map((file) => <div key={file.id} className="flex items-center justify-between gap-4 rounded-xl bg-ivory p-4"><div className="min-w-0"><p className="truncate text-sm font-semibold text-dark-brown">{file.original_file_name || file.file_format || t('File', 'ملف')}</p><p className="mt-1 text-xs text-light-brown">{[file.software_name, file.software_version, file.file_format, formatBytes(file.file_size)].filter(Boolean).join(' · ') || t('File details unavailable', 'تفاصيل الملف غير متاحة')}</p></div><button type="button" disabled={!downloadAllowed || pendingDownload !== null} aria-busy={pendingDownload === file.id} onClick={() => onDownload(file)} className="btn-primary shrink-0 px-4 py-2 text-xs">{user ? <Download size={14}/> : <LockKeyhole size={14}/>} {!downloadAllowed ? t('Download not permitted', 'التحميل غير مسموح') : pendingDownload === file.id ? t('Preparing…', 'جارٍ التجهيز…') : user ? t('Download', 'تحميل') : t('Sign in', 'تسجيل الدخول')}</button></div>)}</div> : <p className="text-sm text-light-brown">{t('No files are currently available.', 'لا توجد ملفات متاحة حالياً.')}</p>}</div>;
 }

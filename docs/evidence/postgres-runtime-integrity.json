@@ -1,0 +1,15 @@
+{
+  "version": "Postgres.app 2.9.6 / PostgreSQL 18.6",
+  "source": "https://github.com/PostgresApp/PostgresApp/releases/download/v2.9.6/Postgres-2.9.6-18.dmg",
+  "officialReleaseDigest": "sha256:9fc7d0dc08cf46dfd94bb32cbaaad81b41b37847a42d6dcb2f9fbd292813defb",
+  "measuredSHA256": "9fc7d0dc08cf46dfd94bb32cbaaad81b41b37847a42d6dcb2f9fbd292813defb",
+  "diskImageChecksum": "hdiutil verify: VALID",
+  "executionSource": "Original app on read-only DMG mounted inside task workspace",
+  "signature": "codesign --verify --deep --strict: valid on disk; satisfies Designated Requirement",
+  "postgresBinarySignature": "codesign --verify --strict: valid on disk; satisfies Designated Requirement",
+  "gatekeeper": "spctl --assess --type execute: accepted; source=Notarized Developer ID",
+  "copyNote": "Copied bundle acquired FinderInfo metadata and failed strict verification; it was not executed. Used verified read-only original. No security attributes removed or altered.",
+  "systemChanges": "No global installation, PATH change, startup service or security-policy change",
+  "database": "New disposable cluster; loopback-only; TCP auth rejected; owner-only Unix sockets; stopped and removed by harness",
+  "cleanup": "Native PostgreSQL stopped and cluster removed; read-only image ejected; unused metadata-affected copy removed; official DMG retained inside task workspace."
+}

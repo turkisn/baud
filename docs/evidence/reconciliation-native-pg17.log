@@ -1,0 +1,95 @@
+يتم الآن إجراء مجموع اختباري على Protective Master Boot Record (MBR : 0)‎…
+Protective Master Boot Record (MBR :: ‫تم التحقق من   CRC32 $29ADD3CD‬
+يتم الآن إجراء مجموع اختباري على GPT Header (Primary GPT Header : 1)‎…
+ GPT Header (Primary GPT Header : 1): ‫تم التحقق من   CRC32 $E6D95E63‬
+يتم الآن إجراء مجموع اختباري على GPT Partition Data (Primary GPT Table : 2)‎…
+GPT Partition Data (Primary GPT Tabl: ‫تم التحقق من   CRC32 $FEB893CF‬
+يتم الآن إجراء مجموع اختباري على  (Apple_Free : 3)‎…
+                    (Apple_Free : 3): ‫تم التحقق من   CRC32 $00000000‬
+يتم الآن إجراء مجموع اختباري على disk image (Apple_HFS : 4)‎…
+          disk image (Apple_HFS : 4): ‫تم التحقق من   CRC32 $D77C092F‬
+يتم الآن إجراء مجموع اختباري على  (Apple_Free : 5)‎…
+                    (Apple_Free : 5): ‫تم التحقق من   CRC32 $00000000‬
+يتم الآن إجراء مجموع اختباري على GPT Partition Data (Backup GPT Table : 6)‎…
+GPT Partition Data (Backup GPT Table: ‫تم التحقق من   CRC32 $FEB893CF‬
+يتم الآن إجراء مجموع اختباري على GPT Header (Backup GPT Header : 7)‎…
+  GPT Header (Backup GPT Header : 7): ‫تم التحقق من   CRC32 $281C90C5‬
+‫تم التحقق من   CRC32 $20FAE1BB‬
+hdiutil: verify: checksum of "/Users/macbook/Documents/Codex/2026-10-12/task/postgres-runtime/Postgres-2.8.5-17.dmg" is VALID
+   Device Identifier:         disk4s1
+   Device Node:               /dev/disk4s1
+   Whole:                     No
+   Part of Whole:             disk4
+
+   Volume Name:               Postgres-2.8.5-17
+   Mounted:                   Yes
+   Mount Point:               /Volumes/Postgres-2.8.5-17
+
+   Partition Type:            Apple_HFS
+   File System Personality:   HFS+
+   Type (Bundle):             hfs
+   Name (User Visible):       Mac OS Extended
+   Owners:                    Disabled
+
+   OS Can Be Installed:       No
+   Media Type:                عام
+   Protocol:                  Disk Image
+   SMART Status:              Not Supported
+   Volume UUID:               F040855B-D3A3-31D4-B427-811C674A91F9
+   Disk / Partition UUID:     31381954-F394-4EDD-A895-C0D8664913DB
+   Partition Offset:          20480 Bytes (40 512-Byte-Device-Blocks)
+
+   Disk Size:                 456.1 MB (456130560 Bytes) (exactly 890880 512-Byte-Units)
+   Device Block Size:         512 Bytes
+
+   Volume Total Space:        456.1 MB (456130560 Bytes) (exactly 890880 512-Byte-Units)
+   Volume Used Space:         413.9 MB (413913088 Bytes) (exactly 808424 512-Byte-Units) (90.7%)
+   Volume Free Space:         42.2 MB (42217472 Bytes) (exactly 82456 512-Byte-Units) (9.3%)
+   Allocation Block Size:     4096 Bytes
+
+   Media OS Use Only:         No
+   Media Read-Only:           Yes
+   Volume Read-Only:          Yes (read-only mount flag set)
+
+   Device Location:           External
+   Removable Media:           Removable
+   Media Removal:             Software-Activated
+
+   Solid State:               Info not available
+
+/Volumes/Postgres-2.8.5-17/Postgres.app: accepted
+source=Notarized Developer ID
+postgres (PostgreSQL) 17.6 (Postgres.app)
+postgres (PostgreSQL) 17.6 (Postgres.app)
+PASS transport: loopback-only listener, TCP authentication rejected, owner-only Unix socket directory
+PASS clean: 58 migrations on native PostgreSQL
+PASS native SQL suite admin_security.sql
+PASS native SQL suite backend_contract.sql
+PASS native SQL suite workspace_security.sql
+PASS native SQL suite launch_security.sql
+PASS concurrent cross-demotion read-committed-a: loser Permission denied, one super-admin, one audit
+PASS concurrent cross-demotion read-committed-b: loser Permission denied, one super-admin, one audit
+PASS concurrent cross-demotion repeatable-read-a: loser 40001 serialization failure, one super-admin, one audit
+PASS concurrent cross-demotion repeatable-read-b: loser 40001 serialization failure, one super-admin, one audit
+PASS concurrent role updates: serialized old/new audit chain and final role
+PASS native clean: 58 migrations, 4 SQL suites, 5 real two-session concurrency scenarios
+LIMIT: platform Auth/Storage tables are test scaffolding; HTTP services and deployed-version parity remain external gates.
+PASS cleanup: PostgreSQL stopped; no persistent service
+PASS cleanup: disposable cluster removed
+postgres (PostgreSQL) 17.6 (Postgres.app)
+PASS transport: loopback-only listener, TCP authentication rejected, owner-only Unix socket directory
+PASS upgrade: exact 57-file staging manifest, existing profile/product preserved, public wrapper identities retained
+PASS upgrade: 58 migrations on native PostgreSQL
+PASS native SQL suite admin_security.sql
+PASS native SQL suite backend_contract.sql
+PASS native SQL suite workspace_security.sql
+PASS native SQL suite launch_security.sql
+PASS concurrent cross-demotion read-committed-a: loser Permission denied, one super-admin, one audit
+PASS concurrent cross-demotion read-committed-b: loser Permission denied, one super-admin, one audit
+PASS concurrent cross-demotion repeatable-read-a: loser 40001 serialization failure, one super-admin, one audit
+PASS concurrent cross-demotion repeatable-read-b: loser 40001 serialization failure, one super-admin, one audit
+PASS concurrent role updates: serialized old/new audit chain and final role
+PASS native upgrade: 58 migrations, 4 SQL suites, 5 real two-session concurrency scenarios
+LIMIT: platform Auth/Storage tables are test scaffolding; HTTP services and deployed-version parity remain external gates.
+PASS cleanup: PostgreSQL stopped; no persistent service
+PASS cleanup: disposable cluster removed

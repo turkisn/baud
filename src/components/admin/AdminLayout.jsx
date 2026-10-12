@@ -59,14 +59,14 @@ export default function AdminLayout({ children, title, subtitle }) {
   return (
     <div className="min-h-screen bg-ivory flex">
       {/* ── Sidebar ──────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-64 bg-dark-brown min-h-screen flex-col sticky top-0 h-screen overflow-y-auto flex-shrink-0">
+      <aside className="hidden lg:flex w-64 bg-dark-brown min-h-screen flex-col sticky top-0 h-screen overflow-y-auto shrink-0">
         {/* Identity */}
         <div className="p-6 border-b border-medium-brown/40">
           <Link to="/" className="block mb-5 text-warm-white font-bold text-lg hover:text-gold transition-colors">
             BUOD
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-dark-brown flex-shrink-0"
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-dark-brown shrink-0"
               style={{ background: '#B68D57' }}>
               {initial}
             </div>
@@ -157,7 +157,7 @@ export default function AdminLayout({ children, title, subtitle }) {
 
         {/* Content */}
         <div className="flex-1 p-4 sm:p-6">
-          {logoutError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{t('Sign out failed. You are still signed in; check your connection and try again.', 'تعذّر تسجيل الخروج. ما زلت مسجلاً؛ تحقق من الاتصال وحاول مجدداً.')}</p>}
+          {logoutError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{t('Sign out could not be completed. Check your connection and try again.', 'تعذّر إكمال تسجيل الخروج. تحقق من الاتصال وحاول مجدداً.')}</p>}
           {children}
         </div>
       </div>
@@ -199,7 +199,7 @@ export function AdminErrorState({ message, onRetry }) {
     <div role="alert" className="bg-red-50 border border-red-200 rounded-2xl p-5 text-sm text-red-700 flex items-start gap-3">
       <span className="flex-1">{message}</span>
       {onRetry && (
-        <button type="button" onClick={onRetry} className="font-semibold underline underline-offset-2 flex-shrink-0">
+        <button type="button" onClick={onRetry} className="font-semibold underline underline-offset-2 shrink-0">
           {t('Retry', 'إعادة المحاولة')}
         </button>
       )}

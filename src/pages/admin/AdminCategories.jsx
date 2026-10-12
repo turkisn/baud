@@ -20,7 +20,7 @@ function FieldRow({ label, value, onChange, required, mono }) {
         value={value}
         onChange={e => onChange(e.target.value)}
         required={required}
-        className={`px-3 py-2 text-sm border border-sand rounded-lg outline-none focus:border-dark-brown bg-white transition-colors ${mono ? 'font-mono uppercase' : ''}`}
+        className={`px-3 py-2 text-sm border border-sand rounded-lg outline-hidden focus:border-dark-brown bg-white transition-colors ${mono ? 'font-mono uppercase' : ''}`}
       />
     </div>
   );
@@ -170,7 +170,7 @@ function CategoryRow({ cat, onUpdated, t }) {
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
         <button type="button" onClick={() => setExpanded(e => !e)} aria-expanded={expanded} aria-controls={`subcategories-${cat.id}`} aria-label={expanded ? t('Collapse category', 'طي الفئة') : t('Expand category', 'توسيع الفئة')}
-          className="text-light-brown hover:text-dark-brown transition-colors flex-shrink-0">
+          className="text-light-brown hover:text-dark-brown transition-colors shrink-0">
           {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </button>
 
@@ -180,7 +180,7 @@ function CategoryRow({ cat, onUpdated, t }) {
           <div className="flex items-center gap-2">
             <span className="font-bold text-dark-brown">{cat.name_en}</span>
             <span className="text-light-brown text-sm">{cat.name_ar}</span>
-            <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-sand text-medium-brown">{cat.code}</span>
+            <span className="font-mono text-[10px] px-2 py-0.5 rounded-sm bg-sand text-medium-brown">{cat.code}</span>
             {!cat.is_active && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">{t('Disabled', 'معطلة')}</span>
             )}
@@ -190,7 +190,7 @@ function CategoryRow({ cat, onUpdated, t }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button type="button" onClick={() => { setEditing(e => !e); setExpanded(true); }} title={t('Edit', 'تعديل')} aria-label={t(`Edit ${cat.name_en}`, `تعديل ${cat.name_ar}`)}
             className="p-1.5 rounded-lg text-medium-brown hover:bg-sand transition-all">
             <Pencil size={14} />
@@ -237,13 +237,13 @@ function CategoryRow({ cat, onUpdated, t }) {
                     <div className="flex items-center gap-2 text-sm">
                       <span className="font-medium text-dark-brown">{sub.name_en}</span>
                       <span className="text-light-brown">{sub.name_ar}</span>
-                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-sand text-medium-brown">{sub.code}</span>
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-sm bg-sand text-medium-brown">{sub.code}</span>
                       {!sub.is_active && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600">{t('Disabled', 'معطلة')}</span>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex gap-1 shrink-0">
                     <button type="button" onClick={() => setEditSub(sub.id)} aria-label={t(`Edit ${sub.name_en}`, `تعديل ${sub.name_ar}`)}
                       className="p-1.5 rounded-lg text-medium-brown hover:bg-sand transition-all"><Pencil size={12} /></button>
                     <button type="button" onClick={() => handleToggleSubActive(sub)} disabled={saving} aria-label={sub.is_active ? t(`Disable ${sub.name_en}`, `تعطيل ${sub.name_ar}`) : t(`Enable ${sub.name_en}`, `تفعيل ${sub.name_ar}`)}
@@ -345,7 +345,7 @@ export default function AdminCategories() {
 
       {!SUPABASE_CONFIGURED && (
         <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm mb-4">
-          <AlertCircle size={18} className="flex-shrink-0" />
+          <AlertCircle size={18} className="shrink-0" />
           {t('Supabase not configured.', 'Supabase غير متصل.')}
         </div>
       )}

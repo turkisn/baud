@@ -1,0 +1,1276 @@
+[
+  {
+    "view": "ar-desktop-_blocks_catalog-basalt-reception-counter",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 21,
+    "element_count_after": 21,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_forgot-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": [
+      {
+        "text": "\u0625\u0631\u0633\u0627\u0644 \u0631\u0627\u0628\u0637 \u0627\u0644\u0627\u0633\u062a\u0639\u0627\u062f\u0629",
+        "diff": {
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_forgot-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": [
+      {
+        "text": "\u0625\u0631\u0633\u0627\u0644 \u0631\u0627\u0628\u0637 \u0627\u0644\u0627\u0633\u062a\u0639\u0627\u062f\u0629",
+        "diff": {
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-desktop-_reset-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 3,
+    "element_count_after": 3,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_login",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 9,
+    "element_count_after": 9,
+    "geometry_style_changes": [
+      {
+        "text": " \u0639\u0631\u0628\u064a",
+        "diff": {
+          "y": [
+            254.27728271484375,
+            254.29690551757812
+          ]
+        }
+      },
+      {
+        "text": "Sign In",
+        "diff": {
+          "y": [
+            311.5464172363281,
+            311.6213073730469
+          ],
+          "height": [
+            40.000030517578125,
+            39.999969482421875
+          ]
+        }
+      },
+      {
+        "text": "Create Account",
+        "diff": {
+          "y": [
+            311.5464172363281,
+            311.6213073730469
+          ],
+          "height": [
+            40.000030517578125,
+            39.999969482421875
+          ]
+        }
+      },
+      {
+        "text": "Welcome back",
+        "diff": {
+          "y": [
+            392.03875732421875,
+            392.3084716796875
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            516.0369873046875,
+            516.7852783203125
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            608.0369873046875,
+            608.7852783203125
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            625.0369873046875,
+            625.7852783203125
+          ]
+        }
+      },
+      {
+        "text": "Sign In",
+        "diff": {
+          "y": [
+            710.0369873046875,
+            710.7852783203125
+          ],
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-mobile-_admin_dashboard",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_reset-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 3,
+    "element_count_after": 3,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_admin_categories",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-desktop-_admin_dashboard",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_login",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 9,
+    "element_count_after": 9,
+    "geometry_style_changes": [
+      {
+        "text": " EN",
+        "diff": {
+          "y": [
+            254.25856018066406,
+            254.2545166015625
+          ],
+          "height": [
+            19.999984741210938,
+            20
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "diff": {
+          "y": [
+            311.4674072265625,
+            311.45452880859375
+          ]
+        }
+      },
+      {
+        "text": "\u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628",
+        "diff": {
+          "y": [
+            311.4674072265625,
+            311.45452880859375
+          ]
+        }
+      },
+      {
+        "text": "\u0623\u0647\u0644\u0627\u064b \u0628\u0639\u0648\u062f\u062a\u0643",
+        "diff": {
+          "y": [
+            391.79296875,
+            391.72857666015625
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            515.306884765625,
+            515.127197265625
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            607.306884765625,
+            607.127197265625
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            624.306884765625,
+            624.127197265625
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "diff": {
+          "y": [
+            709.306884765625,
+            709.127197265625
+          ],
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_privacy",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_blocks_catalog-basalt-reception-counter-3d",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 34,
+    "element_count_after": 34,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_blocks",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 90,
+    "element_count_after": 90,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_login",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": [
+      {
+        "text": " \u0639\u0631\u0628\u064a",
+        "diff": {
+          "y": [
+            34.25450897216797,
+            34.26677322387695
+          ]
+        }
+      },
+      {
+        "text": "Sign In",
+        "diff": {
+          "y": [
+            93.45452117919922,
+            93.50657653808594
+          ],
+          "height": [
+            40.00000762939453,
+            40
+          ]
+        }
+      },
+      {
+        "text": "Create Account",
+        "diff": {
+          "y": [
+            93.45452117919922,
+            93.50657653808594
+          ],
+          "height": [
+            40.00000762939453,
+            40
+          ]
+        }
+      },
+      {
+        "text": "Welcome back",
+        "diff": {
+          "y": [
+            173.72857666015625,
+            173.9068145751953
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            297.127197265625,
+            297.669677734375
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            389.127197265625,
+            389.669677734375
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            406.127197265625,
+            406.669677734375
+          ]
+        }
+      },
+      {
+        "text": "Sign In",
+        "diff": {
+          "y": [
+            491.127197265625,
+            491.669677734375
+          ],
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-mobile-_admin_products-editor",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 35,
+    "element_count_after": 35,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_compare",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_blocks",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 91,
+    "element_count_after": 91,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_blocks",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 91,
+    "element_count_after": 91,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_compare",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_terms",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_admin_settings",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_projects",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_blocks",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 90,
+    "element_count_after": 90,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_blocks_catalog-basalt-reception-counter-3d",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 34,
+    "element_count_after": 34,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_admin_settings",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-desktop-_admin_users",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-mobile-_blocks_catalog-basalt-reception-counter",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 22,
+    "element_count_after": 22,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_privacy",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 41,
+    "element_count_after": 41,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_blocks_catalog-basalt-reception-counter-3d",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 33,
+    "element_count_after": 33,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_admin_categories",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_admin_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-desktop-_admin_products-editor",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 35,
+    "element_count_after": 35,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-mobile-_admin_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_admin_products",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 10,
+    "element_count_after": 10,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_admin_products",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 10,
+    "element_count_after": 10,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-mobile-_",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 42,
+    "element_count_after": 42,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_blocks_catalog-basalt-reception-counter",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 21,
+    "element_count_after": 21,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_admin_products-editor",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 35,
+    "element_count_after": 35,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 41,
+    "element_count_after": 41,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_admin_users",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-mobile-_admin_categories",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_admin_settings",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-mobile-_admin_products",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 10,
+    "element_count_after": 10,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_projects",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_terms",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_admin_users",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_terms",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_admin_products",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 10,
+    "element_count_after": 10,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-desktop-_admin_categories",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_admin_products-editor",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 35,
+    "element_count_after": 35,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_terms",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_suppliers_synthetic-supplier",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_admin_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_privacy",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 9,
+    "element_count_after": 9,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_projects",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_admin_settings",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_compare",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 3,
+    "element_count_after": 3,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 42,
+    "element_count_after": 42,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_suppliers_synthetic-supplier",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_admin_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": [
+      {
+        "text": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "Sign Out",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_admin_dashboard",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": [
+      {
+        "text": "English",
+        "diff": {
+          "margin": [
+            "0px",
+            "0px 0px 2px"
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c",
+        "diff": {
+          "margin": [
+            "2px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "en-desktop-_blocks_catalog-basalt-reception-counter-3d",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 33,
+    "element_count_after": 33,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_admin_users",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 6,
+    "element_count_after": 6,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_compare",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 3,
+    "element_count_after": 3,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_admin_dashboard",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_forgot-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": [
+      {
+        "text": "Send reset link",
+        "diff": {
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-desktop-_suppliers_synthetic-supplier",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-desktop-_reset-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 3,
+    "element_count_after": 3,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_forgot-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": [
+      {
+        "text": "Send reset link",
+        "diff": {
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "view": "ar-mobile-_privacy",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 9,
+    "element_count_after": 9,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_projects",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 7,
+    "element_count_after": 7,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_reset-password",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 3,
+    "element_count_after": 3,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_suppliers_synthetic-supplier",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 5,
+    "element_count_after": 5,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-desktop-_suppliers",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 4,
+    "element_count_after": 4,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "en-mobile-_blocks_catalog-basalt-reception-counter",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 22,
+    "element_count_after": 22,
+    "geometry_style_changes": []
+  },
+  {
+    "view": "ar-mobile-_login",
+    "overflow_before": false,
+    "overflow_after": false,
+    "element_count_before": 8,
+    "element_count_after": 8,
+    "geometry_style_changes": [
+      {
+        "text": " EN",
+        "diff": {
+          "y": [
+            34.2585563659668,
+            34.26264190673828
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "diff": {
+          "y": [
+            93.46742248535156,
+            93.48690795898438
+          ]
+        }
+      },
+      {
+        "text": "\u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628",
+        "diff": {
+          "y": [
+            93.46742248535156,
+            93.48690795898438
+          ]
+        }
+      },
+      {
+        "text": "\u0623\u0647\u0644\u0627\u064b \u0628\u0639\u0648\u062f\u062a\u0643",
+        "diff": {
+          "y": [
+            173.79296875,
+            173.84158325195312
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            297.306884765625,
+            297.48773193359375
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            389.306884765625,
+            389.48773193359375
+          ]
+        }
+      },
+      {
+        "text": "",
+        "diff": {
+          "y": [
+            406.306884765625,
+            406.48773193359375
+          ]
+        }
+      },
+      {
+        "text": "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644",
+        "diff": {
+          "y": [
+            491.306884765625,
+            491.48773193359375
+          ],
+          "margin": [
+            "16px 0px 0px",
+            "0px"
+          ]
+        }
+      }
+    ]
+  }
+]

@@ -42,6 +42,33 @@ test('reset route without a session provides a working new-link path', async ({ 
   await expect(page.getByRole('textbox', { name: 'Email Address' })).toBeVisible();
 });
 
+for (const [selection, classification] of [['1','interior_designer'],['9','supplier_representative'],['10','manufacturer_representative']]) {
+  test(`signup sends ${classification} only as profile classification`, async ({ page }) => {
+    let submitted;
+    let profileWrites=0;
+    await page.addInitScript(() => localStorage.setItem('buod_language', 'en'));
+    await page.route('https://*.supabase.co/**', route => {
+      const url=new URL(route.request().url());
+      if(url.pathname.endsWith('/profiles') && route.request().method()!=='GET') profileWrites++;
+      if(url.pathname==='/auth/v1/signup') {
+        submitted=route.request().postDataJSON();
+        return route.fulfill({json:{id:'33333333-3333-4333-8333-333333333333',email:'classification@example.invalid',identities:[]}});
+      }
+      return route.fulfill({json:[]});
+    });
+    await page.goto('/login?mode=signup');
+    await page.locator('#full-name').fill('Synthetic classification');
+    await page.locator('#email').fill('classification@example.invalid');
+    await page.locator('#password').fill('Synthetic-only-password');
+    await page.locator('#user-type').selectOption(selection);
+    await page.locator('form').getByRole('button',{name:'Create Account',exact:true}).click();
+    await expect(page.getByRole('heading',{name:'Check your email',exact:true})).toBeVisible();
+    expect(submitted.data.user_type).toBe(classification);
+    expect(submitted.data).not.toHaveProperty('role');
+    expect(profileWrites).toBe(0);
+  });
+}
+
 // Deterministic UI contract checks. These do not replace live Auth account tests.
 const cases = [
   { code: 'invalid_credentials', message: 'Invalid login credentials', status: 400, expected: 'Email or password is incorrect.' },

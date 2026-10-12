@@ -6,9 +6,11 @@ import { hasDemo3DModel } from '../../data/demo3dCatalog';
 import { getProduct3DAsset } from '../../data/product3dAssets';
 import { productImage } from '../../utils/productImage';
 
+import { DEMO_MODE } from '../../lib/demoMode';
+
 const Product3DViewer = lazy(() => import('./Product3DViewer'));
 
-const hasProduct3DPreview = (product) => Boolean(getProduct3DAsset(product)) || hasDemo3DModel(product?.slug);
+const hasProduct3DPreview = (product) => Boolean(getProduct3DAsset(product)) || (DEMO_MODE && hasDemo3DModel(product?.slug));
 
 export default function Product3DPreview({ product, variant = 'card', className = '' }) {
   const { lang, t } = useLanguage();

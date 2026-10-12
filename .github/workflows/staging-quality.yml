@@ -41,6 +41,9 @@ jobs:
       - name: Regression tests
         run: npm test
 
+      - name: Disposable PostgreSQL migration and RLS tests
+        run: npm run test:database
+
       - name: Build
         run: npm run build
 
@@ -51,7 +54,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Auth, workspace and real 3D browser checks (isolated data, no live credentials)
-        run: npm run test:browser -- auth.spec.js workspace.spec.js 3d.spec.js
+        run: npm run test:browser
         env:
           BUOD_BROWSER_FIXTURES: '1'
 

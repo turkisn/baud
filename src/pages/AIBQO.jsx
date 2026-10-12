@@ -348,7 +348,7 @@ export default function AIBQO() {
               <motion.div key={i} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={viewport} transition={{ delay: i * 0.07 }} className="bg-white border border-sand rounded-2xl overflow-hidden">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-sand/30 transition-colors">
                   <span className="font-semibold text-dark-brown text-sm">{lang === 'ar' ? item.qAr : item.q}</span>
-                  {openFaq === i ? <ChevronUp size={18} className="text-light-brown flex-shrink-0" /> : <ChevronDown size={18} className="text-light-brown flex-shrink-0" />}
+                  {openFaq === i ? <ChevronUp size={18} className="text-light-brown shrink-0" /> : <ChevronDown size={18} className="text-light-brown shrink-0" />}
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (
