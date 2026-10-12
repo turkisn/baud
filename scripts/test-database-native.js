@@ -5,6 +5,7 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -13,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 const bin = process.env.BUOD_PG_BIN;
 assert.ok(bin && path.isAbsolute(bin), 'Set BUOD_PG_BIN to the approved PostgreSQL bin directory');
 const root = fileURLToPath(new URL('../', import.meta.url));
+const scenario = process.env.BUOD_DB_SCENARIO || 'clean';
+assert.ok(['clean', 'upgrade'].includes(scenario), 'Unknown disposable database scenario');
 const temporary = await mkdtemp(path.join(tmpdir(), 'buod-native-'));
 const data = path.join(temporary, 'data');
 const socket = path.join(temporary, 'socket');
@@ -76,11 +79,38 @@ try {
   console.log('PASS transport: loopback-only listener, TCP authentication rejected, owner-only Unix socket directory');
   sql(await readFile(path.join(root, 'supabase/tests/platform_fixture.sql'), 'utf8'));
   const migrations = (await readdir(path.join(root, 'supabase/migrations'))).filter(name => name.endsWith('.sql')).sort();
-  for (const name of migrations) {
+  const manifest = JSON.parse(await readFile(path.join(root, 'supabase/migrations/manifest.json'), 'utf8'));
+  const pending = JSON.parse(await readFile(path.join(root, 'supabase/pending-migrations.json'), 'utf8'));
+  for (const entry of manifest.migrations) {
+    assert.equal(createHash('sha256').update(await readFile(path.join(root, entry.file))).digest('hex'), entry.sha256);
+  }
+  assert.equal(manifest.migrations.at(-1).version, '20261012165202');
+  assert.equal(manifest.migrations.length, 57);
+  assert.equal(pending.migrations.length, 1);
+  const pendingName = path.basename(pending.migrations[0]);
+  assert.ok(pendingName > manifest.migrations.at(-1).version);
+  const baseline = scenario === 'upgrade' ? manifest.migrations.map(entry => path.basename(entry.file)) : migrations;
+  for (const name of baseline) {
     run('psql', ['-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', path.join(root, 'supabase/migrations', name)]);
   }
-  console.log(`PASS ${migrations.length} migrations on native PostgreSQL`);
-  for (const name of ['admin_security.sql', 'workspace_security.sql', 'launch_security.sql']) {
+  if (scenario === 'upgrade') {
+    assert.equal(sql("select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('admin_log_action','admin_set_user_role','admin_save_mvp_product') and not p.prosecdef;"), '3');
+    assert.equal(sql("select has_function_privilege('authenticated','private.admin_log_action(text,text,uuid,jsonb)','EXECUTE');"), 't');
+    const wrappers = sql("select string_agg(oid::text,',' order by proname) from pg_proc where pronamespace='public'::regnamespace and proname in ('admin_set_user_role','admin_save_mvp_product');");
+    sql(`insert into auth.users(id,email,raw_user_meta_data) values
+      ('d0000000-0000-4000-8000-000000000001','upgrade-existing@example.invalid','{"user_type":"supplier_representative","role":"super_admin"}');
+      insert into public.products(id,product_name_ar,product_name_en) values
+      ('d0000000-0000-4000-8000-000000000002','اختبار ترقية','Existing upgrade draft');`);
+    const snapshotQuery = "select jsonb_build_object('profile',(select to_jsonb(p) from public.profiles p where id='d0000000-0000-4000-8000-000000000001'),'product',(select to_jsonb(p) from public.products p where id='d0000000-0000-4000-8000-000000000002'))::text;";
+    const before = sql(snapshotQuery);
+    assert.equal(sql("select role from public.profiles where id='d0000000-0000-4000-8000-000000000001';"), 'user', 'Signup metadata elevated the existing identity');
+    run('psql', ['-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', path.join(root, 'supabase/migrations', pendingName)]);
+    assert.equal(sql(snapshotQuery), before, 'Upgrade rewrote existing profile/product data');
+    assert.equal(sql("select string_agg(oid::text,',' order by proname) from pg_proc where pronamespace='public'::regnamespace and proname in ('admin_set_user_role','admin_save_mvp_product');"), wrappers, 'Upgrade replaced API wrapper identity');
+    console.log('PASS upgrade: exact 57-file staging manifest, existing profile/product preserved, public wrapper identities retained');
+  }
+  console.log(`PASS ${scenario}: ${migrations.length} migrations on native PostgreSQL`);
+  for (const name of ['admin_security.sql', 'backend_contract.sql', 'workspace_security.sql', 'launch_security.sql']) {
     const result = run('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-f', path.join(root, 'supabase/tests', name)]);
     assert.ok(result.includes('PASS:'), `Missing pass marker: ${name}`);
     console.log(`PASS native SQL suite ${name}`);
@@ -123,7 +153,7 @@ try {
   assert.equal(sql(`select role from public.profiles where id='${U}';`), 'admin');
   assert.equal(sql(`select string_agg(metadata->>'old_role'||'>'|| (metadata->>'new_role'),',' order by created_at,id) from public.admin_audit_log where action='user.role_change';`), 'user>reviewer,reviewer>admin');
   console.log('PASS concurrent role updates: serialized old/new audit chain and final role');
-  console.log('PASS native regression: 57 migrations, 3 SQL suites, 5 real two-session concurrency scenarios');
+  console.log(`PASS native ${scenario}: ${migrations.length} migrations, 4 SQL suites, 5 real two-session concurrency scenarios`);
   console.log('LIMIT: platform Auth/Storage tables are test scaffolding; HTTP services and deployed-version parity remain external gates.');
 } finally {
   for (const client of clients) if (!client.done) client.child.stdin.end();

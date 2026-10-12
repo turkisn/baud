@@ -25,7 +25,7 @@ try {
     from pg_class c join pg_namespace n on n.oid=c.relnamespace
     where n.nspname='public' and c.relkind='r' and not c.relrowsecurity
     and (has_table_privilege('anon',c.oid,'SELECT') or has_table_privilege('authenticated',c.oid,'SELECT'))`)).rows);
-  for (const name of ['admin_security.sql', 'workspace_security.sql', 'launch_security.sql']) {
+  for (const name of ['admin_security.sql', 'backend_contract.sql', 'workspace_security.sql', 'launch_security.sql']) {
     const sql = await readFile(new URL(`../supabase/tests/${name}`, import.meta.url), 'utf8');
     // psql's ON_ERROR_STOP is implicit: any rejected exec fails this process.
     const results = await db.exec(sql.replace(/^\\set ON_ERROR_STOP on\s*$/m, ''));
@@ -34,7 +34,7 @@ try {
     }
     console.log(`PASS SQL suite ${name}`);
   }
-  console.log(`PASS ${migrations.length} migrations and 3 SQL suites on ${(await db.query('select version()')).rows[0].version}`);
+  console.log(`PASS ${migrations.length} migrations and 4 SQL suites on ${(await db.query('select version()')).rows[0].version}`);
   console.log('LIMIT: single connection and synthetic platform tables; full Supabase and multi-session tests remain required.');
 } catch (error) {
   console.error(error.message);

@@ -1,11 +1,12 @@
-# Local concurrency test — executed on native PostgreSQL 18.6
+# Local concurrency test — PostgreSQL 17.6 reconciliation
 
-On 12 October 2026, `scripts/test-database-native.js` passed five real two-session scenarios after replaying all 57 migrations and the three SQL suites. See `docs/evidence/database-native.log`. It creates its own disposable cluster and does not accept a database URL. Auth/Storage platform tables are fixture scaffolding; this does not test their HTTP services or deployed-version parity.
+On 12 October 2026, `scripts/test-database-native.js` passed a clean replay and an upgrade from the exact 57-file staging manifest. Each path reaches 58 migrations and passes all four SQL suites plus five real two-session scenarios. The upgrade additionally preserves existing fixture records and public RPC identities. See `docs/evidence/reconciliation-native-pg17.log`. Each run creates its own disposable cluster and accepts no database URL. Auth/Storage tables are fixture scaffolding; their HTTP services and full Supabase distribution remain separate gates.
 
 Reproduce only with an approved native runtime:
 
 ```sh
-BUOD_PG_BIN=/absolute/path/to/approved/PostgreSQL/bin npm run test:database:native
+BUOD_PG_BIN=/absolute/path/to/approved/PostgreSQL/bin BUOD_DB_SCENARIO=clean npm run test:database:native
+BUOD_PG_BIN=/absolute/path/to/approved/PostgreSQL/bin BUOD_DB_SCENARIO=upgrade npm run test:database:native
 ```
 
 The runner asserts loopback-only listening, rejects TCP authentication, uses an owner-only Unix socket directory, and stops/removes its disposable cluster in `finally`. The manual sequence below describes the assertions automated by the runner.

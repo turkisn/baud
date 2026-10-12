@@ -3,6 +3,21 @@
 \set ON_ERROR_STOP on
 begin;
 set local statement_timeout = '15s';
+-- Exercise real global + schema defaults, not just ACL metadata. These probes
+-- are disposable and roll back along with every synthetic fixture below.
+create function public.launch_default_probe() returns int language sql as $$select 7$$;
+create function private.launch_default_probe() returns int language sql as $$select 7$$;
+do $$ declare api_role text; probe text; begin
+ foreach api_role in array array['anon','authenticated','service_role'] loop
+  foreach probe in array array['public.launch_default_probe()','private.launch_default_probe()'] loop
+   assert not has_function_privilege(api_role,probe,'EXECUTE'),'New function unexpectedly executable';
+  end loop;
+ end loop;
+end $$;
+grant execute on function public.launch_default_probe() to authenticated;
+set local role authenticated;
+do $$ begin assert public.launch_default_probe()=7,'Explicitly granted invoker RPC must remain usable'; end $$;
+reset role;
 insert into auth.users(id,email,raw_user_meta_data) values
  ('b0000000-0000-4000-8000-000000000001','launch-user@example.invalid','{"role":"super_admin","user_type":"interior_designer"}'),
  ('b0000000-0000-4000-8000-000000000002','launch-admin@example.invalid','{}'),
@@ -43,6 +58,7 @@ set local role authenticated;
 do $$ declare command text; rejected boolean; begin
  assert (select count(*) from public.profiles)=1,'Reviewer may only read own profile';
  perform pg_temp.denied($q$select public.admin_log_action('forged',null,null,'{}')$q$);
+ perform pg_temp.denied($q$select private.admin_log_action('forged',null,null,'{}')$q$);
  foreach command in array array[
   'select public.admin_save_mvp_product_bundle(null,''{}'',''[]'')',
   'select public.admin_save_mvp_supplier(null,''{}'')',
@@ -64,6 +80,7 @@ set local role authenticated;
 do $$ declare p public.products; rejected boolean:=false; before_audit bigint;
 begin
  perform pg_temp.denied($q$select public.admin_log_action('forged',null,null,'{}')$q$);
+ perform pg_temp.denied($q$select private.admin_log_action('forged',null,null,'{}')$q$);
  perform pg_temp.denied($q$delete from public.profiles where role='super_admin'$q$);
  perform pg_temp.denied($q$insert into public.profiles(id,role) values(gen_random_uuid(),'super_admin')$q$);
  p:=public.admin_save_mvp_product_bundle(null,'{"product_name_en":"Launch SQL draft","product_name_ar":"اختبار"}','[]');
@@ -100,6 +117,8 @@ set local role authenticated;
 do $$ declare rejected boolean:=false;
 begin
  perform pg_temp.denied($q$update public.profiles set role='user' where id=auth.uid()$q$);
+ perform pg_temp.denied($q$select public.admin_log_action('forged',null,null,'{}')$q$);
+ perform pg_temp.denied($q$select private.admin_log_action('forged',null,null,'{}')$q$);
  begin perform public.admin_set_user_role(auth.uid(),'user');
  exception when raise_exception then rejected:=sqlerrm='Cannot change own role'; end;
  assert rejected,'Self demotion must be denied';
@@ -112,6 +131,28 @@ begin
  perform public.admin_set_user_role('b0000000-0000-4000-8000-000000000003','reviewer');
  assert (select count(*)=1 from public.profiles where role='super_admin'),'Last super-admin retained';
  assert exists(select from public.admin_audit_log where action='user.role_change' and actor_user_id=auth.uid());
+end $$;
+reset role;
+-- A downgraded account cannot reuse stale authorization claims through either
+-- the public API or a directly callable private implementation.
+select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000003","role":"authenticated","app_metadata":{"role":"admin"}}',true);
+set local role authenticated;
+do $$ declare command text; rejected boolean; begin
+ assert public.get_my_role()='reviewer','Current database role must override stale claims';
+ assert (select count(*) from public.profiles)=1,'Downgrade must immediately narrow profile visibility';
+ foreach command in array array[
+  'select public.admin_save_mvp_product_bundle(null,''{}'',''[]'')',
+  'select private.admin_save_mvp_product_bundle(null,''{}'',''[]'')',
+  'select public.admin_set_user_role(gen_random_uuid(),''user'')',
+  'select private.admin_set_user_role(gen_random_uuid(),''user'')'
+ ] loop
+  rejected:=false;
+  begin execute command;
+  exception when raise_exception then
+   if sqlerrm ~ '^(Admin access required|Permission denied)' then rejected:=true; else raise; end if;
+  end;
+  assert rejected,'Downgraded identity retained administrative access';
+ end loop;
 end $$;
 reset role;
 select set_config('request.jwt.claims','{"sub":"b0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
