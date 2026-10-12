@@ -157,6 +157,8 @@ export default function AdminUsers() {
     try {
       const { data, count: c } = await userAdminService.list({ role: roleFilter || null, search: debouncedSearch, page });
       if (version !== requestVersion.current) return;
+      const lastPage = Math.max(0, Math.ceil(c / 25) - 1);
+      if (page > lastPage) { setPage(lastPage); return; }
       setUsers(data);
       setCount(c);
     } catch (e) {
@@ -179,6 +181,7 @@ export default function AdminUsers() {
 
   const handleRoleChanged = (userId, newRole) => {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    void load();
   };
 
   const totalPages = Math.ceil(count / PAGE_SIZE);

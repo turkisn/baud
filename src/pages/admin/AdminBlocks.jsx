@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import {
   Archive, ArrowDown, ArrowUp, Box, CheckCircle2, FileBox, Image, Loader2,
   Pencil, Plus, RefreshCw, Save, Search, Send, Trash2, Upload, X,
@@ -8,6 +8,7 @@ import AdminLayout, {
 } from '../../components/admin/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useUnsavedEditor } from '../../hooks/useUnsavedEditor';
 import { useModalDialog } from '../../hooks/useModalDialog';
 import {
   ADMIN_PAGE_SIZE, mvpAdminService, PRODUCT_FILE_FORMATS, SPECIFICATION_DATA_TYPES,
@@ -19,9 +20,11 @@ const EMPTY_PRODUCT = {
   supplier_id: '', brand_name: '', model_number: '', country_of_origin: '', unit: '',
   short_description_ar: '', short_description_en: '', full_description_ar: '',
   full_description_en: '', price: '', currency: 'SAR', supplier_product_url: '', source_url: '',
-  is_featured: false, sort_order: 0, rights_confirmed: false, publication_state: 'draft',
+  is_featured: false, sort_order: 0, rights_confirmed: false, license_download: false, publication_state: 'draft',
   specifications: [], images: [], files: [],
 };
+
+const editorSnapshot = value => JSON.stringify(Object.fromEntries(Object.keys(EMPTY_PRODUCT).filter(key => !['images','files'].includes(key)).map(key => [key, value[key]])));
 
 const nullable = (value) => value === '' ? null : value;
 const BLOCK_FILE_ACCEPT = PRODUCT_FILE_FORMATS.map((format) => `.${format.toLowerCase()}`).join(',');
@@ -173,7 +176,6 @@ function ProductAssets({ product, onRefresh, disabled, t }) {
 }
 
 function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved, t }) {
-  const { dialogRef, initialFocusRef } = useModalDialog(onClose);
   const [product, setProduct] = useState(() => productEditorState(initial));
   const [subcategories, setSubcategories] = useState([]);
   const [supplierQuery, setSupplierQuery] = useState('');
@@ -181,6 +183,11 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
   const [saving, setSaving] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [savedState, setSavedState] = useState(() => editorSnapshot(productEditorState(initial)));
+  const closeEditor = useUnsavedEditor(editorSnapshot(product) !== savedState, Boolean(saving), onClose,
+    t('Discard unsaved changes?', 'تجاهل التغييرات غير المحفوظة؟'));
+  const { dialogRef, initialFocusRef } = useModalDialog(closeEditor);
+
 
   useEffect(() => {
     let active = true;
@@ -275,14 +282,15 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
         is_featured: Boolean(product.is_featured),
         sort_order: Number(product.sort_order) || 0,
         rights_confirmed: Boolean(product.rights_confirmed),
+        license_download: Boolean(product.license_download),
         publication_state: publicationState,
-      });
+      }, product.specifications || []);
       const productId = saved?.id || product.id;
       if (!productId) throw new Error('The backend did not return the saved product ID.');
       setProduct((current) => ({ ...current, id: productId }));
-      await mvpAdminService.replaceSpecifications(productId, product.specifications || []);
-      const fresh = await mvpAdminService.getProduct(productId);
+      const fresh = { ...product, ...saved, id: productId };
       setProduct(productEditorState(fresh));
+      setSavedState(editorSnapshot(productEditorState(fresh)));
       setSuccess(t('Product and specifications saved.', 'تم حفظ المنتج والمواصفات.'));
       onSaved(fresh);
     } catch (saveError) {
@@ -310,14 +318,15 @@ function ProductEditor({ initial, categories, supplierOptions, onClose, onSaved,
     && validHttpsUrl(product.source_url)
   );
 
-  return <div ref={dialogRef} tabIndex="-1" className="fixed inset-0 z-50 overflow-y-auto bg-deep-brown/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={t('Block editor', 'محرر البلوك')}><div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-ivory shadow-2xl"><header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-sand bg-white px-5 py-4"><div><p className="text-xs font-bold uppercase tracking-wider text-gold">{product.id ? t('Edit block', 'تعديل البلوك') : t('New block', 'بلوك جديد')}</p><h2 className="mt-1 text-xl font-black text-dark-brown">{product.product_name_en || t('Untitled product', 'منتج بدون عنوان')}</h2>{product.buod_reference && <p className="mt-1 font-mono text-xs text-light-brown">{product.buod_reference}</p>}</div><button ref={initialFocusRef} type="button" onClick={onClose} aria-label={t('Close editor', 'إغلاق المحرر')} className="admin-icon-button"><X/></button></header>
-    <div className="space-y-6 p-5 sm:p-7">{error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}{success && <div role="status" className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"><CheckCircle2 size={17}/>{success}</div>}
+  return <div ref={dialogRef} tabIndex="-1" className="fixed inset-0 z-50 overflow-y-auto bg-deep-brown/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={t('Block editor', 'محرر البلوك')}><div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-ivory shadow-2xl"><header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-sand bg-white px-5 py-4"><div><p className="text-xs font-bold uppercase tracking-wider text-gold">{product.id ? t('Edit block', 'تعديل البلوك') : t('New block', 'بلوك جديد')}</p><h2 className="mt-1 text-xl font-black text-dark-brown">{product.product_name_en || t('Untitled product', 'منتج بدون عنوان')}</h2>{product.buod_reference && <p className="mt-1 font-mono text-xs text-light-brown">{product.buod_reference}</p>}</div><button ref={initialFocusRef} type="button" onClick={closeEditor} aria-label={t('Close editor', 'إغلاق المحرر')} className="admin-icon-button"><X/></button></header>
+    <fieldset disabled={Boolean(saving)} className="space-y-6 p-5 sm:p-7">{error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>}{success && <div role="status" className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"><CheckCircle2 size={17}/>{success}</div>}
       <section className="rounded-2xl border border-sand bg-white p-5"><h3 className="mb-4 font-bold text-dark-brown">{t('Identity and classification', 'الهوية والتصنيف')}</h3><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Field label="Product name (English)" required value={product.product_name_en} onChange={set('product_name_en')}/><Field label="اسم المنتج (العربية)" required dir="rtl" value={product.product_name_ar} onChange={set('product_name_ar')}/><Field label="Slug" value={product.slug} onChange={set('slug')}/><Field label={t('Brand', 'العلامة التجارية')} value={product.brand_name} onChange={set('brand_name')}/><SelectField label={t('Category', 'الفئة')} required={product.publication_state === 'published'} value={product.category_id} onChange={(event) => setProduct((current) => ({ ...current, category_id: event.target.value, subcategory_id: '' }))}><option value="">{t('Select category', 'اختر الفئة')}</option>{categoryOptions.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</SelectField><SelectField label={t('Subcategory', 'الفئة الفرعية')} value={product.subcategory_id} onChange={set('subcategory_id')} disabled={!product.category_id}><option value="">{t('No subcategory', 'بدون فئة فرعية')}</option>{subcategories.map((subcategory) => <option key={subcategory.id} value={subcategory.id}>{subcategory.name_en} · {subcategory.name_ar}</option>)}</SelectField><Field label={t('Find supplier', 'ابحث عن مورد')} value={supplierQuery} onChange={(event) => setSupplierQuery(event.target.value)}/><SelectField label={t('Supplier', 'المورد')} required={product.publication_state === 'published'} value={product.supplier_id} onChange={set('supplier_id')}><option value="">{t('Select supplier', 'اختر المورد')}</option>{supplierChoices.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.company_name_en} · {supplier.company_name_ar}</option>)}</SelectField><Field label={t('Model number', 'رقم الطراز')} value={product.model_number} onChange={set('model_number')}/><Field label={t('Country of origin', 'بلد المنشأ')} value={product.country_of_origin} onChange={set('country_of_origin')}/><Field label={t('Unit', 'الوحدة')} value={product.unit} onChange={set('unit')}/></div></section>
       <section className="rounded-2xl border border-sand bg-white p-5"><h3 className="mb-4 font-bold text-dark-brown">{t('Descriptions', 'الأوصاف')}</h3><div className="grid gap-4 md:grid-cols-2"><Textarea label="Short description (English)" value={product.short_description_en} onChange={set('short_description_en')}/><Textarea label="الوصف المختصر (العربية)" dir="rtl" value={product.short_description_ar} onChange={set('short_description_ar')}/><Textarea label="Full description (English)" value={product.full_description_en} onChange={set('full_description_en')}/><Textarea label="الوصف الكامل (العربية)" dir="rtl" value={product.full_description_ar} onChange={set('full_description_ar')}/></div></section>
       <section className="rounded-2xl border border-sand bg-white p-5"><h3 className="mb-4 font-bold text-dark-brown">{t('Commercial and display data', 'البيانات التجارية والعرض')}</h3><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Field label={t('Product price', 'سعر المنتج')} type="number" min="0" step="0.01" value={product.price} onChange={set('price')}/><Field label={t('Currency', 'العملة')} value={product.currency} maxLength={3} pattern="[A-Za-z]{3}" placeholder="SAR" onChange={(event) => setProduct((current) => ({ ...current, currency: event.target.value.toUpperCase().slice(0, 3) }))}/><Field label={t('Supplier product URL', 'رابط المنتج لدى المورد')} type="url" inputMode="url" placeholder="https://" value={product.supplier_product_url} onChange={set('supplier_product_url')} className="xl:col-span-2"/><Field label={t('Source URL', 'رابط المصدر')} type="url" inputMode="url" placeholder="https://" value={product.source_url} onChange={set('source_url')} className="xl:col-span-2"/><Field label={t('Sort order', 'ترتيب العرض')} type="number" value={product.sort_order} onChange={set('sort_order')}/><label className="flex items-end gap-2 pb-3 text-sm font-medium text-medium-brown"><input type="checkbox" checked={Boolean(product.is_featured)} onChange={set('is_featured')}/>{t('Featured product', 'منتج مميز')}</label></div><div className="mt-5 rounded-xl border border-gold/30 bg-gold/5 p-4"><label className="flex items-start gap-3 text-sm font-semibold text-dark-brown"><input type="checkbox" className="mt-1" checked={Boolean(product.rights_confirmed)} onChange={set('rights_confirmed')}/><span>{t('Rights are confirmed for this product data and its uploaded assets.', 'تم تأكيد حقوق بيانات هذا المنتج وملفاته المرفوعة.')}</span></label></div></section>
+      <label className="flex gap-3 text-sm text-dark-brown"><input type="checkbox" checked={Boolean(product.license_download)} onChange={set('license_download')}/>{t('Downloads are explicitly permitted by the asset licence.', 'ترخيص الملفات يسمح بالتنزيل صراحةً.')}</label>
       <SpecificationsEditor items={product.specifications || []} onChange={(items) => setProduct((current) => ({ ...current, specifications: items }))} disabled={Boolean(saving)} t={t}/>
       <ProductAssets product={product} onRefresh={refresh} disabled={Boolean(saving)} t={t}/>
-    </div>
+    </fieldset>
     <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-sand bg-white px-5 py-4"><div className="flex flex-wrap items-center gap-2"><StatusBadge status={product.publication_state}/>{product.updated_at && <span className="text-xs text-light-brown">{t('Updated', 'آخر تحديث')} <time dateTime={product.updated_at} dir="ltr">{formatAdminDateTime(product.updated_at)}</time></span>}{!canPublish && <span id="publish-requirements" className="text-xs text-amber-700">{t('Publishing requires both names, category, supplier, and confirmed rights.', 'يتطلب النشر الاسمين والفئة والمورد وتأكيد الحقوق.')}</span>}</div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => save('draft')} disabled={Boolean(saving)} className="admin-secondary-button">{saving === 'draft' ? <Loader2 className="animate-spin" size={14}/> : <Save size={14}/>} {t('Save draft', 'حفظ كمسودة')}</button><button type="button" onClick={() => save('archived')} disabled={Boolean(saving) || !product.id} className="admin-secondary-button text-red-700"><Archive size={14}/>{t('Archive', 'أرشفة')}</button><button type="button" onClick={() => save('published')} disabled={Boolean(saving) || !canPublish} aria-describedby={!canPublish ? 'publish-requirements' : undefined} className="admin-primary-button disabled:cursor-not-allowed disabled:opacity-50">{saving === 'published' ? <Loader2 className="animate-spin" size={14}/> : <Send size={14}/>} {t('Publish', 'نشر')}</button></div></div>
   </div></div>;
 }
@@ -358,26 +367,34 @@ export default function AdminBlocks() {
     return () => window.clearTimeout(timer);
   }, [supplierSearch]);
 
+  const listVersion = useRef(0);
+  const [failedEditor, setFailedEditor] = useState(null);
   const load = useCallback(async () => {
+    const version = ++listVersion.current;
     setLoading(true); setError('');
     try {
       const result = await mvpAdminService.listProducts({
         search: debouncedSearch, publicationState, categoryId, supplierId, page,
       });
+      if (version !== listVersion.current) return;
+      const lastPage = Math.max(0, Math.ceil(result.count / ADMIN_PAGE_SIZE) - 1);
+      if (page > lastPage) { setPage(lastPage); return; }
       setItems(result.data);
       setCount(result.count);
       const labels = await mvpAdminService.getSupplierLabels(result.data.map((item) => item.supplier_id));
+      if (version !== listVersion.current) return;
       setSupplierLabels(Object.fromEntries(labels.map((supplier) => [supplier.id, supplier])));
-    } catch (loadError) { setError(loadError.message); }
-    finally { setLoading(false); }
+    } catch (loadError) { if (version === listVersion.current) setError(loadError.message); }
+    finally { if (version === listVersion.current) setLoading(false); }
   }, [categoryId, debouncedSearch, page, publicationState, supplierId]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => () => { listVersion.current++; }, []);
   useEffect(() => { setPage(0); }, [debouncedSearch, publicationState, categoryId, supplierId]);
 
   const openProduct = async (productId) => {
     if (!productId) { setEditor({ ...EMPTY_PRODUCT }); return; }
-    setEditorLoading(true); setError('');
+    setEditorLoading(true); setError(''); setFailedEditor(null);
     try {
       const product = await mvpAdminService.getProduct(productId);
       if (product.supplier_id) {
@@ -385,7 +402,7 @@ export default function AdminBlocks() {
         setSupplierOptions((current) => [...labels, ...current.filter((supplier) => !labels.some((label) => label.id === supplier.id))]);
       }
       setEditor({ ...EMPTY_PRODUCT, ...product, price: product.price ?? '' });
-    } catch (loadError) { setError(loadError.message); }
+    } catch (loadError) { setError(loadError.message); setFailedEditor(productId); }
     finally { setEditorLoading(false); }
   };
 
@@ -394,7 +411,7 @@ export default function AdminBlocks() {
   if (!['admin', 'super_admin'].includes(user?.role)) return <AdminLayout title={t('Access denied', 'الوصول مرفوض')}><p className="text-light-brown">{t('Strict administrator access is required.', 'مطلوب وصول مدير صارم.')}</p></AdminLayout>;
 
   return <AdminLayout title={t('Blocks', 'البلوكات')} subtitle={`${count} ${t('database records', 'سجلات قاعدة البيانات')}`}><div className="mb-5 flex flex-wrap items-center gap-3"><div className="relative min-w-64 flex-1"><Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-light-brown"/><input aria-label={t('Search blocks', 'البحث في البلوكات')} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search name, slug or BUOD reference…', 'ابحث بالاسم أو الرابط أو مرجع BUOD…')} className="input-field bg-white ps-9"/></div><select aria-label={t('Filter by publication state', 'تصفية حسب حالة النشر')} value={publicationState} onChange={(event) => setPublicationState(event.target.value)} className="input-field w-auto min-w-36 bg-white"><option value="">{t('All states', 'كل الحالات')}</option><option value="draft">{t('Draft', 'مسودة')}</option><option value="published">{t('Published', 'منشور')}</option><option value="archived">{t('Archived', 'مؤرشف')}</option></select><select aria-label={t('Filter by category', 'تصفية حسب الفئة')} value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className="input-field w-auto min-w-44 bg-white"><option value="">{t('All categories', 'كل الفئات')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name_en} · {category.name_ar}</option>)}</select><input aria-label={t('Find a supplier to filter by', 'ابحث عن مورد للتصفية')} value={supplierSearch} onChange={(event) => setSupplierSearch(event.target.value)} placeholder={t('Find supplier…', 'ابحث عن مورد…')} className="input-field w-40 bg-white"/><select aria-label={t('Filter by supplier', 'تصفية حسب المورد')} value={supplierId} onChange={(event) => setSupplierId(event.target.value)} className="input-field w-auto max-w-56 bg-white"><option value="">{t('All suppliers', 'كل الموردين')}</option>{supplierOptions.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.company_name_en} · {supplier.company_name_ar}</option>)}</select><button type="button" onClick={load} className="admin-secondary-button"><RefreshCw size={14}/>{t('Refresh', 'تحديث')}</button><button type="button" onClick={() => openProduct(null)} className="admin-primary-button"><Plus size={15}/>{t('Create block', 'إنشاء بلوك')}</button></div>
-    {error && <div className="mb-4"><AdminErrorState message={error} onRetry={load}/></div>}
+    {error && <div className="mb-4"><AdminErrorState message={error} onRetry={failedEditor ? () => openProduct(failedEditor) : load}/></div>}
     {!error && !loading && items.length === 0 ? <AdminEmptyState icon={Box} message={t('No blocks match these filters.', 'لا توجد بلوكات تطابق هذه المرشحات.')}/> : <AdminTable loading={loading} headers={[t('Product', 'المنتج'), t('Supplier', 'المورد'), t('Category', 'الفئة'), t('State', 'الحالة'), t('Rights', 'الحقوق'), t('Updated', 'التحديث'), t('Action', 'الإجراء')]}>{items.map((item) => { const supplier = supplierLabels[item.supplier_id]; const category = categoryLabels[item.category_id]; return <tr key={item.id} className="hover:bg-warm-white"><td className="px-4 py-3"><p className="font-semibold text-dark-brown">{item.product_name_en}</p><p className="text-xs text-light-brown">{item.product_name_ar}</p>{item.buod_reference && <p className="mt-1 font-mono text-[10px] text-gold">{item.buod_reference}</p>}</td><td className="px-4 py-3 text-xs text-medium-brown">{supplier ? `${supplier.company_name_en} · ${supplier.company_name_ar}` : '—'}</td><td className="px-4 py-3 text-xs text-medium-brown">{category ? `${category.name_en} · ${category.name_ar}` : '—'}</td><td className="px-4 py-3"><StatusBadge status={item.publication_state}/></td><td className="px-4 py-3 text-xs">{item.rights_confirmed ? <span className="text-green-700">{t('Confirmed', 'مؤكدة')}</span> : <span className="text-amber-700">{t('Pending', 'غير مؤكدة')}</span>}</td><td className="px-4 py-3 text-xs text-light-brown">{item.updated_at ? <time dateTime={item.updated_at} dir="ltr">{formatAdminDate(item.updated_at)}</time> : '—'}</td><td className="px-4 py-3"><button type="button" onClick={() => openProduct(item.id)} className="admin-secondary-button"><Pencil size={13}/>{t('Edit', 'تعديل')}</button></td></tr>; })}</AdminTable>}
     <Pagination page={page} totalPages={Math.ceil(count / ADMIN_PAGE_SIZE)} onPage={setPage}/>
     {editorLoading && <div role="status" aria-label={t('Loading block editor', 'جارٍ تحميل محرر البلوك')} className="fixed inset-0 z-50 grid place-items-center bg-deep-brown/70"><Loader2 aria-hidden="true" className="animate-spin text-gold" size={36}/></div>}{editor && <ProductEditor key={editor.id || 'new'} initial={editor} categories={categories} supplierOptions={supplierOptions} onClose={() => setEditor(null)} onSaved={() => load()} t={t}/>}

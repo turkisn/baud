@@ -1,0 +1,6 @@
+{
+  "status": "not_applied",
+  "migrations": [
+    "supabase/migrations/20261012131038_initial_launch_hardening.sql"
+  ]
+}

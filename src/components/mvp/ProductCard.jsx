@@ -1,5 +1,5 @@
 import { Box, Download, Eye, FileBox, ImageOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatCount, formatCurrency } from '../../utils/number';
 import Product3DPreview from './Product3DPreview';
@@ -9,6 +9,8 @@ import { productImage } from '../../utils/productImage';
 const value = (row, keys) => keys.map((key) => row?.[key]).find((item) => item !== null && item !== undefined && item !== '');
 
 export default function ProductCard({ product }) {
+  const location = useLocation();
+  const returnTo = location.pathname + location.search;
   const { lang, t } = useLanguage();
   const image = productImage(product);
   const name = lang === 'ar'
@@ -29,7 +31,7 @@ export default function ProductCard({ product }) {
   return (
     <article className="digital-panel product-card group relative overflow-hidden rounded-2xl transition hover:-translate-y-1 hover:border-gold/55">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#100e0b]">
-        <Link to={`/blocks/${product.slug}`} className="block h-full" aria-label={t(`Open ${name}`, `فتح ${name}`)}>
+        <Link to={`/blocks/${product.slug}`} state={{ returnTo }} className="block h-full" aria-label={t(`Open ${name}`, `فتح ${name}`)}>
           {image ? (
             <img src={image} loading="lazy" decoding="async" alt={name || t('Construction product', 'منتج إنشائي')} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
           ) : (
@@ -42,8 +44,9 @@ export default function ProductCard({ product }) {
         <div className="absolute bottom-3 start-3 z-10"><Product3DPreview product={product}/></div>
         <div className="absolute bottom-3 end-3 z-10"><WorkspaceActions product={product} compact/></div>
       </div>
-      <Link to={`/blocks/${product.slug}`} className="block p-5">
+      <Link to={`/blocks/${product.slug}`} state={{ returnTo }} className="block p-5">
         <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-gold"><Box size={12} />{category || t('Uncategorised', 'غير مصنف')}</div>
+        {product.is_demo && <p className="mb-2 text-xs text-amber-300">{t('Demo · fictional product data', 'تجريبي · بيانات منتج افتراضية')}</p>}
         <h2 className="line-clamp-2 min-h-12 text-lg font-bold leading-snug text-warm-white transition group-hover:text-light-gold">{name || t('Unnamed product', 'منتج بدون اسم')}</h2>
         <div className="mt-3 flex min-h-6 items-center justify-between gap-3">
           <span className="truncate text-xs text-light-brown">{supplier || t('Supplier unavailable', 'المورد غير متاح')}</span>

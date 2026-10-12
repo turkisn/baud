@@ -15,7 +15,8 @@
     "test:budget": "node scripts/build-budget.js",
     "test:staging-health": "node scripts/staging-health.js",
     "check": "npm run lint && npm test && npm run build && npm run test:budget",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release:check": "node scripts/validate-release-config.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.3",

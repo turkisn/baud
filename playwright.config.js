@@ -23,12 +23,14 @@ export default defineConfig({
   },
   webServer: deployedPreview ? undefined : {
     env: process.env.BUOD_BROWSER_FIXTURES === '1' ? {
+      VITE_APP_ENV: 'test',
+      VITE_DEMO_MODE: 'true',
       VITE_SUPABASE_URL: 'https://workspace-fixture.supabase.co',
       VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture_not_a_real_key',
     } : {},
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173 --strictPort',
+    command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: false,
-    timeout: 30_000,
+    timeout: 60_000,
   },
 });

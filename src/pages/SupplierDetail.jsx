@@ -31,6 +31,7 @@ function uniqueProducts(rows) {
 export default function SupplierDetail() {
   const { slug } = useParams();
   const { lang, t } = useLanguage();
+  const [retry, setRetry] = useState(0);
   const [supplier, setSupplier] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +84,8 @@ export default function SupplierDetail() {
     }).finally(() => {
       if (version === requestVersion.current) setLoading(false);
     });
-  }, [slug]);
+      return () => { requestVersion.current = version + 1; };
+  }, [slug, retry]);
 
   const loadMore = async () => {
     const supplierId = supplier?.id || supplier?.supplier_id;
@@ -111,7 +113,7 @@ export default function SupplierDetail() {
   };
 
   if (loading) return <div className="min-h-screen bg-ivory pt-[76px]"><LoadingState/></div>;
-  if (error) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState/></div>;
+  if (error) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState onRetry={() => setRetry(v => v + 1)}/></div>;
   if (!supplier) return <div className="min-h-screen bg-ivory px-6 pt-[108px]"><ErrorState message={t('Supplier not found.', 'المورد غير موجود.')}/></div>;
 
   const name = lang === 'ar' ? pick(supplier, 'company_name_ar', 'name_ar', 'company_name_en') : pick(supplier, 'company_name_en', 'name_en', 'company_name_ar');
@@ -125,9 +127,9 @@ export default function SupplierDetail() {
       {productsLoading
         ? <LoadingState/>
         : products.length === 0 && productsError
-          ? <ErrorState/>
+          ? <ErrorState onRetry={() => setRetry(v => v + 1)}/>
           : products.length
-            ? <><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product}/>)}</div>{productsError && <div className="mt-6"><ErrorState/></div>}<div className="mt-10 flex flex-col items-center gap-3">{hasMore ? <button type="button" onClick={loadMore} disabled={loadingMore} className="btn-primary min-w-44 justify-center disabled:opacity-60">{loadingMore && <Loader2 className="animate-spin" size={17}/>} {loadingMore ? t('Loading more…', 'جارٍ تحميل المزيد…') : t('Load more blocks', 'تحميل المزيد من البلوكات')}</button> : <p className="text-sm text-light-brown">{t('All published blocks are shown.', 'تم عرض جميع البلوكات المنشورة.')}</p>}</div></>
+            ? <><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <ProductCard key={product.id || product.slug} product={product}/>)}</div>{productsError && <div className="mt-6"><ErrorState onRetry={() => setRetry(v => v + 1)}/></div>}<div className="mt-10 flex flex-col items-center gap-3">{hasMore ? <button type="button" onClick={loadMore} disabled={loadingMore} className="btn-primary min-w-44 justify-center disabled:opacity-60">{loadingMore && <Loader2 className="animate-spin" size={17}/>} {loadingMore ? t('Loading more…', 'جارٍ تحميل المزيد…') : t('Load more blocks', 'تحميل المزيد من البلوكات')}</button> : <p className="text-sm text-light-brown">{t('All published blocks are shown.', 'تم عرض جميع البلوكات المنشورة.')}</p>}</div></>
             : <EmptyState title={t('No published blocks yet', 'لا توجد بلوكات منشورة حالياً')}/>}
     </section></div></div>;
 }

@@ -34,7 +34,8 @@ export const userAdminService = {
 
     const { data, error, count } = await q;
     if (error) throw error;
-    return { data: data ?? [], count: count ?? 0 };
+    if (!Array.isArray(data)) throw new Error('Unexpected administrative list response. Retry the request.');
+    return { data, count: count ?? 0 };
   },
 
   async setRole(targetUserId, newRole) {
@@ -80,7 +81,8 @@ export const supplierAdminService = {
 
     const { data, error, count } = await q;
     if (error) throw error;
-    return { data: data ?? [], count: count ?? 0 };
+    if (!Array.isArray(data)) throw new Error('Unexpected administrative list response. Retry the request.');
+    return { data, count: count ?? 0 };
   },
 
   async verify(supplierId, newStatus, notes = null) {
@@ -126,7 +128,8 @@ export const manufacturerAdminService = {
 
     const { data, error, count } = await q;
     if (error) throw error;
-    return { data: data ?? [], count: count ?? 0 };
+    if (!Array.isArray(data)) throw new Error('Unexpected administrative list response. Retry the request.');
+    return { data, count: count ?? 0 };
   },
 
   async verify(manufacturerId, newStatus, notes = null) {
@@ -171,7 +174,6 @@ export const categoryAdminService = {
       .select(CATEGORY_FIELDS)
       .single();
     if (error) throw error;
-    await logAction('category.create', 'category', data.id, { code, name_en });
     return data;
   },
 
@@ -184,7 +186,6 @@ export const categoryAdminService = {
       .select(CATEGORY_FIELDS)
       .single();
     if (error) throw error;
-    await logAction('category.update', 'category', categoryId, updates);
     return data;
   },
 
@@ -197,7 +198,6 @@ export const categoryAdminService = {
       .select(CATEGORY_FIELDS)
       .single();
     if (error) throw error;
-    await logAction(isActive ? 'category.enable' : 'category.disable', 'category', categoryId);
     return data;
   },
 
@@ -209,7 +209,6 @@ export const categoryAdminService = {
       .select(SUBCATEGORY_FIELDS)
       .single();
     if (error) throw error;
-    await logAction('subcategory.create', 'subcategory', data.id, { code, name_en, category_id });
     return data;
   },
 
@@ -222,7 +221,6 @@ export const categoryAdminService = {
       .select(SUBCATEGORY_FIELDS)
       .single();
     if (error) throw error;
-    await logAction('subcategory.update', 'subcategory', subcategoryId, updates);
     return data;
   },
 
@@ -235,7 +233,6 @@ export const categoryAdminService = {
       .select(SUBCATEGORY_FIELDS)
       .single();
     if (error) throw error;
-    await logAction(isActive ? 'subcategory.enable' : 'subcategory.disable', 'subcategory', subcategoryId);
     return data;
   },
 };
@@ -282,22 +279,7 @@ export const auditLogService = {
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     if (error) throw error;
-    return { data: data ?? [], count: count ?? 0 };
+    if (!Array.isArray(data)) throw new Error('Unexpected administrative list response. Retry the request.');
+    return { data, count: count ?? 0 };
   },
 };
-
-// ── Internal: non-blocking audit log helper ───────────────────
-async function logAction(action, targetType, targetId, metadata = {}) {
-  if (!SUPABASE_CONFIGURED) return;
-  try {
-    const { error } = await supabase.rpc('admin_log_action', {
-      p_action:      action,
-      p_target_type: targetType,
-      p_target_id:   targetId,
-      p_metadata:    metadata,
-    });
-    if (error) throw error;
-  } catch {
-    // Non-blocking — a logging failure must never block the admin action.
-  }
-}

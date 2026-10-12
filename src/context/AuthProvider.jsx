@@ -10,7 +10,7 @@ async function fetchProfile(userId) {
     .from('profiles')
     .select('id,full_name,role,avatar_url,user_type,company_name')
     .eq('id', userId)
-    .maybeSingle();
+    .maybeSingle().abortSignal(AbortSignal.timeout(10_000));
   if (error) throw error;
   return data ?? null;
 }
@@ -41,6 +41,8 @@ function AuthLoadingScreen() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState(false);
+  const [profileRetry, setProfileRetry] = useState(0);
   const authVersion = useRef(0);
   const mounted = useRef(false);
 
@@ -61,13 +63,15 @@ export function AuthProvider({ children }) {
 
     const hydrateSession = async (authUser, version) => {
       let profile = null;
+      let failed = false;
       try {
         profile = await fetchProfile(authUser.id);
       } catch {
-        // Authentication succeeds, while authorization fails closed to role=user.
+        failed = true; // Authorization fails closed, with a visible recovery path.
       }
 
       if (!mounted.current || version !== authVersion.current) return;
+      setProfileError(failed);
       setUser(mergeProfile(authUser, profile));
       setLoading(false);
     };
@@ -83,6 +87,7 @@ export function AuthProvider({ children }) {
 
       if (!session?.user) {
         currentSessionUserId = null;
+        setProfileError(false);
         setUser(null);
         setLoading(false);
         return;
@@ -102,14 +107,24 @@ export function AuthProvider({ children }) {
       deferredHydrations.add(timer);
     });
 
+    const refreshOnFocus = () => {
+      const version = authVersion.current;
+      void supabase.auth.getSession().then(({ data }) => {
+        if (!mounted.current || version !== authVersion.current || !data.session?.user) return;
+        void hydrateSession(data.session.user, nextAuthVersion());
+      }).catch(() => {});
+    };
+    window.addEventListener('focus', refreshOnFocus);
+
     return () => {
       mounted.current = false;
       nextAuthVersion();
       for (const timer of deferredHydrations) window.clearTimeout(timer);
       deferredHydrations.clear();
       subscription.unsubscribe();
+      window.removeEventListener('focus', refreshOnFocus);
     };
-  }, [nextAuthVersion]);
+  }, [nextAuthVersion, profileRetry]);
 
   const login = useCallback(async (email, password) => {
     if (!SUPABASE_CONFIGURED) {
@@ -170,7 +185,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? <AuthLoadingScreen /> : children}
+      {loading ? <AuthLoadingScreen /> : <>{profileError && <div role="alert" className="fixed bottom-4 start-4 z-[100] max-w-sm rounded-xl bg-red-50 p-4 text-sm text-red-900">Account permissions could not be loaded. تعذّر تحميل صلاحيات الحساب. <button type="button" className="underline" onClick={() => setProfileRetry(v => v + 1)}>Retry profile / إعادة المحاولة</button></div>}{children}</>}
     </AuthContext.Provider>
   );
 }

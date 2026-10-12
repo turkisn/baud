@@ -11,7 +11,7 @@ const PRODUCT_FIELDS = [
   'supplier_id', 'brand_name', 'model_number', 'country_of_origin', 'unit',
   'short_description_ar', 'short_description_en', 'full_description_ar',
   'full_description_en', 'price', 'currency', 'supplier_product_url', 'source_url',
-  'price_updated_at', 'is_featured', 'sort_order', 'rights_confirmed',
+  'price_updated_at', 'is_featured', 'sort_order', 'rights_confirmed', 'license_download',
   'publication_state', 'buod_reference', 'created_at', 'updated_at',
 ].join(',');
 
@@ -49,7 +49,7 @@ const PRODUCT_PAYLOAD_FIELDS = new Set([
   'supplier_id', 'brand_name', 'model_number', 'country_of_origin', 'unit',
   'short_description_ar', 'short_description_en', 'full_description_ar',
   'full_description_en', 'price', 'currency', 'supplier_product_url', 'source_url',
-  'is_featured', 'sort_order', 'rights_confirmed', 'publication_state',
+  'is_featured', 'sort_order', 'rights_confirmed', 'license_download', 'publication_state',
 ]);
 
 const SUPPLIER_PAYLOAD_FIELDS = new Set([
@@ -182,9 +182,10 @@ export const mvpAdminService = {
     };
   },
 
-  async saveProduct(productId, payload) {
+  async saveProduct(productId, payload, specifications) {
     assertConfigured();
-    const { data, error } = await supabase.rpc('admin_save_mvp_product', {
+    const { data, error } = await supabase.rpc(specifications ? 'admin_save_mvp_product_bundle' : 'admin_save_mvp_product', {
+      ...(specifications ? { p_items: specifications } : {}),
       p_product_id: productId || null,
       p_payload: pickAllowed(payload, PRODUCT_PAYLOAD_FIELDS),
     });

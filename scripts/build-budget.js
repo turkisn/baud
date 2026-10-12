@@ -14,9 +14,11 @@ const viewer = rows.find(row => /^Product3DViewer-.*\.js$/.test(row.name));
 assert.ok(entry && viewer, 'Expected entry and lazy 3D chunks are missing');
 const total = rows.reduce((sum, row) => sum + row.bytes, 0);
 console.log(JSON.stringify({ unit: 'gzip-bytes', entry: entry.bytes, viewer: viewer.bytes, allJavaScript: total }));
-assert.ok(entry.bytes <= 150_000, 'Entry chunk exceeds 150 kB gzip');
+// Data-router navigation blocking protects unsaved admin drafts on browser Back.
+// Measured addition: ~19 kB gzip; retain a narrow, explicit payload ceiling.
+assert.ok(entry.bytes <= 155_000, 'Entry chunk exceeds 155 kB gzip');
 assert.ok(viewer.bytes <= 165_000, '3D chunk exceeds 165 kB gzip');
-assert.ok(total <= 480_000, 'All JS chunks exceed 480 kB gzip');
+assert.ok(total <= 490_000, 'All JS chunks exceed 490 kB gzip');
 // index.html must not eagerly fetch the lazy 3D engine.
 const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
 assert.ok(!html.includes(viewer.name), '3D engine must remain lazy-loaded');

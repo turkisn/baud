@@ -51,7 +51,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Auth, workspace and real 3D browser checks (isolated data, no live credentials)
-        run: npm run test:browser -- auth.spec.js workspace.spec.js 3d.spec.js
+        run: npm run test:browser
         env:
           BUOD_BROWSER_FIXTURES: '1'
 

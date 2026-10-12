@@ -1,0 +1,7 @@
+
+> buod@0.0.0 release:check
+> node scripts/validate-release-config.js
+
+Production needs a real public Supabase key.
+Production needs a valid Supabase URL.
+Production needs an application URL.

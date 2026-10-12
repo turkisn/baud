@@ -1882,7 +1882,7 @@ body.product-3d-open .public-shell *::after {
   .product-3d-dialog > header h2 { max-width: 56vw; }
   .product-3d-dialog > header button { width: 35px; height: 35px; }
   .product-3d-dialog-footer { padding: 10px 12px; font-size: 9px; }
-  .product-3d-dialog-footer span { display: none; }
+  .product-3d-dialog-footer span { display: inline; }
   .product-3d-viewer-controls { right: 10px; bottom: 10px; }
   .product-3d-reference { top: 10px; inset-inline-start: 10px; width: 106px; }
   .product-3d-reference span { padding: 5px 7px; font-size: 8px; }

@@ -1,7 +1,11 @@
 import { supabase, SUPABASE_CONFIGURED } from '../lib/supabase';
-import { BUNDLED_CATALOG_PRODUCTS, getBundledCatalogProduct } from '../data/bundledCatalog';
+import { BUNDLED_CATALOG_PRODUCTS as DEMO_PRODUCTS } from '../data/bundledCatalog';
 import { catalogFacets, mergeCatalogFacets, planCatalogPage } from '../utils/catalogPage';
 import { safeDownloadName } from '../utils/download';
+
+import { DEMO_MODE } from '../lib/demoMode';
+const BUNDLED_CATALOG_PRODUCTS = DEMO_MODE ? DEMO_PRODUCTS : [];
+const getBundledCatalogProduct = lookup => BUNDLED_CATALOG_PRODUCTS.find(p => [p.slug,p.id,p.buod_reference].includes(lookup));
 
 const PRIVATE_BUCKETS = Object.freeze({
   PRODUCT_IMAGES: 'product-images',
